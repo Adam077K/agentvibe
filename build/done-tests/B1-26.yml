@@ -8,7 +8,7 @@
 #
 # Canon: 09a-ENGINEERING.md §12 (LabelV1, Provenance, SourceRef, PrincipalRef, both mapping tables,
 # Join); 06-MEMORY.md §4 (L1, L3, L8); _process/DR-LABEL-RECONCILE-2026-10-01.md (founder decisions
-# 1-8, A-C, E-I, J-L, M-P). Every fixture case carries a `cite` naming the canon line it enforces.
+# 1-8, A-C, E-I, J-L, M-P, Q-T). Every fixture case carries a `cite` naming the canon line it enforces.
 #
 # First frozen 2026-10-02 at 0268a8b (Go 7 tests, Userland 380 subtests). kernel/internal/label/label.go and
 # userland/src/label.ts are NOT registered: they are the interface the job implements (the B1-02
@@ -31,11 +31,19 @@
 # Re-frozen 2026-10-02 founder rulings M-P (DR-LABEL-RECONCILE round 6): a join across ventures is
 # refused (ErrCrossVenture / LabelJoinError); least trusted wins (taint quarantined > untrusted > clean,
 # guarded over open, origin, subjects union, newer epoch); journal_metadata and a legal hold are the
-# longest retention; a HumanTask on a customer's behalf is customer. The origin cases pin the
-# orchestrator's PROPOSED order founder > system_of_record > internal > customer > counterparty, which is
-# NOT canon and is OPEN in the DR (:151): re-freeze if the founder orders it differently. Red against
+# longest retention; a HumanTask on a customer's behalf is customer. (The origin order was then the
+# orchestrator's proposal; ruling Q confirmed it, below.) Red against
 # stubs: Go 9/9, Userland 408/408. Green against a $TMPDIR reference with B1-02 (919 Userland subtests).
 # Mutants: Go 34 killed of 37 (the same 3 equivalent survivors as before); Userland 19 of 19.
+#
+# Re-frozen 2026-10-02 founder rulings Q-T (DR-LABEL-RECONCILE round 7): the origin trust order founder >
+# system_of_record > internal > customer > counterparty is confirmed, and every adjacent pair is pinned;
+# retention-class strictness personal > client > operational > synthetic replaces the journal_metadata
+# cases derived from O (where journal_metadata sits is OPEN); two different consent refs refuse
+# (ErrConsentConflict / LabelJoinError 'consent_conflict'); founder and portfolio inputs join a venture's
+# and the result is that venture's. The approval's wire form stays OPEN: the canon names no record for it.
+# Red against stubs: Go 9/9, Userland 408/408. Green with B1-02 against a $TMPDIR reference (965 Userland
+# subtests). Mutants: Go 39 killed of 42 (the same 3 equivalent survivors); Userland 24 of 24.
 #
 # Userland's test:donetest glob (test/*.donetest.test.ts) now also runs this file, so it is red until
 # B1-26 lands. B1-02's Go run line (./internal/nouns/) is red too until then: its re-frozen fixtures
@@ -48,7 +56,7 @@ jobs:
   - id: B1-26
     files:
       - path: kernel/internal/label/label_donetest_test.go
-        sha256: 684ed2093a9e06bd8bc1c111763348afea3e04eadb86b7d34817f97f40c3944c
+        sha256: db9cd4f357362326e7262941bb55dc13539e15b543928397293888807b3a5f15
       - path: kernel/internal/label/testdata/label/valid.json
         sha256: dccc7ef0dc57b3d43c0187dc1be25aa91f2086901cd15c8e1e1934b5f90ab2c8
       - path: kernel/internal/label/testdata/label/invalid.json
@@ -58,6 +66,6 @@ jobs:
       - path: kernel/internal/label/testdata/label/origin.json
         sha256: d6c278f9e98bb875c827924d509e9ae6a70a2d2c4c977eea29f6ed2e61c23637
       - path: kernel/internal/label/testdata/label/join.json
-        sha256: 846c68c748512f3f2bab7ecbbe725cadd0bc6bea193910edb0b8d4535ab10a6c
+        sha256: 6a7a0cb7337748decb38eb83fde5b070e7b1535c3be5049f22b7d49578af8f4d
       - path: userland/test/label.donetest.test.ts
-        sha256: 423c92de19aef1551ed803e0e280f44ea2e1d8a7e68550fd2e57b5b565f8d0c0
+        sha256: 8d28cd8d25b223a84f9814fea303c97c620512926953c48e95c8f9cc8fa126a2

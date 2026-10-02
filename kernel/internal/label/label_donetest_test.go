@@ -526,8 +526,8 @@ func TestB126Join(t *testing.T) {
 		Cases []joinCase `json:"cases"`
 	}
 	load(t, "join.json", &f)
-	if len(f.Cases) < 48 {
-		t.Fatalf("join.json holds %d cases; the register froze 48", len(f.Cases))
+	if len(f.Cases) < 50 {
+		t.Fatalf("join.json holds %d cases; the register froze 50", len(f.Cases))
 	}
 	for _, c := range f.Cases {
 		var decoded []label.Input

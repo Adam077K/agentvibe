@@ -197,7 +197,7 @@ function checkJoin(c: (typeof joins)[number], inputs: { id: string; label: any; 
 }
 
 test('B1-26 Userland: the join, over every order of its inputs (09a:665-670; 06:180 L1, 06:187 L8; 09a:602; decisions F, J, M-O, Q-T)', async (t) => {
-  assert.ok(joins.length >= 48, `join.json holds ${joins.length} cases; the register froze 48`);
+  assert.ok(joins.length >= 50, `join.json holds ${joins.length} cases; the register froze 50`);
   for (const c of joins) {
     const decoded = c.inputs.map((i) => ({ id: i.id, label: label.LabelV1.decode(clone(i.label)), control: i.control ?? false }));
     for (const order of permutations(decoded)) {
