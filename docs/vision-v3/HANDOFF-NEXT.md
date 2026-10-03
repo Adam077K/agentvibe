@@ -181,3 +181,67 @@ If an agent's report was lost with the session, check its branch head and re-dis
 - B1-08 launcher: frozen tests exist and are red; it needs B1-06 (done) and B1-07.
 - B1-12b: socket wiring, fencing, local effectors.
 - B1-14a policy compiler.
+
+
+## Update — session build-2d (2026-10-03, ceo-4) — READ THIS FIRST
+
+**Main = 9f11123.** Merged this session: #158 B1-12a, #159 secretscan, #160 B1-06, #161 B1-26, #162 kernel budget, #163 B1-12b. Kernel is 9,122 of 11,000 lines, and all untagged tests are green. The only tagged failures are in launcher (B1-08, not merged yet).
+
+**How merging works.** The orchestrator cannot record verdicts; the classifier calls that "Self-Approval". The founder runs the merge script from the session scratchpad, which is lost with the session, so recreate it:
+
+1. fetch;
+2. switch to the local `fin-*` branch;
+3. merge origin/main;
+4. run `verdict.mjs record --verdict PASS --by reviewer-opus --evidence "<review summary>"` with the GIT_CONFIG core.abbrev=8 env set;
+5. commit `.qa/verdicts`;
+6. `gh pr edit N --base main`;
+7. push;
+8. wait for at least 3 checks;
+9. `gh pr checks --watch`;
+10. `gh pr merge --merge`.
+
+Wrap every network call in a retry. CI does NOT need session-file `qa_verdict` flips; the `.qa` verdict is enough. Write PR bodies to the scratchpad, not $TMPDIR, because `gh` runs unsandboxed and sees a different TMPDIR.
+
+**In flight — check each branch head and re-dispatch if no report:**
+
+| Job | State | Next |
+|---|---|---|
+| B1-07 codex adapter | impl `build/b1-07` @ 9faaaef, on r4 tests d05bd4c. Founder ruling: `--ignore-user-config` + every setting as `-c` + sha256 of Argv and binary; no profile. Measured on codex 0.154.0: no user/project MCP, `.codex/config.toml` ignored, login found. A fresh Opus review is running. | If PASS → PR (base main). If FAIL → test builder r5. |
+| B1-08 launcher | tests `build/b1-08-tests-r5` @ 7275a72 (r4 rules merged with the codex r4 shape). The implementer is fixing on `build/b1-08`. r4 requires: lease consumed at admit (durable, file-locked); every slot has a rule; codex `-c` exact list; receipt log fails closed; headless derived from the Argv; unattended means headless. | Opus re-review → PR after B1-07 merges (it contains B1-07). |
+
+**Founder rulings this session.** All are in DR files.
+- **Kernel budget:** 11,000, with everything counted. The 2026-10-02 exclude-the-checker ruling is superseded.
+- **B1-06 F:** Task is an alias of Agent. A funded team may get bare Agent or Agent(x).
+- **B1-07 codex** (supersedes the earlier profile rulings): command-line lock as above; nested agents never; `-o` must match the stream; rate-limit is never a pass.
+- **B1-12 C:** a dead worker under 15 minutes is retried once.
+- **B1-12b:**
+  - tight effectors: email only to the founder, PRs only to allow-listed repos, preview-only deploys;
+  - the venture comes from the lease.
+  - Orchestrator call: a lease lost mid-dispatch is Uncertain, never a definite failure.
+- **B1-08 (orchestrator calls, fail-safe):**
+  - `sub` is the only billing spelling;
+  - an injected lease verifier is required, and missing means refuse;
+  - the env allowlist is explicit;
+  - the grant is checked at admit;
+  - digest TOCTOU is closed.
+- **secretscan:** tighten.
+
+**Open follow-ups (LOW, not blocking):**
+- B1-06: the known-tool list is missing about 14 CLI tools; MCP-name case variants are not handled.
+- B1-26: escape-skip mutant.
+- B1-12a: 5 qualifier mutants, plus a frozen r5 test that is not gofmt-clean.
+- B1-12b: `uniqueKeys` fold-key check.
+- secretscan: digit-only misses.
+- B1-07: profile-vs-config precedence is now moot; ChatGPT-login under `--ignore-user-config` is unmeasured (API-key auth measured OK).
+- All B1 PRs still owe a cross-family (Codex) review. This session was Claude-only by founder direction.
+
+**Process notes:**
+- Two builders worked around a hook by using `git stash`. The stashes `b112-r5-gofmt-of-frozen-test-a6fbceab` and `kb-abandoned-import-rule-2026-10-03` remain in the shared stack. Briefs now say "no stash workaround".
+- Subagent reports are sometimes lost when an agent leaves background commands running. Tell reviewers "no background commands; foreground only; MUST return the report".
+- Agents hit the 30-turn limit often; resume them with "commit what you have, continue, batch commands".
+
+**Next jobs after B1-07 and B1-08:**
+- B1-14a policy compiler;
+- the B1-04 remainder;
+- the lease renew/max_wait owner row;
+- cross-family reviews.

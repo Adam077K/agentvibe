@@ -354,3 +354,4 @@ One line per merged job: `date · job · PR · what landed · what's next`. Deci
 - **Tagged donetests on main:** 3 launcher failures (B1-08 not built), as expected. check-done-tests: 64 hashes across 7 registers.
 - **2026-10-03:** merged #162 (Kernel budget raised to 11,000, nothing excluded; founder ruling). On main, avk-boundary is ok at 8318/11000 and the untagged kernel suite is all green. B1-07 codex adapter: r2 implementation at b0f1e27; re-review verdict pending.
 - **2026-10-03:** merged #163 (B1-12b propose_effect + fencing + local effectors). Main kernel green.
+- **2026-10-03:** handoff written (HANDOFF-NEXT 'build-2d'). In flight: B1-07 review @ 9faaaef; B1-08 r4 implementation on tests 7275a72.
