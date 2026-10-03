@@ -345,7 +345,14 @@ func (st *fstate) apply(ev journal.Event) error {
 			st.leases[r] = lrec{Job: d.Job, Born: d.Born, Token: ev.Seq, Exp: d.ExpiresAt}
 		}
 		delete(st.waits, d.Job)
-		delete(st.clocks, d.Job)
+		// A grant ends the clock of what it granted and no other: a job that takes a free resource
+		// while it waits on a busy one is still waiting on the busy one.
+		for _, r := range d.Resources {
+			delete(st.clocks[d.Job], r)
+		}
+		if len(st.clocks[d.Job]) == 0 {
+			delete(st.clocks, d.Job)
+		}
 	case TypeWaited:
 		var d waitedData
 		if err := json.Unmarshal(ev.Data, &d); err != nil {
@@ -504,6 +511,11 @@ func (c *coordinator) Acquire(ctx context.Context, req Request) (Grant, error) {
 		}
 		now := c.now()
 		nowN := now.UnixNano()
+		// A wait is stamped with this reading and the fold refuses a stamp at or before the epoch, so
+		// a clock there would write a row every reader fails closed on.
+		if nowN <= 0 {
+			return Grant{}, fmt.Errorf("lease: clock reads %s, at or before the Unix epoch", now.UTC().Format(time.RFC3339Nano))
+		}
 		if w, ok := c.st.waits[req.Job]; ok && w.Born != born {
 			return Grant{}, fmt.Errorf("lease: %s requested with Born %s but waits with Born %s; a job has one Born",
 				req.Job, req.Born.UTC().Format(time.RFC3339Nano), time.Unix(0, w.Born).UTC().Format(time.RFC3339Nano))
