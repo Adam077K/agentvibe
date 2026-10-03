@@ -109,7 +109,7 @@ function parseFamilyBlock(raw, blockId, roleName) {
 
   // raw is the inner content of {...}, e.g.:
   //   title: "Kernel Engineer", family: codex, model: "gpt-6-astra"
-  //   family: both, models: ["gpt-6-astra", "claude-opus-5"]
+  //   family: both, models: ["gpt-6-astra", "claude-opus-5-5"]
   const result = {};
   const titleMatch = raw.match(/title: (".*?")/);
   if (titleMatch) result.title = jsonScalar(titleMatch[1], `${roleName}.title`, blockId);
