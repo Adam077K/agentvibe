@@ -1198,3 +1198,106 @@ func reversed(r []Rule) []Rule {
 	slices.Reverse(c)
 	return c
 }
+
+// ---- review r1, 2026-10-03: fail-open ----
+
+// Review r1 (MED-security, fail-open) and the orchestrator's grammar ruling of 2026-10-03. A name in
+// a rule or an action is lowercase [a-z0-9_]+ segments joined by "."; "*" is a whole segment and
+// only in a RULE. An action is a concrete effect: a wildcard in it would select no rule written for
+// a real venture or verb and walk past P1 and P2. Continuity is the venture's own safe state: a
+// route counts only when its venture is the snapshot's Charter.Venture.
+func TestB1_14a_ReviewR1FailOpen(t *testing.T) {
+	snap := baseSnap()
+	never := admit("never.charge", 1, Invariant, []string{"payments.charge"}, Never)
+
+	refusedWalk := func(t *testing.T, name string, p *Policy, s Snapshot, a Action) {
+		t.Helper()
+		c, err := Walk(p, s, a, Auto)
+		if !errors.Is(err, ErrWalk) {
+			t.Errorf("%s: Walk = %q P%d, err %v; want ErrWalk", name, c.Disposition, c.Applied, err)
+		}
+	}
+
+	t.Run("a wildcard action is refused, never walked past P1 or P2", func(t *testing.T) {
+		p := mustPolicy(t, never)
+		refusedWalk(t, "P1 never keel/payments.charge vs venture *", p, noOverlays(snap), act("*", "payments.charge"))
+		refusedWalk(t, "P1 never keel/payments.charge vs verb *", p, noOverlays(snap), act("keel", "*"))
+		refusedWalk(t, "P1 never keel/payments.charge vs verb payments.*", p, noOverlays(snap), act("keel", "payments.*"))
+		refusedWalk(t, "overlay keel payments.* vs venture *", mustPolicy(t), snap, act("*", "payments.charge"))
+		refusedWalk(t, "overlay keel payments.* vs verb *", mustPolicy(t), snap, act("keel", "*"))
+		c := walk(t, p, noOverlays(snap), act("keel", "payments.charge"), Auto)
+		expect(t, "positive control: the same rule, a concrete action", c, Never, 1)
+	})
+
+	t.Run("continuity counts only for the snapshot's own venture", func(t *testing.T) {
+		kill := admit("kill.all", 2, Invariant, []string{"*"}, Held)
+		kill.Scope.Venture = "*"
+		wide := snap
+		wide.Overlays = nil
+		wide.SafeState.Continuity = []ContinuityRoute{{ID: "route.any", Scope: Scope{Venture: "*", Verbs: []string{"*"}}}}
+		c := walk(t, mustPolicy(t, kill), wide, act("other", "payments.charge"), Auto)
+		expect(t, "P2 kill {*,*}, keel route {*,*}, action other/payments.charge", c, Held, 2)
+		c = walk(t, mustPolicy(t, kill), wide, act("keel", "payments.charge"), Auto)
+		expect(t, "P2 kill {*,*}, route venture * (not the charter's), action keel/payments.charge", c, Held, 2)
+
+		foreign := snap
+		foreign.Overlays = nil
+		foreign.SafeState.Continuity = []ContinuityRoute{{ID: "route.other", Scope: Scope{Venture: "other", Verbs: []string{"payments.*"}}}}
+		c = walk(t, mustPolicy(t, kill), foreign, act("other", "payments.charge"), Auto)
+		expect(t, "route for venture other in keel's snapshot", c, Held, 2)
+
+		own := snap
+		own.Overlays = nil
+		own.SafeState.Continuity = []ContinuityRoute{{ID: "route.keel", Scope: Scope{Venture: "keel", Verbs: []string{"payments.*"}}}}
+		c = walk(t, mustPolicy(t, kill), own, act("keel", "payments.charge"), Auto)
+		expect(t, "positive control: keel's own route, keel action", c, Auto, 0)
+	})
+
+	bad := []string{
+		"Payments.charge", "payments.Charge", "PAYMENTS.*", "payments .*", "payments. *", " payments.*",
+		"payments.* ", "payments.charge\t", "pay ments.charge", "payments​.charge", "payments.​charge",
+		"​payments.*", "payments.charge ", "paymentś.charge", "payments-charge", "payments..charge",
+		".payments", "payments.", "payments.re*", "pay*", "payments.*x", "payments.**", "payments,charge", "",
+	}
+	t.Run("rule verbs outside the grammar are refused at NewPolicy", func(t *testing.T) {
+		for _, v := range bad {
+			if pol, err := NewPolicy([]Rule{admit("r", 4, Consequence, []string{v}, Ask)}); !errors.Is(err, ErrRule) || pol != nil {
+				t.Errorf("rule verb %q: policy %v err %v; want nil, ErrRule", v, pol != nil, err)
+			}
+		}
+		for _, v := range []string{"*", "payments.*", "payments.charge", "a_1.b_2.c3"} {
+			if _, err := NewPolicy([]Rule{admit("r", 4, Consequence, []string{v}, Ask)}); err != nil {
+				t.Errorf("positive control: rule verb %q refused: %v", v, err)
+			}
+		}
+	})
+	t.Run("rule ventures outside the grammar are refused at NewPolicy", func(t *testing.T) {
+		for _, v := range []string{"Keel", "KEEL", "keel ", " keel", "ke el", "keel​", "k​eel", "kéel", "keel-co", "k*", "keel.*x", ""} {
+			r := admit("r", 4, Consequence, []string{"payments.*"}, Ask)
+			r.Scope.Venture = v
+			if pol, err := NewPolicy([]Rule{r}); !errors.Is(err, ErrRule) || pol != nil {
+				t.Errorf("rule venture %q: policy %v err %v; want nil, ErrRule", v, pol != nil, err)
+			}
+		}
+	})
+	t.Run("action verbs and ventures outside the grammar are refused at Walk", func(t *testing.T) {
+		p := mustPolicy(t, never)
+		for _, v := range bad {
+			refusedWalk(t, fmt.Sprintf("action verb %q", v), p, noOverlays(snap), act("keel", v))
+		}
+		for _, v := range []string{"Keel", "keel ", "keel​", "kéel", "keel-co", ""} {
+			refusedWalk(t, fmt.Sprintf("action venture %q", v), p, noOverlays(snap), act(v, "payments.charge"))
+		}
+	})
+
+	t.Run("a snapshot's charter venture is a venture, never *", func(t *testing.T) {
+		s := baseSnap()
+		s.Charter.Venture = "*"
+		if _, err := s.Digest(); !errors.Is(err, ErrSnapshot) {
+			t.Errorf("Charter.Venture \"*\": Digest err %v, want ErrSnapshot", err)
+		}
+		if _, err := Walk(mustPolicy(t), s, act("keel", "payments.charge"), Auto); err == nil {
+			t.Errorf("Charter.Venture \"*\": Walk accepted the snapshot")
+		}
+	})
+}

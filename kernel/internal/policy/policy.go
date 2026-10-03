@@ -20,6 +20,7 @@ var (
 	ErrRule     = errors.New("policy: rule refused")
 	ErrRights   = errors.New("policy: rights matrix refused")
 	ErrSnapshot = errors.New("policy: snapshot refused")
+	ErrWalk     = errors.New("policy: walk refused")
 )
 
 var errStub = errors.New("policy: not implemented (B1-14a stub)")
