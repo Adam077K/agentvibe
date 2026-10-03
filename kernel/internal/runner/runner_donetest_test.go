@@ -53,6 +53,10 @@
 //	ProcIdentity                r3: pid + kernel start time; a dead pid is ESRCH
 //	ReconcileGuardsPidReuse     r3: when Config.Identify reports another start time for every
 //	                            recorded pid, Reconcile signals nothing, and still ends the launch
+//	ExecACLWritable             r3, the ACL ruling: an allow entry granting a write-class right on
+//	                            the binary, its dir, or an ancestor takes the copy path. GATED: it
+//	                            runs only with AGENTVIBE_ACL_TESTS=1 and otherwise SKIPs, naming the
+//	                            gate; unverified until the founder runs it (B1-09a.yml)
 //
 // "The whole tree" is the leader, its child and a grandchild that called setsid(2): measured, a
 // kill(-pgid) misses the setsid grandchild, so every test checks it by pid.
@@ -1477,4 +1481,83 @@ func TestB1_09a_ExecInPlaceOrCopy(t *testing.T) {
 		t.Fatal(err)
 	}
 	copied("a path through a symlink into a group-writable dir", mustExec(t, other), filepath.Join(root, "pub", "lnk", "w"))
+}
+
+// aclGate opts in to the one test that writes ACLs. The permission system refused the chmod +a
+// measurement on 2026-10-04 and the founder has not yet approved it, so the default run, an
+// implementer's run and CI never set an ACL: they SKIP, naming the gate.
+const aclGate = "AGENTVIBE_ACL_TESTS"
+
+// r3, orchestrator ruling (ceo-1, 2026-10-04): "not worker-writable" includes ACLs and fails closed.
+// An entry granting a write-class right to anyone but root or the daemon's uid, on the binary or on
+// any resolved ancestor, takes the copy path. UNVERIFIED: founder-run required (B1-09a.yml).
+func TestB1_09a_ExecACLWritable(t *testing.T) {
+	if os.Getenv(aclGate) != "1" {
+		t.Skipf("SKIP, not passed: sets ACLs with /bin/chmod +a; run only with %s=1 (founder-run, B1-09a.yml)", aclGate)
+	}
+	other := runner.ExecConfig{WorkerUID: 4242, WorkerRoots: []string{"/nonexistent-b109a-root"}}
+	var hst syscall.Stat_t
+	home, _ := os.UserHomeDir()
+	if err := syscall.Stat(home, &hst); err != nil {
+		t.Fatal(err)
+	}
+	other.WorkerGIDs = []int{int(hst.Gid)}
+	root := privateRoot(t, other)
+	e := mustExec(t, other)
+	script := []byte("#!/bin/sh\nprintf %s \"$0\"\n")
+	mk := func(rel string) string {
+		t.Helper()
+		p := filepath.Join(root, rel)
+		if err := os.MkdirAll(p, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	put := func(dir string) string {
+		t.Helper()
+		p := filepath.Join(dir, "w")
+		if err := os.WriteFile(p, script, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(p, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	acl := func(p, entry string) {
+		t.Helper()
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if out, err := exec.CommandContext(ctx, "/bin/chmod", "+a", entry, p).CombinedOutput(); err != nil {
+			t.Fatalf("chmod +a %q %s: %v %s", entry, p, err, out)
+		}
+	}
+	ranAs := func(path string) (string, error) {
+		var out bytes.Buffer
+		err := e.Run(runner.WithLimits(context.Background(), runner.Limits{Wall: 20 * time.Second, Idle: 20 * time.Second, Stdout: &out}),
+			path, fileDigest(path), nil, []string{})
+		return strings.TrimSpace(out.String()), err
+	}
+	// Control: the same layout with no ACL runs in place for uid 4242.
+	if got, err := ranAs(put(mk("plain"))); err != nil || got != filepath.Join(root, "plain", "w") {
+		t.Fatalf("control, no ACL: ran as %q (err %v), want in place", got, err)
+	}
+	cases := []struct {
+		name, dir, target, entry string // target: where the ACL goes, under root; "" = the binary
+	}{
+		{"the measured ruling: everyone allow add_file,delete_child on the binary's dir", "acl-dir", "acl-dir", "everyone allow add_file,delete_child"},
+		{"an allow entry on an ancestor three levels up", "acl-anc/a/b", "acl-anc", "everyone allow add_subdirectory"},
+		{"an allow entry on the binary itself", "acl-file", "", "everyone allow write"},
+	}
+	for _, c := range cases {
+		bin := put(mk(c.dir))
+		target := bin
+		if c.target != "" {
+			target = filepath.Join(root, c.target)
+		}
+		acl(target, c.entry)
+		if got, err := ranAs(bin); err != nil || got == "" || got == bin {
+			t.Errorf("%s: ran as %q (err %v), want a private copy", c.name, got, err)
+		}
+	}
 }

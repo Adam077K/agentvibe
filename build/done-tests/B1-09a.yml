@@ -67,7 +67,7 @@
 #     non-zero exit or signal death as an error wrapping its *exec.ExitError; Run returns only after
 #     the tree is dead however the leader ended; the 90% SIGINT goes to the whole group; Runner.Run
 #     records exited or killed.
-#   Tests, 13 (was 8):
+#   Tests, 14 (was 8): 13 always run, 1 gated.
 #   ExecInPlaceOrCopy           copies are judged against the resolved path too (/tmp, /var are
 #                               symlinks on darwin); every ancestor of the RESOLVED path is checked
 #                               (four levels up; through a symlinked directory); group bits count;
@@ -102,12 +102,22 @@
 #                               Reconcile signals none of them, still marks interrupted and ends once.
 #   Strays: reap() now kills each recorded pid AND its process group, and registers with a reaper
 #   process (own process group) that does the same when the suite dies by -timeout, SIGINT or SIGKILL.
-#   NOT IN THIS FREEZE: the ruling's measured ACL test (`everyone allow add_file,delete_child` on the
-#   binary's dir -> copy path). The permission system refused the chmod +a measurement probe on
-#   2026-10-04; it was not retried in any form (the test would perform the same action), and it is
-#   escalated to the orchestrator. The ruling stands on the stub's NewExec contract; no test pins it yet.
+#   ExecACLWritable             NEW, GATED (orchestrator ceo-1, 2026-10-04, option b): the ruling's
+#                               measured case (`everyone allow add_file,delete_child` on the binary's
+#                               dir -> copy), an allow entry three ancestors up, and one on the binary
+#                               itself, each against a no-ACL control that runs in place (uid 4242).
+#                               It runs only with AGENTVIBE_ACL_TESTS=1; otherwise it reports SKIP and
+#                               names the gate, so the default run, an implementer and CI never call
+#                               chmod +a. The permission system refused the chmod +a probe on
+#                               2026-10-04 and it was not retried in any form: the test has NEVER RUN.
+#     unverified: founder-run required
+#     Command (repo root; red against the stub, passes once B1-09a is implemented; it creates and
+#     removes $HOME/.agentvibe/b109a-fixture-*):
+#       AGENTVIBE_ACL_TESTS=1 go -C kernel test -count=1 -tags donetest -run 'TestB1_09a_ExecACLWritable' -v ./internal/runner/
+#     Untested half of the ruling: "an ACL that cannot be read is writable" (no fault seam).
 # Proof, 2026-10-04, in a $TMPDIR scratch copy (never on this branch): a reference implementation
-# passes 13 of 13, five runs of five, sandboxed (19.8-21.5s); red 13 of 13 against the stub. Each
+# passes 13 of 13, five runs of five, sandboxed (19.8-21.5s); red 13 of 13 against the stub. The
+# gated test SKIPs in both and has not been run. Each
 # mutant fails >= 1 test: parent-only and three-ancestor writability, no EvalSymlinks (ExecInPlaceOrCopy);
 # in-place skips the digest, hash-then-re-read copy (ExecRunsOnlyMatchingDigest; 5 of 5 runs);
 # Runner drops Limits / Stdout / Dir, never records the end, records killed as exited
@@ -115,10 +125,11 @@
 # the group (LeaderExitKillsTree); SIGINT to the leader only, SIGKILL at 2x wall, SIGINT at 99%
 # (WallBackstopKillsTree, 3 of 3 runs each); no pid-reuse guard (ReconcileGuardsPidReuse); refusing a
 # binary in a worker root (ExecInPlaceOrCopy); ProcIdentity Start = now, or nil error for a dead pid
-# (ProcIdentity and others). Survives: a mutant that ignores ACLs (the test above is absent).
+# (ProcIdentity and others). Survives the default run: a mutant that ignores ACLs (only the gated
+# test can kill it, and it is unverified).
 register: B1-09a
 jobs:
   - id: B1-09a
     files:
       - path: kernel/internal/runner/runner_donetest_test.go
-        sha256: b46dca20a069fdc99658f926a05e754469a10f354a60788ab6f3dd592e46e01a
+        sha256: 20e818ec621b814abb45a8aece5291c8033e41cddf0c430839985eca884060a5
