@@ -121,6 +121,29 @@ function sha256File(p: string): { sha256: string; bytes: number } | null {
 
 // ── Builder: Claude Code ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Which files the Builder actually wrote. A Write/Edit is a REQUEST at `tool_use`; it is a write
+ * only once its matching `tool_result` (same tool_use_id) comes back without `is_error`. Counting
+ * at the request gave a refused write a `by: builder` receipt for a file nothing wrote.
+ */
+export function createWriteTracker() {
+  const pending = new Map<string, string>();
+  const written = new Set<string>();
+  return {
+    onToolUse(c: { id?: unknown; name?: unknown; input?: { file_path?: unknown } }) {
+      if ((c.name === 'Write' || c.name === 'Edit') && typeof c.id === 'string' && typeof c.input?.file_path === 'string') pending.set(c.id, c.input.file_path);
+    },
+    onToolResult(c: { tool_use_id?: unknown; is_error?: unknown }) {
+      if (typeof c.tool_use_id !== 'string') return;
+      const file = pending.get(c.tool_use_id);
+      if (file === undefined) return;
+      pending.delete(c.tool_use_id);
+      if (!c.is_error) written.add(file);
+    },
+    files: (): ReadonlySet<string> => written,
+  };
+}
+
 async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
   const prompt = [
     `You are the Builder on a mission from a Mission Control board.`,
@@ -141,7 +164,7 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
     '--no-session-persistence',
   ];
   emit(BUILDER, { kind: 'status', status: 'starting', text: `claude -p (${CLAUDE_MODEL}) in ${WORKDIR}` });
-  const written = new Set<string>();
+  const writes = createWriteTracker();
   let cost: number | undefined;
   let summary = '';
   let isError = false;
@@ -160,10 +183,12 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
         if (c.type === 'text' && c.text?.trim()) emit(BUILDER, { kind: 'message', text: clip(c.text.trim()) });
         if (c.type === 'tool_use') {
           const fp = c.input?.file_path ?? c.input?.path ?? c.input?.pattern ?? '';
-          if ((c.name === 'Write' || c.name === 'Edit') && c.input?.file_path) written.add(c.input.file_path);
+          writes.onToolUse(c);
           emit(BUILDER, { kind: 'tool', text: `${c.name} ${clip(String(fp), 120)}` });
         }
       }
+    } else if (j.type === 'user') {
+      for (const c of Array.isArray(j.message?.content) ? j.message.content : []) if (c.type === 'tool_result') writes.onToolResult(c);
     } else if (j.type === 'result') {
       cost = j.total_cost_usd;
       summary = String(j.result ?? '');
@@ -180,7 +205,7 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
   const secs = (Date.now() - t0) / 1000;
   logLaunch({ worker: 'claude', model: CLAUDE_MODEL, mission: m.id, seconds: secs, cost: cost?.toFixed(4) ?? '', exit: code });
   if (code !== 0 && !isError) emit(BUILDER, { kind: 'status', status: 'failed', text: `exit ${code}: ${clip(stderr)}` });
-  const files = [...written].map((f) => path.resolve(WORKDIR, f));
+  const files = [...writes.files()].map((f) => path.resolve(WORKDIR, f));
   for (const f of files) {
     const h = sha256File(f);
     emit(RUNNER, { kind: 'receipt', text: `file ${path.relative(WORKDIR, f)}`, data: { by: 'builder', file: path.relative(WORKDIR, f), ...(h ?? { missing: true }) } });
@@ -191,17 +216,20 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>) {
 
 // ── Referee: Codex ───────────────────────────────────────────────────────────────────────────
 
+/**
+ * The Referee's verdict is its LAST non-empty line, anchored `^VERDICT:`. Anything else is no
+ * verdict. The Referee's prompt quotes the Builder's own summary, so a `VERDICT:` line earlier in
+ * the output may be the Builder's words echoed back; scanning the whole text let one spoof it.
+ */
 export function parseVerdict(text: string): { verdict: Verdict; reasons: string[] } | null {
-  const lines = text.trim().split('\n').reverse();
-  for (const l of lines) {
-    const m = l.match(/VERDICT:\s*(\{.*\})\s*$/);
-    if (!m) continue;
-    try {
-      const j = JSON.parse(m[1]!);
-      if (j.verdict === 'PASS' || j.verdict === 'FAIL') return { verdict: j.verdict, reasons: Array.isArray(j.reasons) ? j.reasons.map(String) : [] };
-    } catch {
-      /* fall through */
-    }
+  const last = text.split('\n').map((l) => l.trim()).filter(Boolean).at(-1);
+  const m = last?.match(/^VERDICT:\s*(\{.*\})$/);
+  if (!m) return null;
+  try {
+    const j = JSON.parse(m[1]!);
+    if (j.verdict === 'PASS' || j.verdict === 'FAIL') return { verdict: j.verdict, reasons: Array.isArray(j.reasons) ? j.reasons.map(String) : [] };
+  } catch {
+    /* fail closed */
   }
   return null;
 }
@@ -260,9 +288,91 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
 
 // ── Mission loop ─────────────────────────────────────────────────────────────────────────────
 
+// One runner per mission. The lock is an O_EXCL file, `<id>/runner.lock`, holding the owner's pid —
+// the same append-only, file-per-fact style as the board, with no server in the path. Winning the
+// lock is not enough: the board is re-read under it, because another runner may have run the
+// mission to its end and released the lock between our fold and our claim.
+
+function pidAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code !== 'ESRCH'; // EPERM: it exists, it is just not ours
+  }
+}
+
+const lockPath = (id: string, dir: string) => path.join(path.dirname(eventsPath(id, dir)), 'runner.lock');
+
+function takeLock(file: string): boolean {
+  try {
+    fs.writeFileSync(file, String(process.pid), { flag: 'wx' });
+    return true;
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
+    return false;
+  }
+}
+
+/** True iff this runner now owns `id`: it held the lock, found the mission still `queued`, and wrote `working`. */
+export function claimMission(id: string, dir: string = missionsDir()): boolean {
+  const file = lockPath(id, dir);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  if (!takeLock(file)) {
+    const owner = Number.parseInt(fs.readFileSync(file, 'utf8'), 10);
+    // A lock whose owner is gone belongs to a crash between lock and `working`: retake it once.
+    // Two runners starting in the same instant over one stale lock can still both pass here;
+    // that window is a few microseconds and the re-read below closes most of it.
+    if (!(owner > 0 && !pidAlive(owner))) return false;
+    fs.rmSync(file, { force: true });
+    if (!takeLock(file)) return false;
+  }
+  const mission = foldBoard(readBoardLines(boardPath(dir))).find((m) => m.id === id);
+  if (mission?.status !== 'queued') {
+    fs.rmSync(file, { force: true });
+    return false;
+  }
+  appendMissionLine({ id, ts: Date.now(), status: 'working', runnerPid: process.pid } satisfies MissionLine, boardPath(dir));
+  return true;
+}
+
+export function releaseMission(id: string, dir: string = missionsDir()): void {
+  fs.rmSync(lockPath(id, dir), { force: true });
+}
+
+/** `working` cards whose runner died go back to `waiting`, each with an event. Returns the ids reset. */
+export function reconcileWorking(dir: string = missionsDir()): string[] {
+  const lines = readBoardLines(boardPath(dir));
+  const pidOf = new Map<string, number>();
+  for (const l of lines) if (typeof l.runnerPid === 'number') pidOf.set(l.id, l.runnerPid);
+  const reset: string[] = [];
+  for (const m of foldBoard(lines)) {
+    const pid = pidOf.get(m.id);
+    if (m.status !== 'working' || pid === undefined || pid === process.pid || pidAlive(pid)) continue;
+    appendMissionLine({ id: m.id, ts: Date.now(), status: 'waiting' } satisfies MissionLine, boardPath(dir));
+    releaseMission(m.id, dir);
+    const file = eventsPath(m.id, dir);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const ev: TeamEvent = { ts: Date.now(), agent: RUNNER.agent, title: RUNNER.title, model: RUNNER.model, family: RUNNER.family, kind: 'status', text: `reconciled: runner pid ${pid} is gone; mission returned to waiting` };
+    fs.appendFileSync(file, JSON.stringify(ev) + '\n');
+    reset.push(m.id);
+  }
+  return reset;
+}
+
 async function runMission(m: Mission) {
-  const claim: MissionLine = { id: m.id, ts: Date.now(), status: 'working', runnerPid: process.pid };
-  appendMissionLine(claim, board());
+  if (!claimMission(m.id)) {
+    console.log(`[runner] mission ${m.id} — not claimed (another runner holds it, or it is no longer queued)`);
+    return;
+  }
+  try {
+    await runClaimed(m);
+  } finally {
+    releaseMission(m.id);
+  }
+}
+
+async function runClaimed(m: Mission) {
   const emit = emitter(m.id);
   emit(RUNNER, { kind: 'status', text: `claimed by runner pid ${process.pid}; workdir ${WORKDIR}` });
   console.log(`[runner] mission ${m.id} "${m.title}" — builder starting`);
@@ -284,6 +394,7 @@ async function runMission(m: Mission) {
 
 async function main() {
   console.log(`[runner] board ${board()} · workdir ${WORKDIR} · builder ${CLAUDE_MODEL} · referee ${CODEX_MODEL}`);
+  for (const id of reconcileWorking()) console.log(`[runner] mission ${id} — previous runner is gone; back to waiting`);
   for (;;) {
     const queued = foldBoard(readBoardLines(board())).filter((m) => m.status === 'queued');
     for (const m of queued) await runMission(m);
