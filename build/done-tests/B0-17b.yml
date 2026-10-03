@@ -222,16 +222,58 @@
 #   Proof, $TMPDIR only: the r4 reference passes every B108 test on the merged files. Mutants: r4's
 #   26 and r9's 2 codex-shape mutants (literal -c values not compared; length check loosened),
 #   28 of 28 killed.
+# RE-FREEZE r6 2026-10-03 (B1-08): 2026-10-03 re-freeze r6 after review, plus the B1-07 r5 sync.
+#   The Opus review FAILED f9f54d6 (the implementation on 7275a72). Root cause: lease consumption
+#   and the launch count lived in launcher-local files that can be deleted or forked. Branch
+#   build/b1-08-tests-r6 from f9f54d6, merged with build/b1-07-tests-r5 @ b2d33a4. Orchestrator calls:
+#   1 LeaseVerifier.Consume(job, lease) is the authoritative store's compare-and-set, called as the
+#     last check under the admit lock. Refused: a lease consumed elsewhere, the same lease from a
+#     launcher with another State dir, and the lease after state.json is deleted. A launch refused
+#     by a cap or a slot rule consumes nothing.
+#   2 The receipt log's genesis is pinned (Grant.ReceiptGenesis). CreateReceiptLog(path, pinned)
+#     returns a unique genesis and is refused once one is pinned. OpenReceiptLog(path, genesis)
+#     refuses a re-created or forked log. FounderResetReceiptLog(path, prior, {By, Reason, At}) is
+#     the only reset; it is recorded in the new genesis, and the hour after it counts as full. The
+#     journal (internal/journal) MAY be imported by the launcher: ALLOWED_MODULES governs only
+#     third-party modules, and writers.go only files outside kernel/. The pinned-genesis log was
+#     chosen because the journal is just as local.
+#   3 Grant.State pins the one State location; New refuses any other (a missing, relative,
+#     unclean or different pin).
+#   4 MED-sec :260/:272: -C must be WorktreeRoot/<JobID> or inside it, and job files must be in
+#     JobRoot/<JobID>/; a JobID that is not one clean segment is refused.
+#   5 Survivors: :251, :252, :287 (leading -, whitespace), :577 (state.json without its maps is
+#     ErrState, never a panic), and receiptlog.go:108 (an emptied log). The final-newline half of
+#     :108 is EQUIVALENT: read() slices off the last byte, so a missing newline already breaks the
+#     last record's hash.
+#   B1-07 r5 sync (b2d33a4): the launcher codex line drops features={} and ends with the 103
+#     measured feature pins (codexFeatures, mirrored from codex_r5_donetest_test.go).
+#     Grant.EnvAllow must lie within HOME, CODEX_HOME, PATH and LANG; AV_JOB is no longer passed
+#     and is now refused. 09a §8.2 is updated to match.
+#   Earlier rounds, edited only where r6 demands it: every New wraps its grant in pinned(g, d);
+#   the fakes gain Consume (r3Leases does a real CAS); fixture paths are scoped to each launch's
+#   job (renderJob); the env fixtures use the B1-07 allowlist. Contract: launcher.go declarations
+#   and fail-closed stubs. r4's receipt-log functions are kept, unexported, in receiptlog.go.
+#   launcher_test.go (the implementer's) no longer compiles until it gives okLease a Consume and
+#   moves to the r6 receipt-log signatures.
+#   ON f9f54d6 plus the stubs (launcher_test.go shimmed only to compile): 7 FAIL. They are
+#   R4_EverySlotHasARule (TemplateOf(codex) is still the pre-r5 adapter line, which B1-07 owns),
+#   R4_ReceiptLogFailsClosed and R6_ConsumeIsAuthoritative, StateIsPinned,
+#   ReceiptLogPinnedGenesis, PathsScopedToThisJob and EnvAllowlistIsB107s. R6_ReviewSurvivors
+#   passes there; it pins guards f9f54d6 already has.
+#   Proof, $TMPDIR only: an r6 reference (f9f54d6 plus an overlay, the adapter given the r5 line)
+#   passes every B108 test. Mutants: 23 killed, 1 equivalent (above).
 register: B0-17b
 jobs:
   - id: B1-08
     files:
       - path: kernel/internal/launcher/launcher_donetest_test.go
-        sha256: 31716f83380051aac3d413bdcfe8602ee00ae81f53c0cfa738fb44d0582c6853
+        sha256: ed4d64bf3980105a44c76cdc07d60bc7bc69083e559073bebb0307fe0bf088cd
       - path: kernel/internal/launcher/launcher_r3_donetest_test.go
-        sha256: 299c8dbd6372ac42f257c0f574231d19b86f56faae8d036af5780a5efeeb205f
+        sha256: ccd31f5fa25ee415e4ef407a615c7062f46b88c4a9ec39c5e948b3e27eeccf3d
       - path: kernel/internal/launcher/launcher_r4_donetest_test.go
-        sha256: 47ecfb99f8c30e50680bc70c7bc85735cac6dc1b9ebe322f68b28d1d8a1b1690
+        sha256: 3957bc7d50fa8ec97f833c98822f0b5fd0e567713c8e6c6c200afb632dd63fe4
+      - path: kernel/internal/launcher/launcher_r6_donetest_test.go
+        sha256: 6e7fe41ce95e3a7eb1e2d7d67ad4ebfe2c3602e8792079cf912754fa38155fb7
   - id: B1-12
     files:
       - path: kernel/internal/outbox/outbox_donetest_test.go
