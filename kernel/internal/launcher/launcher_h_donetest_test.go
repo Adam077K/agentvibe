@@ -435,3 +435,19 @@ func TestB108_H_F3_RequestCarriesPinnedHome(t *testing.T) {
 		r4Refused(t, `HOME "`+v+`"`, r3Grant(), setEnv(map[string]string{"HOME": v}), ErrSpec)
 	}
 }
+
+// TestB108_H_F3_GrantPinsHome: 2026-10-03 orchestrator ruling: HOME pin required. New refuses
+// (ErrGrant) a grant whose EnvPinned has no HOME, so a request can never run without the pinned
+// HOME; the refusal leaves State untouched.
+func TestB108_H_F3_GrantPinsHome(t *testing.T) {
+	hAccepted(t, "every pin present", hGrant(), "")
+	g := hGrant()
+	delete(g.EnvPinned, "HOME")
+	hRefused(t, "CODEX_HOME and PATH pinned, HOME not", g, "", ErrGrant)
+	g = hGrant()
+	g.EnvPinned = map[string]string{}
+	hRefused(t, "an empty pin table", g, "", ErrGrant)
+	g = hGrant()
+	g.EnvPinned = map[string]string{"HOME": "/h"}
+	hAccepted(t, "HOME the only pin", g, "")
+}

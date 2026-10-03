@@ -22,11 +22,14 @@
 #   other pinned name, or codex with CODEX_HOME but no HOME is ErrSpec, as is any other HOME. HOME at
 #   its pin is admitted (claude and codex). On d715c18 it FAILS on the five missing-HOME cases. The
 #   earlier rigs were re-frozen in B0-17b.yml to send HOME. The question above is closed by that ruling.
+# RE-FREEZE r3 2026-10-03: 2026-10-03 orchestrator ruling: HOME pin required. Added
+#   TestB108_H_F3_GrantPinsHome: a grant whose EnvPinned lacks HOME, or is empty, is ErrGrant at New
+#   and leaves State untouched; HOME alone, or with the other pins, is accepted. FAILS on d715c18.
 register: B1-08h
 jobs:
   - id: B1-08h
     files:
       - path: kernel/internal/launcher/launcher_h_donetest_test.go
-        sha256: 1fc2616d0283993bb92a1624b21ac4619bb54ba962a25ff21e31ef2a0ca232fc
+        sha256: 7c2771621782dc19fbca56292ff9962828c63147ec0eb2323dfb56d473ea1750
       - path: kernel/internal/socket/socket_b108h_donetest_test.go
         sha256: 2d05c72a42dd198916dc04ef2021c8ffbc65d99ea4137eea349a9782bf8157da
