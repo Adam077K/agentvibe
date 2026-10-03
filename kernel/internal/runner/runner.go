@@ -32,6 +32,9 @@ var (
 	ErrWall = errors.New("runner: wall-clock backstop")
 	// ErrIdle: the worker wrote no stdout byte for Idle; the group and every descendant were killed.
 	ErrIdle = errors.New("runner: idle backstop")
+	// ErrState: Run was called before Reconcile completed on this Runner (r2, ruling Q4), or State is
+	// unreadable. Refused before Launch.
+	ErrState = errors.New("runner: not reconciled, or state unreadable")
 )
 
 // Limits are one launch's backstops and plumbing. launcher.Exec.Run's signature is frozen by B1-08,
@@ -47,11 +50,22 @@ type Limits struct {
 // WithLimits returns ctx carrying l for Exec.Run.
 func WithLimits(ctx context.Context, l Limits) context.Context { return ctx }
 
-// NewExec returns the real launcher.Exec. Run executes only bytes that hash to digest, in a new
-// process group, with exactly env as the environment (nil env is ErrSpec; nothing is inherited from
-// the Kernel), and returns only after the worker's process group and every descendant are dead.
+// ExecConfig names the worker the Exec defends against (r2, founder ruling Q1: the HYBRID exec model).
+type ExecConfig struct {
+	WorkerUID   int      // the worker's uid; 0 (root, or unset) is ErrSpec
+	WorkerGIDs  []int    // the worker's groups
+	WorkerRoots []string // every root a worker may write (worktrees, job dirs, TMPDIRs); >= 1, clean, absolute, not "/"
+}
+
+// NewExec returns the real launcher.Exec, or ErrSpec for a malformed cfg. Run executes only bytes
+// that hash to digest. It execs in place only when the binary, symlinks resolved at exec time, and
+// EVERY ancestor directory lie outside all WorkerRoots and are not writable by the worker (owner,
+// group and other mode bits against WorkerUID and WorkerGIDs); it then execs the resolved path.
+// Otherwise it copies the bytes it hashed into a private directory and execs the copy. The worker
+// runs in a new process group, with exactly env as the environment (nil env is ErrSpec; nothing is
+// inherited from the Kernel), and Run returns only after the group and every descendant are dead.
 // ctx cancellation kills the tree and returns ctx.Err().
-func NewExec() launcher.Exec { return stubExec{} }
+func NewExec(cfg ExecConfig) (launcher.Exec, error) { return stubExec{}, nil }
 
 type stubExec struct{}
 
@@ -80,7 +94,7 @@ type Job struct {
 // Config configures a Runner.
 type Config struct {
 	State    string            // the runner's persisted state directory; it survives the daemon
-	Capacity int               // at most Capacity jobs admitted at once; must be > 0
+	Capacity int               // at most Capacity jobs at once; 0 means 4; above 12 (the launcher cap) or negative is ErrSpec
 	Launcher launcher.Launcher // the Kernel launcher, built with NewExec()
 }
 
@@ -90,14 +104,17 @@ type Runner struct{}
 // New returns a Runner on cfg. A malformed Config is ErrSpec.
 func New(cfg Config) (*Runner, error) { return nil, ErrNotImplemented }
 
-// Run admits job (ErrCapacity when Capacity jobs are already admitted, before Launch is called),
+// Run admits job (ErrState before Reconcile has completed on this Runner; ErrCapacity when Capacity
+// jobs are already admitted; both before Launch is called),
 // records it running with its process identity in State before the worker can outlive the daemon,
 // launches it under job.Limits and returns the Launch error once the whole tree is dead.
 func (r *Runner) Run(ctx context.Context, job Job) error { return ErrNotImplemented }
 
 // Reconcile runs after a restart: for every job State records as running, it kills the surviving
 // process group and every descendant (guarding against pid reuse), marks the job
-// StatusInterrupted and calls Launcher.End for its lease. A second Reconcile is a no-op.
+// StatusInterrupted and calls Launcher.End for its lease. Interrupted is terminal: no Runner ever
+// relaunches or re-ends it (r2, ruling Q3). A second Reconcile is a no-op. It must complete before
+// Run admits anything (Q4).
 func (r *Runner) Reconcile(ctx context.Context) error { return ErrNotImplemented }
 
 // Status reports jobID's recorded status.

@@ -34,10 +34,25 @@
 # Reference implementation NOT run: the attempt to build one in $TMPDIR was refused by the permission
 # system, and per protocol it was not retried in another form. Passability rests on the measurements.
 #
-# OPEN (not decided here): see the B1-09a return, founder questions 1-5.
+# RE-FREEZE r2 2026-10-03: 2026-10-03 founder+orchestrator rulings (DR-B1-09a-MEASURE, "Rulings").
+#   Q1 HYBRID exec: in place only if the resolved binary and every ancestor are outside WorkerRoots and
+#      not worker-writable (mode bits vs WorkerUID/WorkerGIDs); else copy. NewExec(ExecConfig) refuses
+#      uid 0/-1, no root, a relative, unclean or "/" root (ErrSpec). New TestB1_09a_ExecInPlaceOrCopy:
+#      /bin/bash in place ($BASH == /bin/bash); a symlink to it from a writable dir runs the resolved
+#      path in place; /bin/bash inside a worker root is not in place; a binary in a writable dir, and one
+#      in a read-only dir under a writable ancestor, are copied ($0 differs); a fixture under the package
+#      dir is in place for worker uid 4242 and copied for the test's own uid.
+#   Q2 double-fork + setsid escape: known gap until B1-10, recorded in the DR, no test.
+#   Q3 interrupted is terminal: DaemonKilledMidJob adds a second restart: no launch, no End, still
+#      interrupted.
+#   Q4 Run before Reconcile: ErrState, before Launch (CapacityCap on an empty State; DaemonKilledMidJob
+#      on a State with a running job). The daemon helper reconciles before it runs.
+#   Q5 Capacity 0 means 4 (six concurrent: exactly 4 admitted); 12 accepted; 13 and -1 are ErrSpec.
+#   runner.WithLimits on ctx: accepted.
+# Red 8 of 8 against the stub. Reference implementation still not run (see round 1).
 register: B1-09a
 jobs:
   - id: B1-09a
     files:
       - path: kernel/internal/runner/runner_donetest_test.go
-        sha256: 6ccb37ff549428a938e1641a651426e357c4e6e3ab792c6358b3da707ff03608
+        sha256: 15ad8b64fddd274cba3a4c387c3ba56a2fce6efff7bea48943d588a6ca4d88d7

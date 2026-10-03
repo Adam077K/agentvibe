@@ -2,6 +2,13 @@
 
 // Done-tests for B1-09a, "Runner: admission, capacity/wall/idle backstops, pgid kill"; acceptance
 // "Daemon killed mid-job → reconciled, no orphan" (build/jobs.yml). Frozen 2026-10-03, round 1.
+// RE-FREEZE r2 2026-10-03: "2026-10-03 founder+orchestrator rulings". Founder Q1 (exec model, HYBRID):
+// exec in place only when the resolved binary and EVERY ancestor directory lie outside all worker
+// roots and are not writable by the worker (owner/group/other mode bits against the worker's uid and
+// gids, symlinks resolved, at exec time); otherwise copy to a private dir and exec the copy. NewExec
+// takes that ExecConfig. Orchestrator, fail-safe: Q2 the double-fork + setsid escape is a known gap
+// until B1-10 (DR, no test); Q3 an interrupted job is terminal and never requeued; Q4 Run before
+// Reconcile is refused (ErrState); Q5 Capacity defaults to 4 when 0, must be <= 12 (the launcher cap).
 // Canon: 09a §8.2 ("own process group"; "wall-clock (SIGINT 90%, SIGKILL pgid 100%) and 5-minute
 // idle backstops"), §15 ("orphan processes 2 min after kill: 0"). Measured first, on this machine,
 // with no model turn and no network: docs/vision-v3/_process/DR-B1-09a-MEASURE-2026-10-03.md.
@@ -9,15 +16,19 @@
 // Every worker here is this test binary re-executed in a helper mode named by argv[1] (never
 // claude or codex), or a /bin/sh script. Each test pins one item:
 //
+//	ExecInPlaceOrCopy           r2: protected binary in place; worker-writable file or ancestor,
+//	                            or a worker root, is copied; NewExec refuses a bad ExecConfig
 //	ExecRunsOnlyMatchingDigest  the real Exec runs only bytes that hash to the digest, and refuses
 //	                            a file changed after the check (rename, in-place, and a live swapper)
 //	ExecEnvExact                the child gets exactly the env passed, and exactly the argv
-//	CapacityCap                 with Capacity N, the N+1th admission is refused before Launch
+//	CapacityCap                 with Capacity N, the N+1th admission is refused before Launch;
+//	                            r2: 0 means 4, above 12 is refused, Run before Reconcile is refused
 //	WallBackstopKillsTree       SIGINT the group at 90%, SIGKILL the whole tree at 100%
 //	IdleBackstopKillsTree       no stdout byte for Idle kills the whole tree; output resets it
 //	CtxCancelKillsTree          ctx cancellation kills the whole tree
 //	DaemonKilledMidJob          the acceptance: SIGKILL the daemon, restart, Reconcile: no orphan,
-//	                            the job is interrupted, its launch is ended once
+//	                            the job is interrupted, its launch is ended once; r2: Run before
+//	                            Reconcile is refused; a later restart leaves it interrupted, unlaunched
 //
 // "The whole tree" is the leader, its child and a grandchild that called setsid(2): measured, a
 // kill(-pgid) misses the setsid grandchild, so every test checks it by pid.
@@ -139,10 +150,18 @@ func helper(mode string) {
 // daemon is a runner process the test SIGKILLs mid-job.
 func daemon() {
 	self := os.Getenv("B1_09A_SELF")
-	fl := &fakeLauncher{exec: runner.NewExec()}
-	r, err := runner.New(runner.Config{State: os.Getenv("B1_09A_STATE"), Capacity: 2, Launcher: fl})
+	e, err := runner.NewExec(workerConfig())
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "daemon: New:", err)
+		fmt.Fprintln(os.Stderr, "daemon: NewExec:", err)
+		os.Exit(1)
+	}
+	fl := &fakeLauncher{exec: e}
+	r, err := runner.New(runner.Config{State: os.Getenv("B1_09A_STATE"), Capacity: 2, Launcher: fl})
+	if err == nil {
+		err = r.Reconcile(context.Background())
+	}
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "daemon: New/Reconcile:", err)
 		os.Exit(1)
 	}
 	job := runner.Job{
@@ -155,6 +174,22 @@ func daemon() {
 }
 
 // ---- fixtures ---------------------------------------------------------------------------------
+
+// workerConfig: the worker is this uid with its groups (the single-user machine before B1-10), and
+// its one root is a path nothing here lives in.
+func workerConfig() runner.ExecConfig {
+	gids, _ := os.Getgroups()
+	return runner.ExecConfig{WorkerUID: os.Getuid(), WorkerGIDs: gids, WorkerRoots: []string{"/nonexistent-b109a-root"}}
+}
+
+func mustExec(t *testing.T, c runner.ExecConfig) launcher.Exec {
+	t.Helper()
+	e, err := runner.NewExec(c)
+	if err != nil {
+		t.Fatalf("NewExec(%+v): %v", c, err)
+	}
+	return e
+}
 
 func lease(job string) string { return "job://" + job + "#7" }
 
@@ -284,9 +319,11 @@ func treeEnv(t *testing.T, dir string) (env []string, pids, ints string) {
 	return []string{"B1_09A_SELF=" + self(t), "B1_09A_PIDS=" + pids, "B1_09A_INT=" + ints}, pids, ints
 }
 
-func runExec(ctx context.Context, path, digest string, argv, env []string, l runner.Limits) (error, time.Duration) {
+func runExec(t *testing.T, ctx context.Context, path, digest string, argv, env []string, l runner.Limits) (error, time.Duration) {
+	t.Helper()
+	e := mustExec(t, workerConfig())
 	t0 := time.Now()
-	err := runner.NewExec().Run(runner.WithLimits(ctx, l), path, digest, argv, env)
+	err := e.Run(runner.WithLimits(ctx, l), path, digest, argv, env)
 	return err, time.Since(t0)
 }
 
@@ -310,20 +347,21 @@ func TestB1_09a_ExecRunsOnlyMatchingDigest(t *testing.T) {
 	}
 	lim := runner.Limits{Wall: 20 * time.Second, Idle: 20 * time.Second, Stdout: io.Discard}
 	ctx := context.Background()
+	exe := mustExec(t, workerConfig())
 	write(script(good))
 	goodD := fileDigest(bin)
 	write(script(bad))
 	badD := fileDigest(bin)
 	write(script(good))
 
-	if err, _ := runExec(ctx, bin, goodD, nil, []string{}, lim); err != nil || !exists(good) {
+	if err, _ := runExec(t, ctx, bin, goodD, nil, []string{}, lim); err != nil || !exists(good) {
 		t.Fatalf("matching digest: err %v, ran %v; want nil and the worker ran", err, exists(good))
 	}
 	os.Remove(good)
 
 	refuse := func(name, digest string, ctx context.Context, env []string, want error) {
 		t.Helper()
-		err := runner.NewExec().Run(ctx, bin, digest, nil, env)
+		err := exe.Run(ctx, bin, digest, nil, env)
 		if !errors.Is(err, want) {
 			t.Errorf("%s: err %v, want %v", name, err, want)
 		}
@@ -378,7 +416,7 @@ func TestB1_09a_ExecRunsOnlyMatchingDigest(t *testing.T) {
 	}()
 	ran, refused := 0, 0
 	for i := 0; i < 100; i++ {
-		err := runner.NewExec().Run(wl, bin, goodD, nil, []string{})
+		err := exe.Run(wl, bin, goodD, nil, []string{})
 		switch {
 		case err == nil:
 			ran++
@@ -412,7 +450,7 @@ func TestB1_09a_ExecEnvExact(t *testing.T) {
 	}
 	for _, c := range cases {
 		var out bytes.Buffer
-		err, _ := runExec(context.Background(), bin, d, c.argv, c.env,
+		err, _ := runExec(t, context.Background(), bin, d, c.argv, c.env,
 			runner.Limits{Wall: 20 * time.Second, Idle: 20 * time.Second, Stdout: &out})
 		if err != nil {
 			t.Fatalf("%s: err %v", c.name, err)
@@ -442,8 +480,8 @@ func TestB1_09a_ExecEnvExact(t *testing.T) {
 
 func TestB1_09a_CapacityCap(t *testing.T) {
 	for _, bad := range []runner.Config{
-		{State: t.TempDir(), Capacity: 0, Launcher: &fakeLauncher{}},
 		{State: t.TempDir(), Capacity: -1, Launcher: &fakeLauncher{}},
+		{State: t.TempDir(), Capacity: 13, Launcher: &fakeLauncher{}}, // above the launcher's cap of 12
 		{State: "", Capacity: 2, Launcher: &fakeLauncher{}},
 		{State: t.TempDir(), Capacity: 2},
 	} {
@@ -451,14 +489,22 @@ func TestB1_09a_CapacityCap(t *testing.T) {
 			t.Errorf("New(%+v): err %v, want ErrSpec", bad, err)
 		}
 	}
+	if _, err := runner.New(runner.Config{State: t.TempDir(), Capacity: 12, Launcher: &fakeLauncher{}}); err != nil {
+		t.Errorf("New with Capacity 12 (the launcher cap): %v", err)
+	}
+	capacityRound(t, 2, 2)
+	capacityRound(t, 0, 4) // Q5: 0 means the default, 4
+}
 
-	const capN = 2
+// capacityRound: with Config.Capacity cfgCap, exactly capN of six concurrent Runs are admitted.
+func capacityRound(t *testing.T, cfgCap, capN int) {
+	t.Helper()
 	bin := self(t)
 	dir := t.TempDir()
 	pids := filepath.Join(dir, "pids")
 	reap(t, pids)
-	fl := &fakeLauncher{exec: runner.NewExec()}
-	r, err := runner.New(runner.Config{State: t.TempDir(), Capacity: capN, Launcher: fl})
+	fl := &fakeLauncher{exec: mustExec(t, workerConfig())}
+	r, err := runner.New(runner.Config{State: t.TempDir(), Capacity: cfgCap, Launcher: fl})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -469,7 +515,14 @@ func TestB1_09a_CapacityCap(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	// Six at once against a cap of two: exactly two are admitted, whatever the interleaving.
+	// Q4: Run before Reconcile is refused, even on an empty State, and never reaches Launch.
+	if err := r.Run(ctx, job(50)); !errors.Is(err, runner.ErrState) || fl.count() != 0 {
+		t.Fatalf("Run before Reconcile: err %v, Launch calls %d; want ErrState and none", err, fl.count())
+	}
+	if err := r.Reconcile(ctx); err != nil {
+		t.Fatalf("Reconcile on an empty State: %v", err)
+	}
+	// Six at once against the cap: exactly capN are admitted, whatever the interleaving.
 	const n = 6
 	errs := make(chan error, n)
 	for i := 0; i < n; i++ {
@@ -527,7 +580,7 @@ func TestB1_09a_WallBackstopKillsTree(t *testing.T) {
 	bin := self(t)
 	const wall = 2 * time.Second
 	t0 := time.Now()
-	err, took := runExec(context.Background(), bin, fileDigest(bin), []string{helperPrefix + "tree"}, env,
+	err, took := runExec(t, context.Background(), bin, fileDigest(bin), []string{helperPrefix + "tree"}, env,
 		runner.Limits{Wall: wall, Idle: 30 * time.Second, Stdout: io.Discard})
 	if !errors.Is(err, runner.ErrWall) {
 		t.Fatalf("err %v, want ErrWall", err)
@@ -553,7 +606,7 @@ func TestB1_09a_IdleBackstopKillsTree(t *testing.T) {
 	env, pids, _ := treeEnv(t, t.TempDir())
 	bin := self(t)
 	const idle = 700 * time.Millisecond
-	err, took := runExec(context.Background(), bin, fileDigest(bin), []string{helperPrefix + "tree"}, env,
+	err, took := runExec(t, context.Background(), bin, fileDigest(bin), []string{helperPrefix + "tree"}, env,
 		runner.Limits{Wall: 30 * time.Second, Idle: idle, Stdout: io.Discard})
 	if !errors.Is(err, runner.ErrIdle) {
 		t.Fatalf("silent tree: err %v, want ErrIdle", err)
@@ -565,7 +618,7 @@ func TestB1_09a_IdleBackstopKillsTree(t *testing.T) {
 
 	// Control: a worker that writes every 100ms for 1.5s outlives an idle of 700ms.
 	var out bytes.Buffer
-	err, took = runExec(context.Background(), bin, fileDigest(bin), []string{helperPrefix + "chatty"},
+	err, took = runExec(t, context.Background(), bin, fileDigest(bin), []string{helperPrefix + "chatty"},
 		[]string{"B1_09A_N=15"}, runner.Limits{Wall: 30 * time.Second, Idle: idle, Stdout: &out})
 	if err != nil || took < 1400*time.Millisecond {
 		t.Fatalf("chatty worker: err %v after %v; output must reset the idle timer", err, took)
@@ -585,7 +638,7 @@ func TestB1_09a_CtxCancelKillsTree(t *testing.T) {
 		}
 		cancel()
 	}()
-	err, took := runExec(ctx, bin, fileDigest(bin), []string{helperPrefix + "tree"}, env,
+	err, took := runExec(t, ctx, bin, fileDigest(bin), []string{helperPrefix + "tree"}, env,
 		runner.Limits{Wall: 30 * time.Second, Idle: 30 * time.Second, Stdout: io.Discard})
 	if !errors.Is(err, context.Canceled) || errors.Is(err, runner.ErrWall) || errors.Is(err, runner.ErrIdle) {
 		t.Fatalf("err %v, want context.Canceled and no backstop", err)
@@ -636,13 +689,19 @@ func TestB1_09a_DaemonKilledMidJob(t *testing.T) {
 	}
 	t.Logf("after the daemon's SIGKILL, %d of 3 worker pids survive (measured: all 3)", survivors)
 
-	fl := &fakeLauncher{exec: runner.NewExec()}
+	fl := &fakeLauncher{exec: mustExec(t, workerConfig())}
 	r, err := runner.New(runner.Config{State: state, Capacity: 2, Launcher: fl})
 	if err != nil {
 		t.Fatalf("restart: %v", err)
 	}
 	if st, err := r.Status("job-d"); err != nil || st != runner.StatusRunning {
 		t.Fatalf("before Reconcile, State records job-d as %q (%v); want running, recorded before the daemon died", st, err)
+	}
+	// Q4: Run before Reconcile is refused and never reaches Launch.
+	other := runner.Job{Req: request("job-e", bin, []string{helperPrefix + "sleep"}, map[string]string{}),
+		Limits: runner.Limits{Wall: 30 * time.Second, Idle: 30 * time.Second, Stdout: io.Discard}}
+	if err := r.Run(context.Background(), other); !errors.Is(err, runner.ErrState) || fl.count() != 0 {
+		t.Fatalf("Run before Reconcile: err %v, Launch calls %d; want ErrState and none", err, fl.count())
 	}
 	if err := r.Reconcile(context.Background()); err != nil {
 		t.Fatalf("Reconcile: %v", err)
@@ -662,5 +721,120 @@ func TestB1_09a_DaemonKilledMidJob(t *testing.T) {
 	}
 	if fl.count() != 0 {
 		t.Fatalf("Reconcile relaunched the job (%d launches); it must only kill and record", fl.count())
+	}
+	// Q3: interrupted is terminal. Another restart neither requeues nor ends it again.
+	fl3 := &fakeLauncher{exec: mustExec(t, workerConfig())}
+	r3, err := runner.New(runner.Config{State: state, Capacity: 2, Launcher: fl3})
+	if err != nil {
+		t.Fatalf("second restart: %v", err)
+	}
+	if err := r3.Reconcile(context.Background()); err != nil {
+		t.Fatalf("Reconcile after the second restart: %v", err)
+	}
+	if st, err := r3.Status("job-d"); err != nil || st != runner.StatusInterrupted || fl3.count() != 0 || len(fl3.ends) != 0 {
+		t.Fatalf("after another restart job-d is %q (%v), launches %d, ends %q; want interrupted, untouched", st, err, fl3.count(), fl3.ends)
+	}
+}
+
+func TestB1_09a_ExecInPlaceOrCopy(t *testing.T) {
+	wc := workerConfig()
+	for _, bad := range []runner.ExecConfig{
+		{WorkerUID: 0, WorkerGIDs: wc.WorkerGIDs, WorkerRoots: wc.WorkerRoots}, // root, or unset
+		{WorkerUID: -1, WorkerRoots: wc.WorkerRoots},
+		{WorkerUID: wc.WorkerUID, WorkerGIDs: wc.WorkerGIDs},              // no worker root
+		{WorkerUID: wc.WorkerUID, WorkerRoots: []string{"relative/root"}}, // not absolute
+		{WorkerUID: wc.WorkerUID, WorkerRoots: []string{"/a/../b"}},       // not clean
+		{WorkerUID: wc.WorkerUID, WorkerRoots: []string{"/"}},             // every path
+	} {
+		if _, err := runner.NewExec(bad); !errors.Is(err, runner.ErrSpec) {
+			t.Errorf("NewExec(%+v): err %v, want ErrSpec", bad, err)
+		}
+	}
+	lim := func(out io.Writer) runner.Limits {
+		return runner.Limits{Wall: 20 * time.Second, Idle: 20 * time.Second, Stdout: out}
+	}
+	// bash reports the path it was executed as in $BASH (measured: /bin/bash in place, the link
+	// path through a symlink; a copy of /bin/bash is SIGKILLed by code signing, exit 137).
+	invoked := func(name string, e launcher.Exec, path string, argv []string) (string, error) {
+		t.Helper()
+		var out bytes.Buffer
+		err := e.Run(runner.WithLimits(context.Background(), lim(&out)), path, fileDigest(path), argv, []string{})
+		return strings.TrimSpace(out.String()), err
+	}
+	bashArgv := []string{"-c", `printf %s "$BASH"`}
+
+	// 1. Protected: /bin/bash, and /, /bin root-owned 0755, outside every worker root: in place.
+	if got, err := invoked("protected", mustExec(t, wc), "/bin/bash", bashArgv); err != nil || got != "/bin/bash" {
+		t.Errorf("protected /bin/bash: ran as %q (err %v), want in place as /bin/bash", got, err)
+	}
+	// 2. A symlink in a worker-writable dir to the protected binary: resolved, then in place, at the
+	// resolved path (the link itself can be swapped).
+	link := filepath.Join(t.TempDir(), "bash-link")
+	if err := os.Symlink("/bin/bash", link); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := invoked("symlink", mustExec(t, wc), link, bashArgv); err != nil || got != "/bin/bash" {
+		t.Errorf("symlink to /bin/bash: ran as %q (err %v), want the resolved /bin/bash in place", got, err)
+	}
+	// 3. The same protected binary inside a worker root is copied: never in place.
+	inRoot := wc
+	inRoot.WorkerRoots = []string{"/nonexistent-b109a-root", "/bin"}
+	if got, err := invoked("in a worker root", mustExec(t, inRoot), "/bin/bash", bashArgv); err == nil && got == "/bin/bash" {
+		t.Errorf("/bin/bash inside a worker root ran in place; want a copy")
+	}
+
+	script := []byte("#!/bin/sh\nprintf %s \"$0\"\n")
+	// 4. A binary in a worker-writable dir is copied: $0 is not its path.
+	wdir := t.TempDir()
+	wbin := filepath.Join(wdir, "w")
+	if err := os.WriteFile(wbin, script, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := invoked("writable dir", mustExec(t, wc), wbin, nil); err != nil || got == wbin || got == "" {
+		t.Errorf("binary in a worker-writable dir ran as %q (err %v), want a private copy", got, err)
+	}
+	// 5. A read-only file in a read-only dir whose ANCESTOR is worker-writable is copied.
+	ro := filepath.Join(t.TempDir(), "ro")
+	rbin := filepath.Join(ro, "w")
+	if err := os.Mkdir(ro, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(rbin, script, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(ro, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.Chmod(ro, 0o755) })
+	if got, err := invoked("writable ancestor", mustExec(t, wc), rbin, nil); err != nil || got == rbin || got == "" {
+		t.Errorf("binary under a worker-writable ancestor ran as %q (err %v), want a private copy", got, err)
+	}
+	// 6. Writability is the WORKER's, by mode and owner. A fixture under this package dir (owned by
+	// the test's uid; no ancestor writable by others) is in place for a worker with another uid and
+	// no groups, and copied for a worker with the test's uid.
+	pkg, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for p := pkg; p != "/"; p = filepath.Dir(p) {
+		if fi, err := os.Stat(p); err != nil || fi.Mode().Perm()&0o002 != 0 {
+			t.Skipf("precondition: ancestor %s is writable by others (%v); case 6 needs a private tree", p, err)
+		}
+	}
+	fdir, err := os.MkdirTemp(pkg, ".b109a-fixture-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(fdir) })
+	fbin := filepath.Join(fdir, "w")
+	if err := os.WriteFile(fbin, script, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	other := runner.ExecConfig{WorkerUID: 4242, WorkerRoots: wc.WorkerRoots}
+	if got, err := invoked("other uid", mustExec(t, other), fbin, nil); err != nil || got != fbin {
+		t.Errorf("a binary the worker (uid 4242) cannot write ran as %q (err %v), want in place as %q", got, err, fbin)
+	}
+	if got, err := invoked("same uid", mustExec(t, wc), fbin, nil); err != nil || got == fbin || got == "" {
+		t.Errorf("a binary the worker owns ran as %q (err %v), want a private copy", got, err)
 	}
 }
