@@ -378,7 +378,13 @@ claude -p --setting-sources <profile> --settings <job.json> --agents <compiled.j
        --permission-mode dontAsk --allowedTools <allowed> --disallowedTools <forbidden, incl. Agent,Task>
        --output-format stream-json --verbose --json-schema <f> --max-budget-usd <B> --session-id <uuid>
 codex exec -C <worktree> -s workspace-write -p <generated profile> --json --output-schema <f> -o <result.json> --ephemeral
+           --ignore-rules
 ```
+
+`--ignore-rules` is on every codex launch, and `--ignore-user-config` never is. The second flag stops `-p` from
+loading the profile (measured on codex-cli 0.154.0). The founder ruling of 2026-10-03 superseded ruling 4 and
+honours the user config, so the pinned profile must set every safety-relevant key itself
+([DR-B1-07-CODEX-RULINGS-2026-10-02](_process/DR-B1-07-CODEX-RULINGS-2026-10-02.md), "Round 2").
 
 Never `--bare` (skips hooks), never `--dangerously-skip-permissions`. The per-job `job.json` sets `sandbox.enabled`,
 `allowUnsandboxedCommands: false`, `denyRead` over every other venture root and `~/.agentvibe/{kernel,gate,obs}`,
