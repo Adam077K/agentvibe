@@ -173,7 +173,9 @@ type r3Rig struct {
 func r3Grant() Grant {
 	g := grant()
 	for i := range g.Templates {
-		g.Templates[i].Pinned = map[string]string{"<profile>": "project"}
+		if slices.Contains(g.Templates[i].Tokens, "<profile>") { // claude only since B1-07 round 4
+			g.Templates[i].Pinned = map[string]string{"<profile>": "project"}
+		}
 	}
 	g.EnvAllow = []string{"AV_JOB", "LANG"}
 	return g
@@ -383,7 +385,19 @@ func TestB108_R3_SlotRules(t *testing.T) {
 	for _, v := range []string{"/", "w/job-1", "/w/job-1/..", "/w//job-1", "/w/./job-1", "/w/job-1/"} {
 		r3Launch(t, "codex -C "+v, codexSlot("<worktree>", v), ErrSpec)
 	}
-	r3Launch(t, "codex -p not the pinned profile", codexSlot("<profile>", "other"), ErrSpec)
+	// B1-07 round 4: codex carries no -p; a locked -c is a template literal, so changing or adding one is ErrArgvNotPinned.
+	r3Launch(t, "codex -c network on", func(r *r3Rig, q *Request) {
+		*q = r.codexReq("job-r3")
+		q.Argv[index(codexTokens, "sandbox_workspace_write.network_access=false")] = "sandbox_workspace_write.network_access=true"
+	}, ErrArgvNotPinned)
+	r3Launch(t, "codex extra -c", func(r *r3Rig, q *Request) {
+		*q = r.codexReq("job-r3")
+		q.Argv = append(q.Argv, "-c", `model="gpt-6-astra"`)
+	}, ErrArgvNotPinned)
+	r3Launch(t, "codex -p back in", func(r *r3Rig, q *Request) {
+		*q = r.codexReq("job-r3")
+		q.Argv = append(q.Argv, "-p", "project")
+	}, ErrArgvNotPinned)
 	r3Launch(t, "claude --setting-sources not the pin", claudeSlot("<profile>", "user"), ErrSpec)
 	for _, v := range []string{"5", "4.99", "0.01", "5.00"} {
 		r3Launch(t, "--max-budget-usd "+v, claudeSlot("<B>", v), nil)

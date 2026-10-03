@@ -179,7 +179,9 @@ type Grant struct {
 	//   --max-budget-usd             cents: no leading zero, at most 12 whole digits, within the cap
 	//   --session-id                 a lowercase canonical UUID
 	//   -c                           exactly one of ConfigAllow; a literal -c value must be on it too
-	// TODO(B1-07 r4): codex moves to --ignore-user-config with every setting as -c and no -p.
+	// B1-07 round 4 (r5 merge, 2026-10-03): codex runs --ignore-user-config with every locked
+	// setting a literal -c and no -p, so ConfigAllow is exactly those values; a -p slot (none in
+	// either line today) still needs a pin.
 	WorktreeRoot string
 	JobRoot      string
 	ConfigAllow  []string

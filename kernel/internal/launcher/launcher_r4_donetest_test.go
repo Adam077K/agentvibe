@@ -21,8 +21,10 @@
 //     after a re-establishment admits nothing.
 //  4. MED :354, headless is derived from the argv: claude -p is headless, so a request claiming
 //     non-headless with -p is ErrSpec, and an attended launch never uses -p.
-//  5. Codex, held for B1-07 r4: only that codex slot rules are keyed by flag, and that a -c value
-//     not on Grant.ConfigAllow, exactly, is refused (-c sandbox_mode=danger-full-access included).
+//  5. Codex: slot rules are keyed by flag, and a -c value not on Grant.ConfigAllow, exactly, is
+//     refused (-c sandbox_mode=danger-full-access included). Synced with B1-07 round 4 in the
+//     2026-10-03 merge re-freeze (r5): the codex line has no -p and its locked settings are
+//     literal -c values, which are exactly ConfigAllow.
 //  6. The review's survivors at :314: the leading-zero guard and the 12-digit guard of cents.
 //
 // Shares fakeClock, r3Exec, r3Log, r3Leases, r3Live, request, render, with, index, claudeTokens,
@@ -335,7 +337,7 @@ func TestB108_R4_EverySlotHasARule(t *testing.T) {
 	refuse("a slot after an unruled flag", set(0, append(slices.Clone(claudeTokens), "--add-dir", "<dir>")))
 	refuse("a slot with no flag before it", set(1, append([]string{"<sub>"}, codexTokens[1:]...)))
 	refuse("--setting-sources not pinned", func(g *Grant) { g.Templates[0].Pinned = nil })
-	refuse("codex -p not pinned", func(g *Grant) { g.Templates[1].Pinned = map[string]string{} })
+	refuse("a codex -p slot not pinned", set(1, append(slices.Clone(codexTokens), "-p", "<prof>")))
 	refuse("no WorktreeRoot", func(g *Grant) { g.WorktreeRoot = "" })
 	refuse("WorktreeRoot /", func(g *Grant) { g.WorktreeRoot = "/" })
 	refuse("a relative JobRoot", func(g *Grant) { g.JobRoot = "run/av" })
@@ -355,40 +357,59 @@ func TestB108_R4_EverySlotHasARule(t *testing.T) {
 	} else if err := launchErr(l, r.req("job-tmpl", r.lease("job-tmpl", 1))); err != nil {
 		t.Errorf("a launch on TemplateOf(claude): %v", err)
 	}
-	tx := TemplateOf(codexBin, adapter.NewCodex(codexDigest)) // TODO(B1-07 r4): pin codex's profile and -c list
-	if tx.Binary != codexBin || !slices.Equal(tx.Tokens, codexTokens) || tx.Digest != argvDigest(codexTokens) {
-		t.Errorf("TemplateOf(codex) = %+v; want the full pinned line", tx)
+	// B1-07 round 4: the full codex line, no -p and so no pin, its -c values exactly ConfigAllow.
+	tx := TemplateOf(codexBin, adapter.NewCodex(codexDigest))
+	if tx.Binary != codexBin || !slices.Equal(tx.Tokens, codexTokens) || tx.Digest != argvDigest(codexTokens) ||
+		len(tx.Pinned) != 0 || slices.Contains(tx.Tokens, "-p") {
+		t.Errorf("TemplateOf(codex) = %+v; want the full locked line with no -p and no pin", tx)
+	}
+	gx := r3Grant()
+	gx.Templates = []ArgvTemplate{tx}
+	if l, err := New(gx, r.deps()); err != nil {
+		t.Errorf("New with TemplateOf(codex): %v; every slot of the adapter's line must have a rule", err)
+	} else if err := launchErr(l, func() Request { q := r.req("job-tmplx", r.lease("job-tmplx", 1)); codexReq(&q); return q }()); err != nil {
+		t.Errorf("a launch on TemplateOf(codex): %v", err)
+	}
+	gx.ConfigAllow = gx.ConfigAllow[1:]
+	if _, err := New(gx, r.deps()); !errors.Is(err, ErrGrant) {
+		t.Errorf("New with a locked -c value missing from ConfigAllow: %v, want ErrGrant", err)
 	}
 }
 
-// TestB108_R4_CodexRulesKeyedByFlag: item 5. Held for B1-07 r4 beyond this.
+// TestB108_R4_CodexRulesKeyedByFlag: item 5, on the B1-07 round 4 line (r5).
 func TestB108_R4_CodexRulesKeyedByFlag(t *testing.T) {
-	codexWith := func(tokens []string, pinned map[string]string, allow ...string) Grant {
+	codexWith := func(tokens []string, pinned map[string]string, extra ...string) Grant {
 		g := r3Grant()
 		g.Templates[1] = ArgvTemplate{Binary: codexBin, Tokens: tokens, Digest: argvDigest(tokens), Pinned: pinned}
-		g.ConfigAllow = allow
+		g.ConfigAllow = append(lockedConfig(codexTokens), extra...)
 		return g
 	}
+	rename := map[string]string{"<worktree>": "<w>", "<f>": "<s>", "<result.json>": "<r>"}
 	// Renamed slots keep their flag's rule; the display name carries none.
-	renamed := []string{"exec", "-C", "<w>", "-s", "workspace-write", "-p", "<prof>",
-		"--json", "--output-schema", "<s>", "-o", "<r>", "--ephemeral", "--ignore-rules"}
-	g := codexWith(renamed, map[string]string{"<prof>": "project"})
+	renamed := slices.Clone(codexTokens)
+	for i, tok := range renamed {
+		if n, ok := rename[tok]; ok {
+			renamed[i] = n
+		}
+	}
+	g := codexWith(renamed, nil)
 	argv := func(c string) []string {
-		return []string{"exec", "-C", c, "-s", "workspace-write", "-p", "project", "--json", "--output-schema",
-			"/run/av/job-1/schema.json", "-o", "/run/av/job-1/result.json", "--ephemeral", "--ignore-rules"}
+		out := render(codexTokens)
+		out[index(codexTokens, "<worktree>")] = c
+		return out
 	}
 	r4Refused(t, "renamed -C slot, /Users/adamks", g, func(q *Request) { q.Binary, q.Argv = codexBin, argv("/Users/adamks") }, ErrSpec)
 	r4Refused(t, "renamed -C slot, inside the root", g, func(q *Request) { q.Binary, q.Argv = codexBin, argv("/w/job-1") }, nil)
 	// A -C slot that borrows the budget slot's display name still takes the worktree rule.
 	asBudget := slices.Clone(renamed)
 	asBudget[2] = "<B>"
-	g = codexWith(asBudget, map[string]string{"<prof>": "project"})
+	g = codexWith(asBudget, nil)
 	r4Refused(t, "-C <B> given 5", g, func(q *Request) { q.Binary, q.Argv = codexBin, argv("5") }, ErrSpec)
 	r4Refused(t, "-C <B> given a worktree", g, func(q *Request) { q.Binary, q.Argv = codexBin, argv("/w/job-1") }, nil)
 
 	// -c: only an exact value on Grant.ConfigAllow.
 	withC := append(slices.Clone(codexTokens), "-c", "<cfg>")
-	g = codexWith(withC, map[string]string{"<profile>": "project"}, "approval_policy=\"never\"")
+	g = codexWith(withC, nil, "approval_policy=\"never\"")
 	cArg := func(v string) func(q *Request) {
 		return func(q *Request) { q.Binary, q.Argv = codexBin, append(render(codexTokens), "-c", v) }
 	}
@@ -400,12 +421,12 @@ func TestB108_R4_CodexRulesKeyedByFlag(t *testing.T) {
 	r := newR4(t, at0300())
 	for _, lit := range []string{"sandbox_mode=danger-full-access", "approval_policy=on-request"} {
 		bad := append(slices.Clone(codexTokens), "-c", lit)
-		if _, err := New(codexWith(bad, map[string]string{"<profile>": "project"}, "approval_policy=\"never\""), r.deps()); err == nil {
+		if _, err := New(codexWith(bad, nil, "approval_policy=\"never\""), r.deps()); err == nil {
 			t.Errorf("New with a literal -c %s off the list: nil, want refused", lit)
 		}
 	}
 	good := append(slices.Clone(codexTokens), "-c", "approval_policy=\"never\"")
-	if _, err := New(codexWith(good, map[string]string{"<profile>": "project"}, "approval_policy=\"never\""), r.deps()); err != nil {
+	if _, err := New(codexWith(good, nil, "approval_policy=\"never\""), r.deps()); err != nil {
 		t.Errorf("New with a literal -c on the list: %v", err)
 	}
 }

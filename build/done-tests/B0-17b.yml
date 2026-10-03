@@ -169,7 +169,7 @@
 #   R4_CodexRulesKeyedByFlag (item 5): a renamed -C slot keeps the worktree rule, including one
 #     named <B>. A -c value, slot or literal, must be exactly on Grant.ConfigAllow, so
 #     -c sandbox_mode=danger-full-access is refused.
-#     TODO(B1-07 r4): sync with build/b1-07-tests-r4. Codex is moving to --ignore-user-config,
+#     CLEARED in the r5 merge re-freeze below (was "TODO(B1-07 r4)": sync with build/b1-07-tests-r4). Codex is moving to --ignore-user-config,
 #     every setting as -c, and no -p (founder ruling 2026-10-03). Pin codex's profile and -c list
 #     then; TemplateOf(codex) is pinned on Tokens and Digest only until it lands.
 #   R4_ReceiptLogFailsClosed (HIGH :433): CreateReceiptLog is the only creation, and OpenReceiptLog
@@ -197,16 +197,41 @@
 # per item, among them the review's two :314 survivors.
 # GAP: a state.json deleted by hand reads as no history. The persisted state has no anchor of its
 # own; the receipt log does.
+# RE-FREEZE r9 2026-10-03 (B1-08): 2026-10-03 founder ruling B1-07 round 4, profile superseded
+#   (DR-B1-07-CODEX-RULINGS-2026-10-02.md, "Round 4"). codexTokens is the locked line: no -p,
+#   --ignore-user-config and --ignore-rules, 17 -c settings; 09a §8.2 matches. launcher_r3: the
+#   <profile> pin applies to claude only; "codex -p not the pinned profile" is replaced by a changed
+#   -c, an extra -c and -p appended, each ErrArgvNotPinned. Mutants 2 of 2 killed (literal -c values
+#   not compared; length check loosened). Package passes on 75980d5 (-race -count=2).
+# MERGE RE-FREEZE 2026-10-03 (B1-08 r5): 2026-10-03 merge re-freeze r4 + B1-07 r4 codex shape.
+#   build/b1-08-tests-r5 = r4 (1af7bc7) + build/b1-07 (9faaaef, the round-4 adapter) + the
+#   codex-r4 sync (d86ed85). The two re-freezes above collided: B0-17b.yml conflicted, and the
+#   auto-merged launcher_donetest/r3 files hashed to neither side. Resolved so BOTH intents hold:
+#   - r9's codex line, unchanged: codexTokens has no -p, has --ignore-user-config, and its 17 locked
+#     settings are literal -c values. launcher_r3's claude-only <profile> pin and its three
+#     ErrArgvNotPinned cases are kept as d86ed85 wrote them.
+#   - r4's assertions, all kept. Where they named the old codex line they are restated on the new
+#     one: grant() drops the codex <profile> pin and sets ConfigAllow to the locked -c values
+#     (lockedConfig). R4_CodexRulesKeyedByFlag renames the new line's slots. "codex -p not
+#     pinned" becomes "a codex -p slot not pinned" (ErrGrant).
+#   - r4's TODO "sync B1-07 r4" is CLEARED: TemplateOf(codex) is the full locked line with no -p
+#     and no pin, New accepts it, a launch on it runs, and a locked -c value missing from
+#     ConfigAllow is ErrGrant. launcher.go's rule comment says the same.
+#   On 75980d5 plus the r4 contract stubs, the same 6 FAIL as r4 (R3_UnattendedIsHeadless and five
+#   R4 tests); every r9 assertion passes there.
+#   Proof, $TMPDIR only: the r4 reference passes every B108 test on the merged files. Mutants: r4's
+#   26 and r9's 2 codex-shape mutants (literal -c values not compared; length check loosened),
+#   28 of 28 killed.
 register: B0-17b
 jobs:
   - id: B1-08
     files:
       - path: kernel/internal/launcher/launcher_donetest_test.go
-        sha256: 476c03b60e87328697d36f209dbaa0329c6dd6c82c2d7097f524a9f650214458
+        sha256: 31716f83380051aac3d413bdcfe8602ee00ae81f53c0cfa738fb44d0582c6853
       - path: kernel/internal/launcher/launcher_r3_donetest_test.go
-        sha256: a25d34c9f06afe58156d4fb0642885fd2cfda46b70d1a5f76df6a8bfbdddb560
+        sha256: 299c8dbd6372ac42f257c0f574231d19b86f56faae8d036af5780a5efeeb205f
       - path: kernel/internal/launcher/launcher_r4_donetest_test.go
-        sha256: 8e9aa05cd66df4538e3f8b9c411f39a037963e57b157b9f7b05eabb384d59daa
+        sha256: 47ecfb99f8c30e50680bc70c7bc85735cac6dc1b9ebe322f68b28d1d8a1b1690
   - id: B1-12
     files:
       - path: kernel/internal/outbox/outbox_donetest_test.go

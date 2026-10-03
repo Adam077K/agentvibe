@@ -31,8 +31,15 @@ var (
 		"--allowedTools", "<allowed>", "--disallowedTools", "<forbidden>",
 		"--output-format", "stream-json", "--verbose", "--json-schema", "<f>",
 		"--max-budget-usd", "<B>", "--session-id", "<uuid>"}
-	codexTokens = []string{"exec", "-C", "<worktree>", "-s", "workspace-write", "-p", "<profile>",
-		"--json", "--output-schema", "<f>", "-o", "<result.json>", "--ephemeral", "--ignore-rules"}
+	// B1-07 round 4 (2026-10-03): --ignore-user-config, no -p, every locked setting a -c.
+	codexTokens = []string{"exec", "-C", "<worktree>", "-s", "workspace-write", "--json",
+		"--output-schema", "<f>", "-o", "<result.json>", "--ephemeral", "--ignore-user-config", "--ignore-rules",
+		"-c", `approval_policy="never"`, "-c", `approvals_reviewer="user"`, "-c", `sandbox_mode="workspace-write"`,
+		"-c", "sandbox_workspace_write.network_access=false", "-c", "sandbox_workspace_write.writable_roots=[]",
+		"-c", "sandbox_workspace_write.exclude_tmpdir_env_var=true", "-c", "sandbox_workspace_write.exclude_slash_tmp=true",
+		"-c", `shell_environment_policy.inherit="core"`, "-c", "mcp_servers={}", "-c", `web_search="disabled"`,
+		"-c", `model_provider="openai"`, "-c", "model_providers={}", "-c", "notify=[]", "-c", "hooks={}",
+		"-c", "features={}", "-c", "tools={}", "-c", "projects={}"}
 	slotValues = map[string]string{
 		"<profile>": "project", "<job.json>": "/run/av/job-1/job.json", "<compiled.json>": "/run/av/job-1/agents.json",
 		"<record>": "builder", "<allowed>": "Read,Edit,Bash", "<forbidden>": "Agent,Task",
@@ -40,6 +47,18 @@ var (
 		"<worktree>": "/w/job-1", "<result.json>": "/run/av/job-1/result.json",
 	}
 )
+
+// lockedConfig is every literal -c value of a line, in order: for codex, the locked settings of
+// B1-07 round 4, which r4/r5 make the grant's exact ConfigAllow list.
+func lockedConfig(tokens []string) []string {
+	var out []string
+	for i := 1; i < len(tokens); i++ {
+		if tokens[i-1] == "-c" {
+			out = append(out, tokens[i])
+		}
+	}
+	return out
+}
 
 // argvDigest is the frozen digest encoding documented on ArgvTemplate.
 func argvDigest(tokens []string) string {
@@ -128,10 +147,11 @@ func grant() Grant {
 	return Grant{
 		Holder:   "kernel.launcher",
 		Binaries: []Binary{{Path: claudeBin, Digest: claudeDigest}, {Path: codexBin, Digest: codexDigest}},
-		Templates: []ArgvTemplate{ // r4: every slot has a rule, so the profile slots carry their pin
+		Templates: []ArgvTemplate{ // r4: every slot has a rule, so claude's profile slot carries its pin
 			{Binary: claudeBin, Tokens: claudeTokens, Digest: argvDigest(claudeTokens), Pinned: map[string]string{"<profile>": "project"}},
-			{Binary: codexBin, Tokens: codexTokens, Digest: argvDigest(codexTokens), Pinned: map[string]string{"<profile>": "project"}},
+			{Binary: codexBin, Tokens: codexTokens, Digest: argvDigest(codexTokens)}, // B1-07 round 4: no -p
 		},
+		ConfigAllow:    lockedConfig(codexTokens), // r5: the locked -c values are the exact list
 		ForbiddenFlags: []string{"--dangerously-skip-permissions", "--bare", "-s danger-full-access"},
 		Caps:           Caps{Concurrent: 12, PerHour: 120},
 		WorktreeRoot:   "/w",      // r4: -C lives strictly inside it
