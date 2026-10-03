@@ -193,8 +193,8 @@ func (s Snapshot) wire() (wireSnapshot, error) {
 	w.JournalOffset = s.JournalOffset
 	w.Constitution.Version, w.Constitution.Digest = s.Constitution.Version, s.Constitution.Digest
 	w.Charter.Venture, w.Charter.Version, w.Charter.Level = s.Charter.Venture, s.Charter.Version, string(s.Charter.Level)
-	if s.Charter.Venture == "" {
-		return w, fmt.Errorf("%w: charter has no venture", ErrSnapshot)
+	if !validName(s.Charter.Venture, false) {
+		return w, fmt.Errorf("%w: charter venture %q is not a lowercase dotted name", ErrSnapshot, s.Charter.Venture)
 	}
 	if _, ok := levelIndex(s.Charter.Level); !ok {
 		return w, fmt.Errorf("%w: charter level %q is not A0..A4", ErrSnapshot, s.Charter.Level)

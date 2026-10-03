@@ -27,50 +27,59 @@ var (
 )
 
 // Scope selects actions: Venture is a venture id or "*" for every venture; each Verbs entry is a
-// verb, "*", or a prefix pattern "payments.*" matching "payments.<anything>". A verb that is not a
-// pattern matches exactly, never as a prefix.
+// verb or a pattern. Ventures and verbs follow one grammar: lowercase [a-z0-9_]+ segments joined by
+// ".", and in a Scope (never in an Action) a segment may be "*". A "*" segment matches exactly one
+// segment, except a final one, which matches one or more: "payments.*" matches "payments.charge" and
+// "payments.a.b". A verb with no "*" matches exactly, never as a prefix.
 type Scope struct {
 	Venture string
 	Verbs   []string
 }
 
-// validVerb accepts "*", a pattern whose only "*" is the final ".*", or a verb with no "*".
-func validVerb(v string) bool {
-	switch {
-	case v == "" || !utf8.ValidString(v):
-		return false
-	case v == "*":
-		return true
-	case strings.HasSuffix(v, ".*"):
-		return len(v) > 2 && !strings.Contains(v[:len(v)-2], "*")
+// validSegment is a non-empty run of [a-z0-9_], or "*" when wild.
+func validSegment(s string, wild bool) bool {
+	if s == "*" {
+		return wild
 	}
-	return !strings.Contains(v, "*")
+	return s != "" && !strings.ContainsFunc(s, func(r rune) bool {
+		return !(r >= 'a' && r <= 'z' || r >= '0' && r <= '9' || r == '_')
+	})
 }
 
-// validScope refuses a scope that selects nothing or names a verb it cannot match.
+// validName accepts segments joined by ".": case, spaces, zero-width and other look-alike characters
+// all fail it. wild allows "*" as a whole segment.
+func validName(s string, wild bool) bool {
+	return !slices.ContainsFunc(strings.Split(s, "."), func(seg string) bool { return !validSegment(seg, wild) })
+}
+
+// validScope refuses a scope that selects nothing or names a venture or verb outside the grammar.
 func validScope(sc Scope) error {
-	if sc.Venture == "" || !utf8.ValidString(sc.Venture) {
-		return fmt.Errorf("scope venture %q is empty or not UTF-8", sc.Venture)
+	if sc.Venture != "*" && !validName(sc.Venture, false) {
+		return fmt.Errorf("scope venture %q is not \"*\" or a lowercase dotted name", sc.Venture)
 	}
 	if len(sc.Verbs) == 0 {
 		return errors.New("scope names no verb")
 	}
 	for _, v := range sc.Verbs {
-		if !validVerb(v) {
-			return fmt.Errorf("scope verb %q is not a verb, \"*\" or a \"prefix.*\" pattern", v)
+		if !validName(v, true) {
+			return fmt.Errorf("scope verb %q is not a lowercase dotted name or pattern", v)
 		}
 	}
 	return nil
 }
 
+// verbMatches matches a validated verb against a validated pattern, segment by segment.
 func verbMatches(pattern, verb string) bool {
-	if pattern == "*" {
-		return true
+	ps, vs := strings.Split(pattern, "."), strings.Split(verb, ".")
+	for i, p := range ps {
+		if p == "*" && i == len(ps)-1 {
+			return len(vs) > i
+		}
+		if i >= len(vs) || p != "*" && p != vs[i] {
+			return false
+		}
 	}
-	if prefix, ok := strings.CutSuffix(pattern, "*"); ok && strings.HasSuffix(prefix, ".") {
-		return strings.HasPrefix(verb, prefix)
-	}
-	return pattern == verb
+	return len(vs) == len(ps)
 }
 
 func (sc Scope) matches(a Action) bool {
@@ -262,8 +271,8 @@ func Walk(p *Policy, snap Snapshot, a Action, base Disposition) (Contract, error
 	if _, ok := restrictiveness[base]; !ok {
 		return Contract{}, fmt.Errorf("%w: base %q is not a disposition", ErrWalk, base)
 	}
-	if a.OperationID == "" || a.Venture == "" || a.Verb == "" {
-		return Contract{}, fmt.Errorf("%w: action needs an operation id, a venture and a verb", ErrWalk)
+	if a.OperationID == "" || !validName(a.Venture, false) || !validName(a.Verb, false) {
+		return Contract{}, fmt.Errorf("%w: action needs an operation id and a lowercase dotted venture and verb, with no wildcard", ErrWalk)
 	}
 	addr, err := snap.Digest()
 	if err != nil {
@@ -284,13 +293,16 @@ func Walk(p *Policy, snap Snapshot, a Action, base Disposition) (Contract, error
 	}
 
 	// P2: a deny holds within its scope, unless the safe state names a continuity route for the action.
+	// A route counts only for the charter's own venture, never for "*" or another venture's.
 	held := ruleBlockers(p.admitting(a, 2, 2))
 	for _, o := range snap.Overlays {
 		if o.Scope.matches(a) {
 			held = append(held, Blocker{Rule: o.ID, Precedence: 2, Expires: o.Expires})
 		}
 	}
-	if len(held) > 0 && !slices.ContainsFunc(snap.SafeState.Continuity, func(r ContinuityRoute) bool { return r.Scope.matches(a) }) {
+	if len(held) > 0 && !slices.ContainsFunc(snap.SafeState.Continuity, func(r ContinuityRoute) bool {
+		return r.Scope.Venture == snap.Charter.Venture && r.Scope.matches(a)
+	}) {
 		impose(Held, 2)
 		c.Blockers = sortBlockers(held)
 		return c, nil
