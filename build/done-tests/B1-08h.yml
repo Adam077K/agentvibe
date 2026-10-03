@@ -25,11 +25,26 @@
 # RE-FREEZE r3 2026-10-03: 2026-10-03 orchestrator ruling: HOME pin required. Added
 #   TestB108_H_F3_GrantPinsHome: a grant whose EnvPinned lacks HOME, or is empty, is ErrGrant at New
 #   and leaves State untouched; HOME alone, or with the other pins, is accepted. FAILS on d715c18.
+# RE-FREEZE r4 2026-10-03: 2026-10-03 red-team r1 gaps. The red-team's reference passes every test at
+#   cbe0885 (reachability proven). Added to launcher_h_donetest_test.go:
+#     F2_ExecSeesCallerCancel: only the journal append is detached; Exec.Run, if reached after a
+#       cancel at Consume, sees Canceled. PASSES on d715c18 (no detach there); it guards the fix.
+#     F6_PathComparedResolved: PATH entries and worker roots both resolved (symlinked WorktreeRoot,
+#       TmpRoot given through a symlink, t.TempDir() where TMPDIR lies under one); a dangling PATH
+#       entry (toward <worktree>/later), one under it, and a looping one are ErrGrant. FAILS on d715c18.
+#     F7_RefusedNewLeavesUsedStateIntact: on a used State, a refused New (PATH in a worker root; no
+#       HOME pin) leaves state.json byte-identical and the lock in place. FAILS on d715c18.
+#   F1_RacingAppendNeverBurnsALease: comment only, it now claims what it checks (orchestrator ruling:
+#   forged-launch-record races are fail-closed only, absorption unspecified). No assertion added: the
+#   racing launch itself being refused has no cheap, ruled assertion.
+#   Accepted survivors, LOW, no test: unbounded journal-append retry; context.Background in place of
+#   WithoutCancel; reserving a kernel.* prefix or an EqualFold match in place of the exact stream name;
+#   no timeout on the detached append.
 register: B1-08h
 jobs:
   - id: B1-08h
     files:
       - path: kernel/internal/launcher/launcher_h_donetest_test.go
-        sha256: 7c2771621782dc19fbca56292ff9962828c63147ec0eb2323dfb56d473ea1750
+        sha256: 13ffc876439b0daa944e976ff3ab75028d6245cd4ce514afff7dc8472e872222
       - path: kernel/internal/socket/socket_b108h_donetest_test.go
         sha256: 2d05c72a42dd198916dc04ef2021c8ffbc65d99ea4137eea349a9782bf8157da

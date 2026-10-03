@@ -123,11 +123,14 @@ func (r *raceJournal) Append(ctx context.Context, p journal.Proposal) (journal.E
 	return r.memJournal.Append(ctx, p)
 }
 
-// TestB108_H_F1_RacingAppendNeverBurnsALease: F1, the launcher half. A foreign append that moves the
-// stream head is not a launch record, so the counts still agree: the racing launch is admitted, or
-// refused without exec, without ErrState and with its lease unconsumed; either way the next launch is
-// admitted and receipts and launch records agree. (A forged LAUNCH record is r7's mismatch case and
-// stays ErrState.)
+// TestB108_H_F1_RacingAppendNeverBurnsALease: F1, the launcher half. What is checked: one foreign
+// event that is NOT a launch record lands on JournalStream between the launcher's read of the head and
+// its append. The racing launch is then either admitted (one exec) or refused with no exec, not
+// ErrState, and with its lease unconsumed; the next launch is admitted; receipts and launch records
+// agree in number. Not checked here: a racing forged LAUNCH record. With the socket reservation only
+// Kernel-internal code can write the stream, and the requirement there is fail-closed only (r7's
+// mismatch cases: while the counts disagree nothing is admitted); whether a forgery is later absorbed
+// is unspecified (2026-10-03 orchestrator ruling, red-team r1).
 func TestB108_H_F1_RacingAppendNeverBurnsALease(t *testing.T) {
 	r := newR4(t, at0300())
 	j := &raceJournal{memJournal: &memJournal{}}
@@ -450,4 +453,101 @@ func TestB108_H_F3_GrantPinsHome(t *testing.T) {
 	g = hGrant()
 	g.EnvPinned = map[string]string{"HOME": "/h"}
 	hAccepted(t, "HOME the only pin", g, "")
+}
+
+// ctxExec records the context error each Exec.Run sees.
+type ctxExec struct {
+	*r3Exec
+	seen []error
+}
+
+func (e *ctxExec) Run(ctx context.Context, path, digest string, argv, env []string) error {
+	e.seen = append(e.seen, ctx.Err())
+	return e.r3Exec.Run(ctx, path, digest, argv, env)
+}
+
+// TestB108_H_F2_ExecSeesCallerCancel: F2 detaches the journal append only (red-team r1). Exec.Run is
+// still handed the caller's context, so a launch whose caller cancelled at Consume is either not
+// exec'd or exec'd with a context that reports Canceled; never with a live, detached one.
+func TestB108_H_F2_ExecSeesCallerCancel(t *testing.T) {
+	r := newR4(t, at0300())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ce := &ctxExec{r3Exec: r.exec}
+	d := r.deps()
+	d.Exec = ce
+	d.Leases = cancelOnConsume{r.leases, cancel}
+	l, err := New(pinned(r3Grant(), d))
+	must(t, err)
+	l.Launch(ctx, r.req("job-a", r.lease("job-a", 1))) // its error is not the subject
+	if ctx.Err() == nil {
+		t.Fatal("the launch never reached Consume")
+	}
+	for _, e := range ce.seen {
+		if !errors.Is(e, context.Canceled) {
+			t.Errorf("Exec.Run got a live context after the caller cancelled (%v)", e)
+		}
+	}
+}
+
+// TestB108_H_F6_PathComparedResolved: F6, red-team r1. PATH entries and worker roots are BOTH
+// compared after symlink resolution: a PATH entry naming the real target of a symlinked worker root
+// is inside it. And a PATH entry that cannot be resolved (dangling, even toward a path a worker could
+// create later, or looping) is ErrGrant, never skipped.
+func TestB108_H_F6_PathComparedResolved(t *testing.T) {
+	base := resolved(t, t.TempDir())
+	wt := mkdir(t, base+"/w")
+	g := hGrant()
+	g.WorktreeRoot = symlink(t, wt, base+"/wlink")
+	g.EnvPinned["PATH"] = "/usr/bin:" + wt + "/bin"
+	hRefused(t, "PATH entry under the real target of a symlinked WorktreeRoot", g, "", ErrGrant)
+
+	realTmp := mkdir(t, base+"/realtmp")
+	g = hGrant()
+	g.TmpRoots = []string{symlink(t, realTmp, base+"/tmplink")}
+	g.EnvPinned["PATH"] = "/usr/bin:" + realTmp + "/bin"
+	hRefused(t, "PATH entry under the resolved path of an unresolved TmpRoot", g, "", ErrGrant)
+	if tmp := t.TempDir(); resolved(t, tmp) != tmp { // where TMPDIR itself lies under a symlink
+		g = hGrant()
+		g.TmpRoots = []string{tmp}
+		g.EnvPinned["PATH"] = "/usr/bin:" + resolved(t, tmp) + "/bin"
+		hRefused(t, "PATH entry under the resolved t.TempDir() TmpRoot", g, "", ErrGrant)
+	}
+
+	later := symlink(t, wt+"/later", base+"/dl")
+	loop := symlink(t, base+"/lb", base+"/la")
+	symlink(t, loop, base+"/lb")
+	for _, e := range []string{later, loop, later + "/bin"} {
+		g := hGrant()
+		g.WorktreeRoot = wt
+		g.EnvPinned["PATH"] = "/usr/bin:" + e
+		hRefused(t, "unresolvable PATH entry "+e, g, "", ErrGrant)
+	}
+}
+
+// TestB108_H_F7_RefusedNewLeavesUsedStateIntact: F7, red-team r1. A refused New on a State dir a
+// launcher has already used leaves state.json byte-identical and its lock file in place.
+func TestB108_H_F7_RefusedNewLeavesUsedStateIntact(t *testing.T) {
+	r := newR4(t, at0300())
+	l, err := New(pinned(hGrant(), r.deps()))
+	must(t, err)
+	must(t, launchErr(l, r.req("job-a", r.lease("job-a", 1))))
+	before, err := os.ReadFile(filepath.Join(r.state, "state.json"))
+	must(t, err)
+	pathInRoot := hGrant()
+	pathInRoot.EnvPinned["PATH"] = "/usr/bin:/w"
+	noHome := hGrant()
+	delete(noHome.EnvPinned, "HOME")
+	for name, g := range map[string]Grant{"a PATH entry in a worker root": pathInRoot, "no HOME pin": noHome} {
+		if _, err := New(pinned(g, r.deps())); !errors.Is(err, ErrGrant) {
+			t.Errorf("%s on a used State: New %v, want ErrGrant", name, err)
+		}
+		after, err := os.ReadFile(filepath.Join(r.state, "state.json"))
+		if err != nil || string(after) != string(before) {
+			t.Errorf("%s: a refused New changed a used State's state.json: %v %q -> %q", name, err, before, after)
+		}
+		if _, err := os.Lstat(filepath.Join(r.state, "lock")); err != nil {
+			t.Errorf("%s: a refused New removed a used State's lock: %v", name, err)
+		}
+	}
 }
