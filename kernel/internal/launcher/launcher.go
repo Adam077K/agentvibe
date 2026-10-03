@@ -207,10 +207,17 @@ type Grant struct {
 	ReceiptGenesis string
 	// EnvPinned (B1-08 r7, item 2) is the only value HOME, CODEX_HOME and PATH may take. A request
 	// passing one of them with any other value, or with no pin, is ErrSpec.
+	//
+	// B1-08h: New refuses (ErrGrant) a table with no HOME pin, and a request whose Env lacks HOME
+	// (ErrSpec): a worker with no HOME falls back to the real home directory. The HOME and CODEX_HOME
+	// pins are clean absolute paths other than "/", and PATH is ":"-joined clean absolute entries,
+	// none empty, none equal to or inside a worker root.
 	EnvPinned map[string]string
 	// TmpRoots (B1-08 r7, item 1) is every TMPDIR root handed to workers. New refuses (ErrGrant) a
-	// State dir equal to, inside, or containing WorktreeRoot, JobRoot, EnvPinned["CODEX_HOME"] or
-	// any TmpRoots entry, each compared after resolving symlinks (of the longest existing prefix).
+	// State dir equal to, inside, or containing WorktreeRoot, JobRoot, EnvPinned["HOME"],
+	// EnvPinned["CODEX_HOME"] or any TmpRoots entry, each compared after resolving symlinks (of the
+	// longest existing prefix). A root or State dir that resolves to "/", or cannot be resolved (a
+	// dangling or looping link), is ErrGrant.
 	TmpRoots []string
 }
 
@@ -482,28 +489,55 @@ func New(g Grant, d Deps) (Launcher, error) {
 	return l, nil
 }
 
-// outOfReach (B1-08 r7, item 1) refuses a State dir equal to, inside, or containing a root a worker
-// is handed: WorktreeRoot, JobRoot, the CODEX_HOME pin and every TmpRoots entry. Each path is
-// compared after resolving the symlinks of its longest existing prefix.
+// outOfReach (B1-08 r7, item 1; B1-08h F3, F4, F6, F7) refuses a State dir equal to, inside, or
+// containing a root a worker is handed: WorktreeRoot, JobRoot, the HOME and CODEX_HOME pins and every
+// TmpRoots entry. It refuses a grant with no HOME pin, a root or State dir that resolves to "/", and
+// a PATH pin with an entry that is not a clean absolute path or lies in a worker root. Every path is
+// compared after resolving the symlinks of its longest existing prefix, on both sides, and one that
+// does not resolve is refused, never skipped.
 func outOfReach(g Grant, state string) error {
-	roots := append([]string{g.WorktreeRoot, g.JobRoot}, g.TmpRoots...)
+	home, ok := g.EnvPinned["HOME"]
+	if !ok {
+		return fmt.Errorf("%w: EnvPinned has no HOME pin", ErrGrant)
+	}
+	roots := append([]string{g.WorktreeRoot, g.JobRoot, home}, g.TmpRoots...)
 	if c, ok := g.EnvPinned["CODEX_HOME"]; ok {
 		roots = append(roots, c)
 	}
 	s, err := resolve(state)
-	if err != nil {
-		return fmt.Errorf("%w: State %q: %v", ErrGrant, state, err)
+	if err != nil || s == "/" {
+		return fmt.Errorf("%w: State %q resolves to %q (%v)", ErrGrant, state, s, err)
 	}
-	for _, r := range roots {
+	resolvedRoots := make([]string, len(roots))
+	for i, r := range roots {
 		if !cleanRoot(r) {
 			return fmt.Errorf("%w: worker root %q is not a clean absolute path", ErrGrant, r)
 		}
 		rr, err := resolve(r)
-		if err != nil {
-			return fmt.Errorf("%w: worker root %q: %v", ErrGrant, r, err)
+		if err != nil || rr == "/" {
+			return fmt.Errorf("%w: worker root %q resolves to %q (%v)", ErrGrant, r, rr, err)
 		}
 		if rr == s || strings.HasPrefix(rr, s+"/") || strings.HasPrefix(s, rr+"/") {
 			return fmt.Errorf("%w: State %q is within reach of worker root %q", ErrGrant, state, r)
+		}
+		resolvedRoots[i] = rr
+	}
+	path, ok := g.EnvPinned["PATH"]
+	if !ok {
+		return nil
+	}
+	for _, e := range strings.Split(path, ":") {
+		if !cleanRoot(e) {
+			return fmt.Errorf("%w: PATH entry %q is not a clean absolute path", ErrGrant, e)
+		}
+		re, err := resolve(e)
+		if err != nil {
+			return fmt.Errorf("%w: PATH entry %q: %v", ErrGrant, e, err)
+		}
+		for i, rr := range resolvedRoots {
+			if re == rr || strings.HasPrefix(re, rr+"/") {
+				return fmt.Errorf("%w: PATH entry %q is inside worker root %q", ErrGrant, e, roots[i])
+			}
 		}
 	}
 	return nil
@@ -610,8 +644,12 @@ func cents(v string) (int64, bool) {
 }
 
 // environ builds the worker's complete environment from req.Env: allow-listed names only, each
-// pinned name at its pin, sorted, never nil, so nothing is inherited from the Kernel.
+// pinned name at its pin, HOME always present, sorted, never nil, so nothing is inherited from the
+// Kernel.
 func (l *launcher) environ(env map[string]string) ([]string, error) {
+	if _, ok := env["HOME"]; !ok {
+		return nil, fmt.Errorf("%w: env has no HOME", ErrSpec)
+	}
 	out := make([]string, 0, len(env))
 	for k, v := range env {
 		pin, ok := l.g.EnvPinned[k]
@@ -785,7 +823,7 @@ func (l *launcher) admit(ctx context.Context, req Request, digest, tmpl string) 
 		// every later one is ErrState until the two are re-established.
 		data, err := json.Marshal(rc)
 		if err == nil {
-			_, err = l.d.Journal.Append(ctx, journal.Proposal{Stream: JournalStream, ExpectSeq: head, Type: JournalLaunchType, Data: data})
+			err = l.appendLaunch(ctx, head, data)
 		}
 		if err != nil {
 			return false, fmt.Errorf("%w: journal: %v", ErrReceipt, err)
@@ -795,6 +833,27 @@ func (l *launcher) admit(ctx context.Context, req Request, digest, tmpl string) 
 		return true, nil
 	})
 	return rc, err
+}
+
+// maxAppendTries bounds how often appendLaunch re-reads the head after a conflicting append.
+const maxAppendTries = 8
+
+// appendLaunch appends one launch record to JournalStream at head. It alone ignores the caller's
+// cancellation (B1-08h F2): a caller cancelling between the Receipt and here must not leave the
+// receipts and the journal disagreeing. Exec.Run still gets the caller's ctx. A foreign append that
+// moved the head since journalled read it is not the launch's failure (F1): the head is read again
+// and the append retried, so the receipt is never left without its record.
+func (l *launcher) appendLaunch(ctx context.Context, head uint64, data []byte) error {
+	ctx = context.WithoutCancel(ctx)
+	for try := 0; ; try++ {
+		_, err := l.d.Journal.Append(ctx, journal.Proposal{Stream: JournalStream, ExpectSeq: head, Type: JournalLaunchType, Data: data})
+		if !errors.Is(err, journal.ErrSeqConflict) || try == maxAppendTries {
+			return err
+		}
+		if head, _, err = l.d.Journal.Head(ctx, JournalStream); err != nil {
+			return err
+		}
+	}
 }
 
 // journalled counts the journal's launch records whose At is after t, and returns the stream head.

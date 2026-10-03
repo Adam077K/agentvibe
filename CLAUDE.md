@@ -182,9 +182,13 @@ volumes by pattern, so a new one is governed the moment it exists.
 
 | Tier | Model | Use for |
 |------|-------|---------|
-| Opus 5 | `claude-opus-5` | Six engines — `orchestrator`, `sourcer`, `builder`, `designer`, `reviewer`, `reviewer-readonly` |
-| Sonnet 5 | `claude-sonnet-5` | `framer` |
-| Haiku 4.5 | `claude-haiku-4-5` | Simple/lookup — test runs, lint, log parsing, classification |
+| Opus 5.5 | `claude-opus-5-5` | Six engines — `orchestrator`, `sourcer`, `builder`, `designer`, `reviewer`, `reviewer-readonly` |
+| Sonnet 5.5 | `claude-sonnet-5-5` | `framer` |
+| Haiku | not used | Sonnet 5.5 handles simple tasks (test runs, lint, log parsing, classification) |
+
+> **Superseded 2026-10-03.** The rows above read `claude-opus-5`, `claude-sonnet-5` and `claude-haiku-4-5`.
+> Founder decision: agents may use ONLY `claude-opus-5-5` and `claude-sonnet-5-5`. `VALID_MODELS` in
+> `.claude/hooks/schema-lint.js` is that set, and `scripts/prompt-standard.test.mjs` pins it.
 
 > **Superseded 2026-08-20.** These rows read `claude-opus-4-7` and `claude-sonnet-4-6`. Both identifiers are
 > retired, and `scripts/prompt-standard.test.mjs` pins the valid set to `claude-opus-5`, `claude-sonnet-5`,

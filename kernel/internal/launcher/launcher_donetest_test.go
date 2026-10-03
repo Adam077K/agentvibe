@@ -180,6 +180,8 @@ func grant() Grant {
 		Caps:           Caps{Concurrent: 12, PerHour: 120},
 		WorktreeRoot:   "/w",      // r4: -C lives strictly inside it
 		JobRoot:        "/run/av", // r4: the job files live strictly inside it
+		// 2026-10-03 re-freeze B1-08h founder ruling: HOME required
+		EnvAllow: []string{"HOME"},
 	}
 }
 
@@ -212,6 +214,7 @@ func request(job string) Request {
 			BudgetCapCents: 500,
 			FencedLease:    "job://" + job + "#fence=1",
 		},
+		Env: map[string]string{"HOME": "/h"}, // 2026-10-03 re-freeze B1-08h founder ruling: HOME required (r7EnvPins["HOME"])
 	}
 }
 

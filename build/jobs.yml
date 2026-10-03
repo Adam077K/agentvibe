@@ -30,8 +30,8 @@
   depends_on: []
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: both, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: both, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Verification Engineer", family: both, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: both, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 10
   window_hours_est: 1.3
   status: not_started
@@ -47,7 +47,7 @@
   depends_on: []
   founder_deps: []
   gate_deps: []
-  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 12
   window_hours_est: 1.5
@@ -64,7 +64,7 @@
   depends_on: []
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: claude, model: "claude-sonnet-5"}
+  builder: {title: "Verification Engineer", family: claude, model: "claude-sonnet-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 14
   window_hours_est: 1.8
@@ -82,7 +82,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Surface Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -98,7 +98,7 @@
   depends_on: ["B0-03"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 14
   window_hours_est: 1.8
@@ -115,7 +115,7 @@
   depends_on: []
   founder_deps: ["F-host", "D1"]
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 12
   window_hours_est: 1.5
@@ -133,7 +133,7 @@
   founder_deps: ["F-host", "D1"]
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 18
   window_hours_est: 2.3
   status: not_started
@@ -150,7 +150,7 @@
   founder_deps: ["F-host", "D1"]
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 12
   window_hours_est: 1.5
   status: not_started
@@ -166,8 +166,8 @@
   depends_on: []
   founder_deps: ["D1"]
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5"]}
-  referee: {family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -183,7 +183,7 @@
   depends_on: ["B0-20"]
   founder_deps: ["D1"]
   gate_deps: []
-  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 28
   window_hours_est: 3.5
@@ -200,8 +200,8 @@
   depends_on: []
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: both, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: both, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Verification Engineer", family: both, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: both, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 28
   window_hours_est: 3.5
   status: not_started
@@ -217,8 +217,8 @@
   depends_on: ["B0-01"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: both, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: both, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Verification Engineer", family: both, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: both, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 26
   window_hours_est: 3.3
   status: not_started
@@ -235,7 +235,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -251,7 +251,7 @@
   depends_on: []
   founder_deps: []
   gate_deps: []
-  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 14
   window_hours_est: 1.8
@@ -268,7 +268,7 @@
   depends_on: ["B0-19"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Fleet Surveyor", family: claude, model: "claude-haiku-4-5"}
+  builder: {title: "Fleet Surveyor", family: claude, model: "claude-sonnet-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 10
   window_hours_est: 1.3
@@ -285,7 +285,7 @@
   depends_on: []
   founder_deps: []
   gate_deps: []
-  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 16
   window_hours_est: 2
@@ -294,7 +294,7 @@
   acceptance_hash: "sha256:1e55fa6e20c9c46881476f2f41946a411b1034fa81a9e665ffcf4cd927dad2fb"
 
 - id: B0-16
-  title: "`kernel/` Go module: allowed-module list, ≤11,000-line lint, CI boundary checks"
+  title: "`kernel/` Go module: allowed-module list, ≤15,000-line lint, CI boundary checks"
   phase: P0
   lane: K
   protected_base: true
@@ -303,7 +303,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -320,7 +320,7 @@
   depends_on: ["B0-13", "B0-16"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -338,7 +338,7 @@
   depends_on: ["B0-03", "B0-20"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: claude, model: "claude-sonnet-5"}
+  builder: {title: "Verification Engineer", family: claude, model: "claude-sonnet-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 12
   window_hours_est: 1.5
@@ -356,7 +356,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Fleet Surveyor", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 14
   window_hours_est: 1.8
   status: not_started
@@ -373,7 +373,7 @@
   depends_on: ["B0-03"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 8
   window_hours_est: 1
@@ -390,8 +390,8 @@
   depends_on: ["B0-14"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 12
   window_hours_est: 1.5
   status: not_started
@@ -408,7 +408,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -426,7 +426,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 12
   window_hours_est: 1.5
   status: not_started
@@ -443,7 +443,7 @@
   depends_on: ["B1-01a", "B1-01b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 22
   window_hours_est: 2.8
@@ -462,7 +462,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -480,7 +480,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 26
   window_hours_est: 3.3
   status: not_started
@@ -498,7 +498,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 10
   window_hours_est: 1.3
   status: not_started
@@ -515,7 +515,7 @@
   depends_on: ["B1-03"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -534,7 +534,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 22
   window_hours_est: 2.8
   status: not_started
@@ -552,7 +552,7 @@
   founder_deps: ["F1"]
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -569,7 +569,7 @@
   depends_on: ["B1-05", "B1-08"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 16
   window_hours_est: 2
@@ -587,7 +587,7 @@
   depends_on: ["B1-09a"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 12
   window_hours_est: 1.5
@@ -606,7 +606,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -624,7 +624,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 14
   window_hours_est: 1.8
   status: not_started
@@ -642,7 +642,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -660,7 +660,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 28
   window_hours_est: 3.5
   status: not_started
@@ -677,7 +677,7 @@
   depends_on: ["B1-09a", "B1-09b", "B1-11a", "B1-11b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 18
   window_hours_est: 2.3
@@ -695,7 +695,7 @@
   depends_on: ["B1-03"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 18
   window_hours_est: 2.3
@@ -713,7 +713,7 @@
   depends_on: ["B1-14a"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 12
   window_hours_est: 1.5
@@ -731,7 +731,7 @@
   depends_on: ["B1-14a", "B1-14b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 20
   window_hours_est: 2.5
@@ -749,7 +749,7 @@
   depends_on: ["B1-09a", "B1-09b", "B1-11a", "B1-11b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 14
   window_hours_est: 1.8
@@ -768,7 +768,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 14
   window_hours_est: 1.8
   status: not_started
@@ -786,7 +786,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -804,7 +804,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 22
   window_hours_est: 2.8
   status: not_started
@@ -820,7 +820,7 @@
   depends_on: ["B1-03", "B1-16a", "B1-16b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -838,7 +838,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Surface Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -854,7 +854,7 @@
   depends_on: ["B1-15", "B1-19"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 20
   window_hours_est: 2.5
@@ -871,8 +871,8 @@
   depends_on: ["B0-14"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -888,8 +888,8 @@
   depends_on: ["B1-22"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -906,7 +906,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -923,7 +923,7 @@
   depends_on: ["B1-14a", "B1-14b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 20
   window_hours_est: 2.5
@@ -942,7 +942,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 18
   window_hours_est: 2.3
   status: not_started
@@ -960,7 +960,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -976,7 +976,7 @@
   depends_on: []
   founder_deps: []
   gate_deps: ["G1"]
-  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 24
   window_hours_est: 3
@@ -993,7 +993,7 @@
   depends_on: ["B2-01"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 14
   window_hours_est: 1.8
@@ -1010,7 +1010,7 @@
   depends_on: ["B2-01", "B2-23", "B2-24", "B0-09", "B2-28"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 16
   window_hours_est: 2
@@ -1028,7 +1028,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Mission Systems Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 14
   window_hours_est: 1.8
   status: not_started
@@ -1045,7 +1045,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Mission Systems Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 28
   window_hours_est: 3.5
   status: not_started
@@ -1061,7 +1061,7 @@
   depends_on: ["B1-06", "B1-07"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -1079,7 +1079,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Mission Systems Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -1096,7 +1096,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 26
   window_hours_est: 3.3
   status: not_started
@@ -1113,7 +1113,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Mission Systems Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -1129,7 +1129,7 @@
   depends_on: ["B1-02"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Memory Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Memory Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 30
   window_hours_est: 3.8
@@ -1147,7 +1147,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Memory Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 28
   window_hours_est: 3.5
   status: not_started
@@ -1163,7 +1163,7 @@
   depends_on: ["B2-09", "B1-22"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Memory Engineer", family: claude, model: "claude-sonnet-5"}
+  builder: {title: "Memory Engineer", family: claude, model: "claude-sonnet-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 12
   window_hours_est: 1.5
@@ -1181,7 +1181,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Capability Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 30
   window_hours_est: 3.8
   status: not_started
@@ -1197,7 +1197,7 @@
   depends_on: ["B1-14a", "B1-14b", "B1-15"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 18
   window_hours_est: 2.3
@@ -1216,7 +1216,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Policy Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 10
   window_hours_est: 1.3
   status: not_started
@@ -1233,7 +1233,7 @@
   depends_on: ["B2-13a", "B2-13b", "B1-21"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -1250,8 +1250,8 @@
   depends_on: ["B1-19", "B1-14a", "B1-14b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Surface Engineer", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Surface Engineer", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 30
   window_hours_est: 3.8
   status: not_started
@@ -1268,7 +1268,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -1284,7 +1284,7 @@
   depends_on: ["B2-01", "B2-04", "B2-05", "B2-13a", "B2-13b", "B2-18"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 20
   window_hours_est: 2.5
@@ -1303,7 +1303,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Policy Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -1320,7 +1320,7 @@
   depends_on: ["B2-01", "B1-16a", "B1-16b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 24
   window_hours_est: 3
@@ -1337,8 +1337,8 @@
   depends_on: ["B1-12", "B1-21"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 26
   window_hours_est: 3.3
   status: not_started
@@ -1354,8 +1354,8 @@
   depends_on: ["B2-13a", "B2-13b", "B2-14", "B1-23"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -1371,8 +1371,8 @@
   depends_on: ["B2-21"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -1388,7 +1388,7 @@
   depends_on: ["B2-01"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -1406,7 +1406,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Mission Systems Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -1422,7 +1422,7 @@
   depends_on: ["B2-13a", "B2-13b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 16
   window_hours_est: 2
@@ -1441,7 +1441,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Policy Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -1458,7 +1458,7 @@
   depends_on: ["B2-14"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 20
   window_hours_est: 2.5
@@ -1475,7 +1475,7 @@
   depends_on: ["B1-02", "B0-21"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 22
   window_hours_est: 2.8
@@ -1493,7 +1493,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 18
   window_hours_est: 2.3
   status: not_started
@@ -1510,7 +1510,7 @@
   founder_deps: ["F3"]
   gate_deps: []
   builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 14
   window_hours_est: 1.8
   status: not_started
@@ -1528,7 +1528,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -1546,7 +1546,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 26
   window_hours_est: 3.3
   status: not_started
@@ -1563,7 +1563,7 @@
   depends_on: ["B3-01a", "B3-01b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 24
   window_hours_est: 3
@@ -1581,7 +1581,7 @@
   depends_on: ["B3-01a", "B3-01b", "B2-13a", "B2-13b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 28
   window_hours_est: 3.5
@@ -1599,7 +1599,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -1616,7 +1616,7 @@
   depends_on: ["B3-05a"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 14
   window_hours_est: 1.8
@@ -1635,7 +1635,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -1651,7 +1651,7 @@
   depends_on: ["B1-13", "B2-13a", "B2-13b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -1669,7 +1669,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Policy Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 28
   window_hours_est: 3.5
   status: not_started
@@ -1685,7 +1685,7 @@
   depends_on: ["B2-19"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 24
   window_hours_est: 3
@@ -1702,7 +1702,7 @@
   depends_on: ["B2-04", "B2-19"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -1720,7 +1720,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Surface Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 30
   window_hours_est: 3.8
   status: not_started
@@ -1736,7 +1736,7 @@
   depends_on: ["B2-15"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -1753,7 +1753,7 @@
   depends_on: ["B2-13a", "B2-13b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 24
   window_hours_est: 3
@@ -1771,7 +1771,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 28
   window_hours_est: 3.5
   status: not_started
@@ -1788,7 +1788,7 @@
   depends_on: []
   founder_deps: ["F7", "F9"]
   gate_deps: []
-  builder: {title: "Custody Engineer", family: claude, model: "claude-sonnet-5"}
+  builder: {title: "Custody Engineer", family: claude, model: "claude-sonnet-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 18
   window_hours_est: 2.3
@@ -1805,8 +1805,8 @@
   depends_on: ["B3-01a", "B3-01b", "B3-02", "B3-03", "B3-04", "B3-05a", "B3-05b", "B3-06", "B3-07", "B3-19a", "B3-19b", "B3-20a", "B3-20b", "B1-24", "B2-29"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -1822,8 +1822,8 @@
   depends_on: ["B2-20", "B1-24"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -1840,7 +1840,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 22
   window_hours_est: 2.8
   status: not_started
@@ -1856,8 +1856,8 @@
   depends_on: ["B3-04", "B3-06", "B3-07", "B2-28"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5"]}
-  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5"]}
+  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
   turns_est: 14
   window_hours_est: 1.8
   status: not_started
@@ -1874,8 +1874,8 @@
   depends_on: ["B3-19a"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5"]}
-  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5"]}
+  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
   turns_est: 14
   window_hours_est: 1.8
   status: not_started
@@ -1892,8 +1892,8 @@
   depends_on: ["B3-06", "B3-08", "B3-18", "B2-28"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5"]}
-  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5"]}
+  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -1910,8 +1910,8 @@
   depends_on: ["B3-20a"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5"]}
-  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5"]}
+  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
   turns_est: 14
   window_hours_est: 1.8
   status: not_started
@@ -1929,7 +1929,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 30
   window_hours_est: 3.8
   status: not_started
@@ -1946,7 +1946,7 @@
   depends_on: ["B2-07"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -1965,7 +1965,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -1981,7 +1981,7 @@
   depends_on: ["B2-10", "B2-28"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 30
   window_hours_est: 3.8
@@ -1999,7 +1999,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 28
   window_hours_est: 3.5
   status: not_started
@@ -2015,7 +2015,7 @@
   depends_on: ["B4-05"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 24
   window_hours_est: 3
@@ -2032,7 +2032,7 @@
   depends_on: ["B2-12"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Capability Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Capability Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 28
   window_hours_est: 3.5
@@ -2050,7 +2050,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Capability Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -2067,7 +2067,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Capability Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 28
   window_hours_est: 3.5
   status: not_started
@@ -2084,7 +2084,7 @@
   depends_on: ["B4-07"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Capability Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Capability Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 20
   window_hours_est: 2.5
@@ -2102,7 +2102,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Memory Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 28
   window_hours_est: 3.5
   status: not_started
@@ -2118,8 +2118,8 @@
   depends_on: ["B2-10"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Memory Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5"]}
-  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5"]}
+  builder: {title: "Memory Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
   turns_est: 26
   window_hours_est: 3.3
   status: not_started
@@ -2135,7 +2135,7 @@
   depends_on: ["B2-10"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Memory Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Memory Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 22
   window_hours_est: 2.8
@@ -2153,7 +2153,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Policy Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 30
   window_hours_est: 3.8
   status: not_started
@@ -2169,7 +2169,7 @@
   depends_on: ["B4-13"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 22
   window_hours_est: 2.8
@@ -2186,7 +2186,7 @@
   depends_on: ["B3-17"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 28
   window_hours_est: 3.5
@@ -2204,7 +2204,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Mission Systems Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 20
   window_hours_est: 2.5
   status: not_started
@@ -2220,8 +2220,8 @@
   depends_on: ["B3-07", "B3-16"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 26
   window_hours_est: 3.3
   status: not_started
@@ -2237,7 +2237,7 @@
   depends_on: ["B2-07", "B0-10"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -2254,7 +2254,7 @@
   depends_on: ["B3-15"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 30
   window_hours_est: 3.8
@@ -2272,7 +2272,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 26
   window_hours_est: 3.3
   status: not_started
@@ -2289,7 +2289,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 28
   window_hours_est: 3.5
   status: not_started
@@ -2305,8 +2305,8 @@
   depends_on: ["B5-03", "B3-19a", "B3-19b"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5"]}
-  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5"]}
+  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
   turns_est: 22
   window_hours_est: 2.8
   status: not_started
@@ -2323,7 +2323,7 @@
   depends_on: ["B5-03"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -2340,7 +2340,7 @@
   depends_on: ["B5-03"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Verification Engineer", family: claude, model: "claude-sonnet-5"}
+  builder: {title: "Verification Engineer", family: claude, model: "claude-sonnet-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 18
   window_hours_est: 2.3
@@ -2358,7 +2358,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Capability Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 30
   window_hours_est: 3.8
   status: not_started
@@ -2374,7 +2374,7 @@
   depends_on: ["B3-04"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
@@ -2391,8 +2391,8 @@
   depends_on: ["B4-12"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5", "gpt-6-astra"]}
-  referee: {family: either, models: ["claude-opus-5", "gpt-6-astra"]}
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
   turns_est: 28
   window_hours_est: 3.5
   status: not_started
@@ -2408,7 +2408,7 @@
   depends_on: ["B4-17"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Fleet Surveyor", family: claude, model: "claude-opus-5"}
+  builder: {title: "Fleet Surveyor", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 24
   window_hours_est: 3
@@ -2425,7 +2425,7 @@
   depends_on: ["B3-12"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 30
   window_hours_est: 3.8
@@ -2443,7 +2443,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
   status: not_started
@@ -2460,7 +2460,7 @@
   founder_deps: []
   gate_deps: []
   builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
-  referee: {family: claude, model: "claude-opus-5"}
+  referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 24
   window_hours_est: 3
   status: not_started
@@ -2477,7 +2477,7 @@
   depends_on: ["B3-02"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 18
   window_hours_est: 2.3
@@ -2494,7 +2494,7 @@
   depends_on: ["B3-16"]
   founder_deps: []
   gate_deps: []
-  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5"}
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 20
   window_hours_est: 2.5
