@@ -121,32 +121,6 @@ type FounderReset struct {
 	At     time.Time
 }
 
-// B1-08 r6 receipt log. The launch count comes from an append-only, hash-chained log whose
-// genesis is pinned (Grant.ReceiptGenesis). A deleted, truncated (mid-record, at a record
-// boundary, or by its final newline), re-created or broken log fails CLOSED. Declared here, not
-// implemented: each stub refuses. r4's functions survive unexported in receiptlog.go.
-
-// CreateReceiptLog creates a machine's receipt log at path and returns its genesis hash, which
-// the founder pins as Grant.ReceiptGenesis. It is refused while pinned is non-empty (a prior log,
-// and so prior receipts, exist for this machine), and refuses an existing path. Each genesis is
-// unique, so a log re-created after a deletion never matches the pin.
-func CreateReceiptLog(path, pinned string) (string, error) {
-	return "", fmt.Errorf("%w: CreateReceiptLog not implemented (r6)", ErrState)
-}
-
-// OpenReceiptLog opens the log at path; it refuses one whose genesis hash is not genesis (the
-// pin), a missing one, and one that does not verify. Since and Append re-verify every call.
-func OpenReceiptLog(path, genesis string) (ReceiptSink, error) {
-	return nil, fmt.Errorf("%w: OpenReceiptLog not implemented (r6)", ErrState)
-}
-
-// FounderResetReceiptLog replaces the log at path, explicitly: prior is the currently pinned
-// genesis, r names who and why. The new genesis records r and prior and is returned for the
-// founder to pin. The count is never reset to 0: the hour after r.At counts as full.
-func FounderResetReceiptLog(path, prior string, r FounderReset) (string, error) {
-	return "", fmt.Errorf("%w: FounderResetReceiptLog not implemented (r6)", ErrState)
-}
-
 // GrantStatus reports whether the grant is still live (B1-08 r3): nil while signed and
 // unrevoked. The launcher asks at every admit, so a revocation binds the next launch.
 type GrantStatus interface {
@@ -304,25 +278,40 @@ var (
 )
 
 // slotRules is every slot's rule, keyed by the flag the slot is the value of (never by the
-// slot's display name). A slot whose flag is not here is refused by New.
-var slotRules = map[string]func(g *Grant, v string, capCents int64) bool{
+// slot's display name). A slot whose flag is not here is refused by New. Paths are scoped to
+// THIS job: -C is WorktreeRoot/<JobID> or inside it, job files lie inside JobRoot/<JobID>/.
+var slotRules = map[string]func(g *Grant, q *Request, v string) bool{
 	"--setting-sources": pinnedOnly, "-p": pinnedOnly,
 	"--settings": jobFile, "--agents": jobFile, "--json-schema": jobFile, "--output-schema": jobFile, "-o": jobFile,
-	"-C":                func(g *Grant, v string, _ int64) bool { return inside(v, g.WorktreeRoot) },
-	"--agent":           func(_ *Grant, v string, _ int64) bool { return agentName.MatchString(v) },
-	"--allowedTools":    func(_ *Grant, v string, _ int64) bool { n, ok := tools(v); return ok && !n["Agent"] && !n["Task"] },
-	"--disallowedTools": func(_ *Grant, v string, _ int64) bool { n, ok := tools(v); return ok && n["Agent"] && n["Task"] },
-	"--max-budget-usd":  func(_ *Grant, v string, c int64) bool { n, ok := cents(v); return ok && n > 0 && n <= c },
-	"--session-id":      func(_ *Grant, v string, _ int64) bool { return uuidLower.MatchString(v) },
-	"-c":                func(g *Grant, v string, _ int64) bool { return slices.Contains(g.ConfigAllow, v) },
+	"-C": func(g *Grant, q *Request, v string) bool {
+		own := g.WorktreeRoot + "/" + q.JobID
+		return v == own || inside(v, own)
+	},
+	"--agent":           func(_ *Grant, _ *Request, v string) bool { return agentName.MatchString(v) },
+	"--allowedTools":    func(_ *Grant, _ *Request, v string) bool { n, ok := tools(v); return ok && !n["Agent"] && !n["Task"] },
+	"--disallowedTools": func(_ *Grant, _ *Request, v string) bool { n, ok := tools(v); return ok && n["Agent"] && n["Task"] },
+	"--max-budget-usd": func(_ *Grant, q *Request, v string) bool {
+		n, ok := cents(v)
+		return ok && n > 0 && n <= q.Requires.BudgetCapCents
+	},
+	"--session-id": func(_ *Grant, _ *Request, v string) bool { return uuidLower.MatchString(v) },
+	"-c":           func(g *Grant, _ *Request, v string) bool { return slices.Contains(g.ConfigAllow, v) },
 }
 
 // pinnedOnly: the value is checked against the template's pin, which New requires.
-func pinnedOnly(*Grant, string, int64) bool { return true }
+func pinnedOnly(*Grant, *Request, string) bool { return true }
 
-func jobFile(g *Grant, v string, _ int64) bool {
-	return inside(v, g.JobRoot) && strings.HasSuffix(v, ".json")
+func jobFile(g *Grant, q *Request, v string) bool {
+	return inside(v, g.JobRoot+"/"+q.JobID) && strings.HasSuffix(v, ".json")
 }
+
+// segment: a JobID that can scope a path is one clean path segment.
+func segment(job string) bool {
+	return job != "" && job != "." && job != ".." && !strings.ContainsAny(job, "/\x00")
+}
+
+// envNames is the only environment a worker may receive (B1-07 r5; AV_JOB is not passed).
+var envNames = []string{"HOME", "CODEX_HOME", "PATH", "LANG"}
 
 // inside: a clean absolute path strictly inside root.
 func inside(v, root string) bool {
@@ -376,8 +365,9 @@ func New(g Grant, d Deps) (Launcher, error) {
 		return nil, ErrDeps
 	}
 	if g.Holder != Holder || g.Caps.Concurrent <= 0 || g.Caps.PerHour <= 0 || len(g.Templates) == 0 ||
-		!cleanRoot(g.WorktreeRoot) || !cleanRoot(g.JobRoot) {
-		return nil, fmt.Errorf("%w: holder %q, caps %+v, %d templates, roots %q %q", ErrGrant, g.Holder, g.Caps, len(g.Templates), g.WorktreeRoot, g.JobRoot)
+		!cleanRoot(g.WorktreeRoot) || !cleanRoot(g.JobRoot) || !cleanRoot(g.State) || g.State != d.State {
+		return nil, fmt.Errorf("%w: holder %q, caps %+v, %d templates, roots %q %q, State pinned %q used %q",
+			ErrGrant, g.Holder, g.Caps, len(g.Templates), g.WorktreeRoot, g.JobRoot, g.State, d.State)
 	}
 	for _, f := range g.ForbiddenFlags {
 		if !strings.HasPrefix(f, "-") {
@@ -385,8 +375,8 @@ func New(g Grant, d Deps) (Launcher, error) {
 		}
 	}
 	for _, n := range g.EnvAllow {
-		if n == "" || strings.ContainsAny(n, "=\x00") {
-			return nil, fmt.Errorf("%w: env name %q", ErrGrant, n)
+		if !slices.Contains(envNames, n) {
+			return nil, fmt.Errorf("%w: env name %q is not one of %v", ErrGrant, n, envNames)
 		}
 	}
 	bins := map[string]bool{}
@@ -424,13 +414,20 @@ func New(g Grant, d Deps) (Launcher, error) {
 	g.EnvAllow = slices.Clone(g.EnvAllow)
 	g.ConfigAllow = slices.Clone(g.ConfigAllow)
 	l := &launcher{g: g, d: d}
-	// A State directory with no state yet is initialised, under the flock; an existing one is kept.
+	// Only a fresh State dir (its lock file created now) is initialised. A used one whose
+	// state.json is gone fails closed: the running jobs it recorded are unknown.
+	lock, err := os.OpenFile(filepath.Join(d.State, "lock"), os.O_RDWR|os.O_CREATE|os.O_EXCL, 0o600)
+	fresh := err == nil
+	if fresh {
+		lock.Close()
+	}
 	unlock, err := l.flock()
 	if err != nil {
 		return nil, err
 	}
 	defer unlock()
-	if _, err := os.Stat(l.statePath()); errors.Is(err, fs.ErrNotExist) {
+	_, err = os.Stat(l.statePath())
+	if fresh && errors.Is(err, fs.ErrNotExist) {
 		err = replace(l.statePath(), `{"consumed":{},"running":{}}`)
 	}
 	if err != nil {
@@ -490,15 +487,18 @@ func matches(tokens, argv []string) bool {
 	return true
 }
 
-// checkSlots applies each slot's pin and its flag's rule.
-func (l *launcher) checkSlots(t ArgvTemplate, argv []string, capCents int64) error {
+// checkSlots applies each slot's pin and its flag's rule, for this request's job.
+func (l *launcher) checkSlots(t ArgvTemplate, req *Request) error {
+	if !segment(req.JobID) {
+		return fmt.Errorf("%w: JobID %q is not one clean path segment", ErrSpec, req.JobID)
+	}
 	for i, tok := range t.Tokens {
 		if !isSlot(tok) {
 			continue
 		}
 		pin, pinned := t.Pinned[tok]
-		if pinned && argv[i] != pin || !slotRules[t.Tokens[i-1]](&l.g, argv[i], capCents) {
-			return fmt.Errorf("%w: %s %q", ErrSpec, t.Tokens[i-1], argv[i])
+		if pinned && req.Argv[i] != pin || !slotRules[t.Tokens[i-1]](&l.g, req, req.Argv[i]) {
+			return fmt.Errorf("%w: %s %q", ErrSpec, t.Tokens[i-1], req.Argv[i])
 		}
 	}
 	return nil
@@ -593,7 +593,7 @@ func (l *launcher) Launch(ctx context.Context, req Request) (Receipt, error) {
 	if err := prerequisites(req); err != nil {
 		return Receipt{}, err
 	}
-	if err := l.checkSlots(*tmpl, req.Argv, req.Requires.BudgetCapCents); err != nil {
+	if err := l.checkSlots(*tmpl, &req); err != nil {
 		return Receipt{}, err
 	}
 	env, err := l.environ(req.Env)
@@ -643,9 +643,10 @@ func (l *launcher) locked(fn func(s *jobState) (bool, error)) error {
 }
 
 // admit is one step under the admit lock: the grant is live, the job is not running, the lease
-// was never consumed and verifies at the launcher's clock, the receipt log holds fewer than
-// per_hour launches in the trailing hour, fewer than concurrent jobs run, and the Receipt is
-// appended. Then the lease is consumed and the job recorded running. A refusal takes nothing.
+// verifies at the launcher's clock, the receipt log holds fewer than per_hour launches in the
+// trailing hour, and fewer than concurrent jobs run. Last, the lease is consumed in the
+// AUTHORITATIVE store (Consume, compare-and-set); only then is the Receipt appended and the job
+// recorded running. The local Consumed set is a second refusal, never the one relied on.
 func (l *launcher) admit(req Request, digest, tmpl string) (rc Receipt, err error) {
 	job, lease := req.JobID, req.Requires.FencedLease
 	err = l.locked(func(s *jobState) (bool, error) {
@@ -671,6 +672,9 @@ func (l *launcher) admit(req Request, digest, tmpl string) (rc Receipt, err erro
 		}
 		if len(s.Running) >= l.g.Caps.Concurrent {
 			return false, fmt.Errorf("%w: %d running", ErrConcurrentCap, len(s.Running))
+		}
+		if err := l.d.Leases.Consume(job, lease); err != nil {
+			return false, fmt.Errorf("%w: consume: %v", ErrLease, err)
 		}
 		rc = Receipt{JobID: job, Binary: req.Binary, Digest: digest, Template: tmpl, Argv: slices.Clone(req.Argv), At: now}
 		if err := l.d.Receipts.Append(rc); err != nil {
