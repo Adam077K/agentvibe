@@ -147,14 +147,20 @@
 #   R3_ReviewMutants does. The 3 frozen tests and R3_ReviewMutants pass.
 #   Proof, $TMPDIR only: a reference passes every B108 test (-race -count=3). Mutants: 28 of 28
 #   killed, including the review's 8 survivors and 20 for items 1-8.
+# RE-FREEZE r9 2026-10-03 (B1-08): 2026-10-03 founder ruling B1-07 round 4, profile superseded
+#   (DR-B1-07-CODEX-RULINGS-2026-10-02.md, "Round 4"). codexTokens is the locked line: no -p,
+#   --ignore-user-config and --ignore-rules, 17 -c settings; 09a §8.2 matches. launcher_r3: the
+#   <profile> pin applies to claude only; "codex -p not the pinned profile" is replaced by a changed
+#   -c, an extra -c and -p appended, each ErrArgvNotPinned. Mutants 2 of 2 killed (literal -c values
+#   not compared; length check loosened). Package passes on 75980d5 (-race -count=2).
 register: B0-17b
 jobs:
   - id: B1-08
     files:
       - path: kernel/internal/launcher/launcher_donetest_test.go
-        sha256: 6f2cebf7fc8fda9f63f0d445f01487c92bdfdfcaad03d065e9a10592670fd822
+        sha256: 7b6561abe26fadcc190fb911c6cdda134f291c06769abf87d8c2390db2c45e68
       - path: kernel/internal/launcher/launcher_r3_donetest_test.go
-        sha256: 00410072475c33ef899190fe8c7f0ec85b7bd084918eb77ec5a502a0f4d87f59
+        sha256: 6978c93aa0907c09250d340c43c74041f1e074b1711a5215d46dfce3aca1c95a
   - id: B1-12
     files:
       - path: kernel/internal/outbox/outbox_donetest_test.go

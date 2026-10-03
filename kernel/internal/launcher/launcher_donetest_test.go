@@ -30,8 +30,15 @@ var (
 		"--allowedTools", "<allowed>", "--disallowedTools", "<forbidden>",
 		"--output-format", "stream-json", "--verbose", "--json-schema", "<f>",
 		"--max-budget-usd", "<B>", "--session-id", "<uuid>"}
-	codexTokens = []string{"exec", "-C", "<worktree>", "-s", "workspace-write", "-p", "<profile>",
-		"--json", "--output-schema", "<f>", "-o", "<result.json>", "--ephemeral", "--ignore-rules"}
+	// B1-07 round 4 (2026-10-03): --ignore-user-config, no -p, every locked setting a -c.
+	codexTokens = []string{"exec", "-C", "<worktree>", "-s", "workspace-write", "--json",
+		"--output-schema", "<f>", "-o", "<result.json>", "--ephemeral", "--ignore-user-config", "--ignore-rules",
+		"-c", `approval_policy="never"`, "-c", `approvals_reviewer="user"`, "-c", `sandbox_mode="workspace-write"`,
+		"-c", "sandbox_workspace_write.network_access=false", "-c", "sandbox_workspace_write.writable_roots=[]",
+		"-c", "sandbox_workspace_write.exclude_tmpdir_env_var=true", "-c", "sandbox_workspace_write.exclude_slash_tmp=true",
+		"-c", `shell_environment_policy.inherit="core"`, "-c", "mcp_servers={}", "-c", `web_search="disabled"`,
+		"-c", `model_provider="openai"`, "-c", "model_providers={}", "-c", "notify=[]", "-c", "hooks={}",
+		"-c", "features={}", "-c", "tools={}", "-c", "projects={}"}
 	slotValues = map[string]string{
 		"<profile>": "project", "<job.json>": "/run/av/job-1/job.json", "<compiled.json>": "/run/av/job-1/agents.json",
 		"<record>": "builder", "<allowed>": "Read,Edit,Bash", "<forbidden>": "Agent,Task",
