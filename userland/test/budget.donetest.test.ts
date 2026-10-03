@@ -71,7 +71,7 @@ function jsonSafe(v: unknown, path = 'data'): void {
 }
 
 type Stored = { seq: number; type: string; data: string };
-type Fault = null | 'reply' | 'throw' | 'lost_ack';
+type Fault = null | 'reply' | 'throw' | 'lost_ack' | 'conflict';
 
 class MemPort implements JournalPort {
   streams = new Map<string, Stored[]>();
@@ -91,6 +91,7 @@ class MemPort implements JournalPort {
     await tick();
     if (this.fault === 'throw') throw new Error('port: propose failed');
     if (this.fault === 'reply') return { ok: false as const, reason: 'failed' as const };
+    if (this.fault === 'conflict') return { ok: false as const, reason: 'seq_conflict' as const };
     jsonSafe(p.data);
     const s = this.streams.get(p.stream) ?? [];
     if (p.expect_seq !== s.length) return { ok: false as const, reason: 'seq_conflict' as const };
@@ -109,6 +110,12 @@ class MemPort implements JournalPort {
       .map((e) => ({ stream, seq: e.seq, type: e.type, data: JSON.parse(e.data) }));
     await this.cut();
     return out;
+  }
+
+  count(): number {
+    let n = 0;
+    for (const s of this.streams.values()) n += s.length;
+    return n;
   }
 
   dump(): string {
@@ -771,4 +778,84 @@ test('B1_18_ReadAndWriteErrorsFailClosed', async () => {
     }
     assert.equal(await truth(port, 'execution'), '6300');
   }
+});
+
+test('B1_18_ProjectionIsDisposable', async () => {
+  // Orchestrator 2026-10-03 (1): the SQLite projection is disposable. Deleted and rebuilt from the Journal alone,
+  // every balance of every (hold, resource), its journal_offset included, is identical to the live one, and
+  // every granted key replays at its original seq.
+  const { port, d, L } = await fresh();
+  const p = join(d, 'p.db');
+  const grants: [Debit, number][] = [];
+  const ops: Debit[] = [
+    debit({ quantity: '1234' }),
+    debit({ purpose: 'judging', quantity: '777' }),
+    debit({ purpose: 'recovery', quantity: '5' }),
+    debit({ purpose: 'integration_rework', quantity: '800' }),
+    debit({ resource: 'allowance', quantity: '99' }),
+    debit({ purpose: 'judging', resource: 'allowance', quantity: '40' }),
+    debit({ resource: 'founder_minutes', quantity: '3' }),
+    debit({ purpose: 'judging', resource: 'verifier_window', unit: 'window', quantity: '2' }),
+  ];
+  for (const o of ops) grants.push([o, granted(await L.debit(o), `debit ${o.idempotency_key}`)]);
+  refused(await L.debit(debit({ quantity: '999999' })), 'insufficient', 'a refusal leaves no trace in the state');
+  const cells = tranche().holds.map((h) => [h.hold, h.amount.resource] as [Hold, Resource]);
+  const snap = async (X: Ledger) => {
+    const out: Record<string, unknown> = {};
+    for (const [h, r] of cells) out[`${h}/${r}`] = await X.balance('t1', h, r);
+    return out;
+  };
+  const live = await snap(L);
+  await L.close();
+  removeProjection(p);
+  assert.equal(existsSync(p), false, 'the projection is gone');
+  const R = await open(port, p);
+  assert.deepEqual(await snap(R), live, 'rebuilt from the Journal alone, the state is identical');
+  for (const [o, seq] of grants) assert.deepEqual(await R.debit({ ...o }), { ok: true, seq, replayed: true }, `${o.idempotency_key} replays`);
+  assert.deepEqual(await snap(R), live, 'replays changed nothing');
+  await R.close();
+  // A second, independent projection path agrees too.
+  const R2 = await open(port, join(dir(), 'other.db'));
+  assert.deepEqual(await snap(R2), live, 'any empty projection rebuilds to the same state');
+  await R2.close();
+});
+
+test('B1_18_NoSpendOnProjectionAlone', { timeout: 60000 }, async () => {
+  // Orchestrator 2026-10-03 (2), (3). Fixture control first: the test port enforces real expect_seq
+  // compare-and-swap, so a ledger cannot pass these tests against a port that accepts any append.
+  {
+    const port = new MemPort();
+    assert.deepEqual(await port.propose({ stream: 's', expect_seq: 1, type: 'x', data: {} }), { ok: false, reason: 'seq_conflict' });
+    assert.equal(port.count(), 0, 'a stale expect_seq appends nothing');
+    assert.equal((await port.propose({ stream: 's', expect_seq: 0, type: 'x', data: {} })).ok, true);
+    assert.deepEqual(await port.propose({ stream: 's', expect_seq: 0, type: 'x', data: {} }), { ok: false, reason: 'seq_conflict' });
+    assert.equal((await port.propose({ stream: 's', expect_seq: 1, type: 'x', data: {} })).ok, true);
+    assert.equal(port.count(), 2);
+  }
+  // Every grant that is not a replay is backed by a new Journal event: the projection never grants on its own.
+  const { port, L } = await fresh();
+  const before = port.count();
+  granted(await L.debit(debit({ quantity: '100' })), 'a normal debit');
+  assert.ok(port.count() > before, 'a grant appended to the Journal');
+  // The Journal answers seq_conflict to every append, forever: after whatever retries it makes, the ledger denies.
+  port.fault = 'conflict';
+  for (const [purpose, q] of [['execution', '1'], ['judging', '1'], ['recovery', '2000']] as [Purpose, string][]) {
+    const n = port.count();
+    const r = await L.debit(debit({ purpose, quantity: q }));
+    assert.equal(r.ok, false, `${purpose}: an append that never wins is denied: ${JSON.stringify(r)}`);
+    assert.ok(REFUSALS.includes((r as { code: string }).code), `refusal code ${JSON.stringify(r)}`);
+    assert.equal(port.count(), n, 'nothing appended');
+  }
+  port.fault = null;
+  assert.equal(await consumed(L, 'execution'), '100', 'denied debits were not counted');
+  assert.equal(await consumed(L, 'acceptance'), '0');
+  // The port is unavailable for both reads and writes: denied, even for a debit the projection says fits.
+  port.failRead = true;
+  port.fault = 'throw';
+  refused(await L.debit(debit({ quantity: '1' })), 'unavailable', 'no Journal at all');
+  port.failRead = false;
+  port.fault = null;
+  await L.close();
+  assert.equal(await truth(port, 'execution'), '100');
+  assert.equal(await truth(port, 'recovery'), '0');
 });

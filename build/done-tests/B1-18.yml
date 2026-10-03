@@ -11,8 +11,14 @@
 # (userland/src/budget.ts), because B1-18 is protected_base: false and Allocation is not Kernel. The ledger
 # reaches the Journal through an injected JournalPort (propose with expect_seq, read). The tests supply the
 # port: an in-memory one, and a file-backed one for the SIGKILL child. userland/src/budget.ts is NOT
-# registered: it is the interface the job implements (the B1-02 pattern). Orchestrator to confirm the
-# location; the Go alternative is kernel/internal/budget over journal.Journal.
+# registered: it is the interface the job implements (the B1-02 pattern).
+#
+# DECISION: orchestrator, 2026-10-03, option A — Userland, userland/src/budget.ts behind an injected
+# JournalPort, no new dependency (jobs.yml protected_base: false; 03-MISSION-ENGINE.md:35 names the Budget
+# Ledger an Allocation record; 0 Kernel lines). Rejected: kernel/internal/budget over journal.Journal.
+# SPEC GAP / DEPENDENCY: the command socket has no read verb, so the production JournalPort.read does not
+# exist. It depends on B1-19 (Board through the command API) or a new register row. Until then only the test
+# ports implement read.
 #
 # Fifteen tests. Two pin the acceptance line; the rest pin the brief's money-safety edges: replay and
 # lost-ack idempotency, CAS under concurrency and a forced cut-in, a quantity grammar with a 2^63-1 bound,
@@ -22,9 +28,18 @@
 # Mutants, 12 of 12 killed: number arithmetic, BigInt() parsing, no catch-up, no idempotency, a loose
 # idempotency digest, no pool check, execution spilling into acceptance, no unit check, append at a fresh
 # head, no per-resource sum bound, no completion-reserve check, no projection writes.
+#
+# Extended 2026-10-03 (same day, before any implementation) on the orchestrator's option-A rider:
+# (1) B1_18_ProjectionIsDisposable: delete the projection, rebuild from the port's Journal, and every
+# balance (journal_offset included) and every replay is identical; (2) B1_18_NoSpendOnProjectionAlone: a
+# port that answers seq_conflict forever, or is unavailable, gets every debit DENIED, and every grant is
+# backed by a new Journal event; (3) a fixture control in the same test proves the test port enforces real
+# expect_seq compare-and-swap. Red against the stub: 17/17. Green against the reference: 17/17, five runs.
+# Mutants, 14 of 14 killed: the 12 above plus granting on a failed write and granting after conflict
+# retries are exhausted.
 register: B1-18
 jobs:
   - id: B1-18
     files:
       - path: userland/test/budget.donetest.test.ts
-        sha256: a619d4e36a61a22cf296c5595182f5f18f98c6738f6f4c7c97bdcfc455281454
+        sha256: 6ad1b02bdaed168dcef29694b3add2b4423b4712c774f7b313da553b39b541e9
