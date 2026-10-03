@@ -98,8 +98,28 @@
 # ignored; Lstat errors ignored). The survivor, "no multi-line guard", is equivalent: the value grammar
 # already refuses a """ or ''' opening.
 #
+# RE-FREEZE r5 2026-10-03: 2026-10-03 founder ruling B1-07 round 4, profile superseded. The Opus
+# review FAILED 763ed2c (HIGH x2, codex 0.154.0, no model turn): user-config MCP servers survive the
+# profile's mcp_servers = {} and one launched; a trusted <worktree>/.codex/config.toml overrides the
+# profile (network on, MCP launched). Ruling: always --ignore-user-config; no -p, no profile file;
+# every locked setting a -c; pin sha256 of the whole argv (init_expect) and of the binary.
+# Measured first (DR-B1-07 "Round 4"), throwaway HOME/CODEX_HOME: control, both MCP markers
+# created, project model and network applied; locked line + --strict-config, neither marker, default
+# model, `sandbox: workspace-write [workdir]`, approval never. Login under --ignore-user-config:
+# `codex login status` reads CODEX_HOME/auth.json; `exec` sent a FAKE key (server: invalid_api_key),
+# and with no auth.json `Missing bearer`. So auth survives; .codex/config.toml is proven ignored.
+#   Re-frozen codex_donetest_test.go (cxTokens = the locked line; no profile fields; cxPin), r2
+#   (profile helpers and two profile tests removed), r3 (R3_ProfileIsParsedAsTOML removed). Added
+#   codex_r4_donetest_test.go: R4_LockedLine (17 -c keys pinned, no -p, both ignore flags once),
+#   R4_ArgvAndBinaryPinned (extra/changed/removed/reordered -c, -p, --strict-config, r3 line: ErrSpec),
+#   R4_ProfileFieldsRefused, R4_DanglingSymlinkRefused (the :227 gap).
+#   codex_profile.go is dead code under this ruling: the implementer deletes it.
+# On 763ed2c unchanged, 13 tests FAIL. Reference in TMPDIR passes the package (-race -count=3).
+# Mutants 9 of 9 killed: -p back, no --ignore-user-config, network on, hooks dropped, argv pin
+# unchecked, profile fields accepted, :227 dangling as missing, extra --strict-config, binary unchecked.
+#
 # OPEN (not decided here):
-# 1. (r3) 09a §8.2 and B1-08's codexTokens carry --ignore-rules, not --ignore-user-config (build/b1-08-tests-r2).
+# 1. (r5) 09a §8.2 and B1-08's codexTokens carry the locked line (build/b1-08-tests-r4).
 # 2. Who measures BinaryDigest and ProfileDigest, and when (launcher/runner, B1-08/B1-09).
 # 3. Whether codex writes -o with a trailing newline is unmeasured; byte equality would then make
 #    every run UNPARSED, and the per-family UNPARSED rate (09a §8.8) shows it.
@@ -110,11 +130,13 @@ jobs:
   - id: B1-07
     files:
       - path: kernel/internal/adapter/codex_donetest_test.go
-        sha256: d1d5a84fad1d5824a6bf6f19a047e0876514d8191cd1a6ff92b03c2146ffb1d2
+        sha256: 55173959323a6dc4ea5d8d455bfa679a9e93ca4adeadf4c8bac8ce22a45be2ac
       - path: kernel/internal/adapter/codex_r2_donetest_test.go
-        sha256: abc3bb86276426e91962be731821abd357a5c3d23fc12c3c93052f1ed028c8ed
+        sha256: 846530666c51eb76717a160ec25b9ee7cb7e0a620f4b689d162b9e8aa240cf03
       - path: kernel/internal/adapter/codex_r3_donetest_test.go
-        sha256: 1269e8c265add32562381eab3823cdd7039de44026faf8bf5ebe2acae1c1b1b8
+        sha256: 0976f23b16befe3f66d20f57594ff9521d7162f890025ef321b6e9f637b453cb
+      - path: kernel/internal/adapter/codex_r4_donetest_test.go
+        sha256: f7581aa998d85389d98d26e87209cd667160dd8e1ad9eaf0dd7d8a58e4f1689e
       - path: kernel/internal/adapter/testdata/codex/collab-spawn.jsonl
         sha256: 3ffd0b33825a5f58b07a180e81c3750bb6003e72225f5c2b37cbd6ebb9519878
       - path: kernel/internal/adapter/testdata/codex/empty.jsonl

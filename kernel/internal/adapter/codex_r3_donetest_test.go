@@ -20,13 +20,15 @@
 //     worktree. XDG is not pinned.
 //  5. noSymlink: an Lstat error other than not-exist (permission denied, not a directory) refuses.
 //
+// ROUND 4 (2026-10-03, DR-B1-07 "Round 4"): the profile is superseded, so item 1's test
+// (R3_ProfileIsParsedAsTOML) is removed; items 2-5 stand.
+//
 // Hashed in build/done-tests/B1-07.yml. Run: go -C kernel test -count=1 -tags donetest -run B1_07 ./internal/adapter/
 package adapter
 
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -67,37 +69,6 @@ func cxR3Spec(wt string) LaunchSpec {
 	s := cxSpec()
 	s.Worktree, s.Cwd = wt, wt
 	return s
-}
-
-// 1. The required-key check is a TOML parse, not a line scan.
-func TestB1_07_R3_ProfileIsParsedAsTOML(t *testing.T) {
-	without := func(k string) string { return cxProfileLines(k, "") }
-	// top puts extra lines before the profile's first table, so they are top-level TOML.
-	top := func(extra, omit string) string { return extra + without(omit) }
-	for name, toml := range map[string]string{
-		// The re-review's case: the closing delimiter shares a line with a key-looking line.
-		"sandbox_mode only in a \"\"\" string": top("description = \"\"\"\nsandbox_mode = \"workspace-write\" \"\"\"\n", "sandbox_mode"),
-		"sandbox_mode only in a ''' string":    top("description = '''\nsandbox_mode = \"workspace-write\" '''\n", "sandbox_mode"),
-		"network_access only in a \"\"\" string, dotted": top(
-			"description = \"\"\"\nsandbox_workspace_write.network_access = false \"\"\"\n", "sandbox_workspace_write.network_access"),
-		"approval_policy only inside a multi-line array": top("extra = [\napproval_policy = \"never\" ]\n", "approval_policy"),
-		"approval_policy only after a comment":           top("model = \"m\" # approval_policy = \"never\"\n", "approval_policy"),
-		"approval_policy only in an inline table":        top("extra = { approval_policy = \"never\" }\n", "approval_policy"),
-		"approval_policy only in a one-line string":      top("extra = \"approval_policy = never\"\n", "approval_policy"),
-		"network_access only in an array of tables": strings.Replace(without("sandbox_workspace_write.network_access"),
-			"[shell_environment_policy]", "[[sandbox_workspace_write]]\nnetwork_access = false\n\n[shell_environment_policy]", 1),
-		"network_access only in a sub-table": strings.Replace(without("sandbox_workspace_write.network_access"),
-			"[shell_environment_policy]", "[sandbox_workspace_write.extra]\nnetwork_access = false\n\n[shell_environment_policy]", 1),
-		"duplicate key, one quoted":       "\"sandbox_mode\" = \"read-only\"\n" + cxProfileTOML,
-		"duplicate key, dotted and table": "sandbox_workspace_write.network_access = true\n" + cxProfileTOML,
-		"bare-word value":                 strings.Replace(cxProfileTOML, `sandbox_mode = "workspace-write"`, `sandbox_mode = workspace-write`, 1),
-		"unterminated string value":       strings.Replace(cxProfileTOML, `sandbox_mode = "workspace-write"`, `sandbox_mode = "workspace-write`, 1),
-		"missing value":                   strings.Replace(cxProfileTOML, `sandbox_mode = "workspace-write"`, `sandbox_mode =`, 1),
-		"unterminated \"\"\" string":      cxProfileTOML + "description = \"\"\"\nnever closed\n",
-	} {
-		cxRefused(t, name, cxWithProfile(toml), ErrSpec)
-	}
-	cxArgv(t, cxWithProfile(cxProfileTOML)) // the complete profile still passes
 }
 
 // 2 and 3. -C, -o and CODEX_HOME are compared after resolution.
