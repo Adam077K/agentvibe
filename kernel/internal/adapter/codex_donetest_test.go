@@ -51,14 +51,14 @@ import (
 const cxDigest = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
 
 var (
-	cxTokens = []string{"exec", "-C", "<worktree>", "-s", "workspace-write", "--json",
+	cxTokens = append([]string{"exec", "-C", "<worktree>", "-s", "workspace-write", "--json",
 		"--output-schema", "<f>", "-o", "<result.json>", "--ephemeral", "--ignore-user-config", "--ignore-rules",
 		"-c", `approval_policy="never"`, "-c", `approvals_reviewer="user"`, "-c", `sandbox_mode="workspace-write"`,
 		"-c", "sandbox_workspace_write.network_access=false", "-c", "sandbox_workspace_write.writable_roots=[]",
 		"-c", "sandbox_workspace_write.exclude_tmpdir_env_var=true", "-c", "sandbox_workspace_write.exclude_slash_tmp=true",
 		"-c", `shell_environment_policy.inherit="core"`, "-c", "mcp_servers={}", "-c", `web_search="disabled"`,
 		"-c", `model_provider="openai"`, "-c", "model_providers={}", "-c", "notify=[]", "-c", "hooks={}",
-		"-c", "features={}", "-c", "tools={}", "-c", "projects={}"}
+		"-c", "tools={}", "-c", "projects={}"}, cxFeaturePins()...)
 	cxSlotValues = map[string]string{"<worktree>": "/w/job-1",
 		"<f>": "/run/av/job-1/schema.json", "<result.json>": "/run/av/job-1/result.json"}
 	// Round 4: the adapter's template is the canon line itself, the launcher's codexTokens.
@@ -107,7 +107,7 @@ func cxSpec() LaunchSpec {
 		BudgetUSD:      5,
 		WallS:          1800,
 		IdleS:          300,
-		Env:            map[string]string{"AV_JOB": "job-1"},
+		Env:            map[string]string{"LANG": "C.UTF-8"},
 		ProviderMode:   "sub",
 	}
 }

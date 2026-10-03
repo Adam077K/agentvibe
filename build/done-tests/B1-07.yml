@@ -118,8 +118,26 @@
 # Mutants 9 of 9 killed: -p back, no --ignore-user-config, network on, hooks dropped, argv pin
 # unchecked, profile fields accepted, :227 dangling as missing, extra --strict-config, binary unchecked.
 #
+# RE-FREEZE r6 2026-10-03: 2026-10-03 re-freeze r5 after review. The Opus review PASSED 9faaaef on
+# security with two MED-security findings; orchestrator fail-safe calls (DR-B1-07 "Round 5"):
+#   1. Env is an allowlist: HOME, CODEX_HOME, PATH, LANG; any other key is ErrSpec (AV_JOB too).
+#      PATH entries are clean, absolute, outside the worktree after resolution, none empty.
+#      Measured with env -i: PATH is required (node launcher); one of HOME/CODEX_HOME is required.
+#   2. features={} is a no-op (measured). Every non-removed feature of `codex features list`
+#      (103) is pinned as -c features.<name>=<bool>, false except shell_tool and unified_exec
+#      (unified_exec cannot be turned off, measured). multi_agent and multi_agent_v2 are false.
+#   3. mcp_tool_call and web_search items are UNPARSED (the lock failed).
+#   4. The review's gaps: a non-string agent_message then a valid one; -C through an alias.
+#   r1-r3 Env fixtures move from AV_JOB to LANG; r4's cxLocked drops "features" ({} is gone).
+#   Added codex_r5_donetest_test.go (7 tests).
+# On 9faaaef, 19 tests FAIL: every Argv-success test (the pinned line changed), the r5 Env,
+# feature, multi_agent, item and -C tests. R5_NonStringMessageThenValid passes (the gap was the test).
+# Reference in TMPDIR passes the package (-race -count=3). Mutants 16 of 16 killed; one more,
+# "PATH entry not cleanAbs", is equivalent (outsideWorktree already requires cleanAbs).
+# adapter.go:121-125 still carries -p/profile comments: the implementer removes them.
+#
 # OPEN (not decided here):
-# 1. (r5) 09a §8.2 and B1-08's codexTokens carry the locked line (build/b1-08-tests-r4).
+# 1. (r6) 09a §8.2 and B1-08's codexTokens must carry the feature pins (follow-up; build/b1-08-tests-codex-r4 has r5's line).
 # 2. Who measures BinaryDigest and ProfileDigest, and when (launcher/runner, B1-08/B1-09).
 # 3. Whether codex writes -o with a trailing newline is unmeasured; byte equality would then make
 #    every run UNPARSED, and the per-family UNPARSED rate (09a §8.8) shows it.
@@ -130,13 +148,15 @@ jobs:
   - id: B1-07
     files:
       - path: kernel/internal/adapter/codex_donetest_test.go
-        sha256: 55173959323a6dc4ea5d8d455bfa679a9e93ca4adeadf4c8bac8ce22a45be2ac
+        sha256: 85b74d7ad33d3295c794a9e7790c6ea5e08d74829d72372b09cf0a34ca898d01
       - path: kernel/internal/adapter/codex_r2_donetest_test.go
-        sha256: 846530666c51eb76717a160ec25b9ee7cb7e0a620f4b689d162b9e8aa240cf03
+        sha256: 8fd0822f69772b6bc3c1279e199e9db0cdfe11d0b95929037584b1ff34ad9ef4
       - path: kernel/internal/adapter/codex_r3_donetest_test.go
-        sha256: 0976f23b16befe3f66d20f57594ff9521d7162f890025ef321b6e9f637b453cb
+        sha256: 2d934a95cf988a92166d51bb5915e5ea6b66413d278b18cf328d7a16c026f8bb
       - path: kernel/internal/adapter/codex_r4_donetest_test.go
-        sha256: f7581aa998d85389d98d26e87209cd667160dd8e1ad9eaf0dd7d8a58e4f1689e
+        sha256: a1131a744168e79ec72eee663e374f7147ae322cec805a2650656f92de059413
+      - path: kernel/internal/adapter/codex_r5_donetest_test.go
+        sha256: cc1fa3eb5cf3883ad9b8e7f25fba1fb4ce6b6c6a534895081e2329420c921306
       - path: kernel/internal/adapter/testdata/codex/collab-spawn.jsonl
         sha256: 3ffd0b33825a5f58b07a180e81c3750bb6003e72225f5c2b37cbd6ebb9519878
       - path: kernel/internal/adapter/testdata/codex/empty.jsonl
