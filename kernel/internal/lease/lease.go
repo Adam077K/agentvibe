@@ -143,7 +143,9 @@ func validJobID(jobID string) error {
 }
 
 // load reads the head event of the job's lease stream. Only the head matters: a claim is live iff
-// the head is lease.claimed and unexpired, and its token is the head's seq.
+// the head is a lease.claimed, or the lease.consumed that directly follows one (launch.go), and is
+// unexpired. A claimed head's token is its own seq; a consumed head carries the token of the claim
+// it consumes, which is the seq before the head's.
 func (c *claimer) load(ctx context.Context, jobID string) (state, error) {
 	stream := Stream(jobID)
 	seq, _, err := c.j.Head(ctx, stream)

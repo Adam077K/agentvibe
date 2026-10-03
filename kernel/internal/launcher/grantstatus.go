@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 	"time"
 
@@ -73,13 +74,49 @@ func foldGrants(ctx context.Context, j journal.Journal) (grantFold, error) {
 	return f, nil
 }
 
+// decodeGrant reads data as one JSON object holding only the two keys of grantRecord, spelled
+// exactly and each at most once, and nothing after it. encoding/json alone would match keys
+// case-insensitively, let the last duplicate win and stop at a trailing "}".
+func decodeGrant(data []byte) (grantRecord, error) {
+	var rec grantRecord
+	dec := json.NewDecoder(bytes.NewReader(data))
+	if tok, err := dec.Token(); err != nil || tok != json.Delim('{') {
+		return rec, errors.New("not a JSON object")
+	}
+	seen := map[string]bool{}
+	for dec.More() {
+		tok, err := dec.Token()
+		key, ok := tok.(string)
+		if err != nil || !ok || seen[key] {
+			return rec, errors.New("bad or repeated key")
+		}
+		seen[key] = true
+		switch key {
+		case "digest":
+			err = dec.Decode(&rec.Digest)
+		case "until_unix_nano":
+			err = dec.Decode(&rec.Until)
+		default:
+			err = fmt.Errorf("unknown key %q", key)
+		}
+		if err != nil {
+			return rec, err
+		}
+	}
+	if tok, err := dec.Token(); err != nil || tok != json.Delim('}') {
+		return rec, errors.New("unterminated object")
+	}
+	if _, err := dec.Token(); err != io.EOF {
+		return rec, errors.New("data after the object")
+	}
+	return rec, nil
+}
+
 // parseGrant decodes ev as exactly one of the two records a writer here produces.
 func parseGrant(ev journal.Event) (grantRecord, error) {
-	var rec grantRecord
-	dec := json.NewDecoder(bytes.NewReader(ev.Data))
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(&rec); err != nil || dec.More() {
-		return grantRecord{}, fmt.Errorf("launcher: %s seq %d (%s) is unreadable", GrantStream, ev.Seq, ev.Type)
+	rec, err := decodeGrant(ev.Data)
+	if err != nil {
+		return grantRecord{}, fmt.Errorf("launcher: %s seq %d (%s) is unreadable: %v", GrantStream, ev.Seq, ev.Type, err)
 	}
 	if !grantDigest.MatchString(rec.Digest) {
 		return grantRecord{}, fmt.Errorf("launcher: %s seq %d (%s) names digest %q", GrantStream, ev.Seq, ev.Type, rec.Digest)
@@ -185,6 +222,12 @@ type grantStatus struct {
 }
 
 func (g *grantStatus) Live() error {
+	// A zero clock, or one past the int64 Unix-nanosecond range, has no meaningful UnixNano and
+	// must never read as "before until": refuse it.
+	now := g.now()
+	if now.IsZero() || !time.Unix(0, now.UnixNano()).Equal(now) {
+		return fmt.Errorf("launcher: clock %v is zero or outside the representable range", now)
+	}
 	f, err := foldGrants(context.Background(), g.j)
 	if err != nil {
 		return err
@@ -198,7 +241,7 @@ func (g *grantStatus) Live() error {
 		return fmt.Errorf("launcher: the latest transition on %s is a revocation", GrantStream)
 	case f.rec.Digest != g.digest:
 		return fmt.Errorf("launcher: grant %s is not the released grant %s", g.digest, f.rec.Digest)
-	case g.now().UnixNano() >= f.rec.Until:
+	case now.UnixNano() >= f.rec.Until:
 		return fmt.Errorf("launcher: grant %s expired at %s", g.digest, time.Unix(0, f.rec.Until).UTC().Format(time.RFC3339Nano))
 	}
 	return nil

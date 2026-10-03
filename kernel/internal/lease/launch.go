@@ -103,6 +103,10 @@ func parseLease(jobID, lease string) (uint64, error) {
 // current is the job's claim row at now if it is live, holds token and is unconsumed; otherwise
 // the reason it is not.
 func (v *launchVerifier) current(ctx context.Context, jobID string, token uint64, now time.Time) (state, error) {
+	// A zero clock, or one past the int64 Unix-nanosecond range, has no meaningful UnixNano: refuse.
+	if now.IsZero() || !time.Unix(0, now.UnixNano()).Equal(now) {
+		return state{}, fmt.Errorf("lease: clock %v is zero or outside the representable range", now)
+	}
 	st, err := v.c.load(ctx, jobID)
 	if err != nil {
 		return state{}, err
@@ -157,6 +161,8 @@ func (v *launchVerifier) Consume(jobID, lease string) error {
 
 // checkConsumed verifies that ev, a lease.consumed head carrying r, is exactly the consumption of
 // the claim written at seq r.Token directly before it: the same row, and no event between them.
+// Events after ev may exist (a transition can commit between load's Head and this Read); they are
+// not this check's business.
 func (c *claimer) checkConsumed(ctx context.Context, stream string, ev journal.Event, r row) error {
 	if r.Runner == "" || r.Token == 0 || r.Token+1 != ev.Seq {
 		return fmt.Errorf("%w: %s seq %d consumes token %d", ErrCorrupt, stream, ev.Seq, r.Token)
@@ -165,7 +171,7 @@ func (c *claimer) checkConsumed(ctx context.Context, stream string, ev journal.E
 	if err != nil {
 		return fmt.Errorf("lease: read %s: %w", stream, err)
 	}
-	if len(evs) != 2 || evs[0].Seq != r.Token || evs[0].Type != TypeClaimed || evs[1].Seq != ev.Seq {
+	if len(evs) < 2 || evs[0].Seq != r.Token || evs[0].Type != TypeClaimed || evs[1].Seq != ev.Seq {
 		return fmt.Errorf("%w: %s seq %d is not the consumption of the claim at seq %d", ErrCorrupt, stream, ev.Seq, r.Token)
 	}
 	var claim row
