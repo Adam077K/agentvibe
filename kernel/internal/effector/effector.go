@@ -2,8 +2,9 @@
 // B1-12: "Outbox + Operation IDs + reconciler; local effectors: git PR, preview deploy,
 // founder-mailbox email"). B1-12a, the outbox core, is kernel/internal/outbox.
 //
-// This file is the surface B1-12b implements. It is NOT registered; the done-tests beside it
-// (effector_donetest_test.go, build tag donetest) are, in build/done-tests/B1-12b.yml.
+// This file is the surface; gateway.go implements the Gateway and local.go the three effectors.
+// It is NOT registered; the done-tests beside it (effector_donetest_test.go, build tag
+// donetest) are, in build/done-tests/B1-12b.yml.
 //
 // THE GATEWAY. Gateway.ProposeEffect is socket.Backend.ProposeEffect: the B1-03 socket validates a
 // propose_effect line and hands it here, once. It finds or creates the Operation for the business
@@ -69,8 +70,6 @@ import (
 )
 
 var (
-	// ErrNotImplemented is returned by every constructor until B1-12b lands.
-	ErrNotImplemented = errors.New("effector: not implemented")
 	// ErrNoLease: the proposal presents no lease token at all (Q2).
 	ErrNoLease = errors.New("effector: an effect with no lease is refused")
 	// ErrInvalidTarget: target is not a JSON string id (Q3).
@@ -150,7 +149,7 @@ type Gateway interface {
 
 // Open opens (creating if needed) the Gateway persisted under cfg.Dir. Two Gateways opened on one
 // Dir see one set of Operations, as two outboxes on one directory do.
-func Open(cfg Config) (Gateway, error) { return nil, ErrNotImplemented }
+func Open(cfg Config) (Gateway, error) { return open(cfg) }
 
 // MailPayload is the founder-mailbox effector's payload, as JSON.
 type MailPayload struct {
@@ -170,7 +169,7 @@ type MailboxConfig struct {
 
 // NewMailbox returns the founder-mailbox effector: class check_before (09a §7.2, "Mailbox send
 // (Sent by Message-ID)"). Do delivers at most one message per idem.
-func NewMailbox(cfg MailboxConfig) (Effector, error) { return nil, ErrNotImplemented }
+func NewMailbox(cfg MailboxConfig) (Effector, error) { return newMailbox(cfg) }
 
 // PRPayload is the git PR effector's payload, as JSON.
 type PRPayload struct {
@@ -196,7 +195,7 @@ type GitPRConfig struct {
 
 // NewGitPR returns the git PR effector: class check_before (no native key; query by marker, send
 // if absent). Do opens at most one PR per idem.
-func NewGitPR(cfg GitPRConfig) (Effector, error) { return nil, ErrNotImplemented }
+func NewGitPR(cfg GitPRConfig) (Effector, error) { return newGitPR(cfg) }
 
 // DeployPayload is the preview-deploy effector's payload, as JSON. Digest is "sha256:" + 64
 // lowercase hex; Environment must be "preview".
@@ -221,4 +220,4 @@ type DeployConfig struct {
 // NewPreviewDeploy returns the preview-deploy effector: class natural (09a §7.2, "digest-pinned
 // deploy … payload is the digest"). A payload whose digest is not a digest is rejected; any
 // environment but "preview" is outside the sandbox.
-func NewPreviewDeploy(cfg DeployConfig) (Effector, error) { return nil, ErrNotImplemented }
+func NewPreviewDeploy(cfg DeployConfig) (Effector, error) { return newPreviewDeploy(cfg) }
