@@ -197,3 +197,10 @@ It pins every diff option and scrubs the git env, so the subject is now a functi
 - **Permissions that would remove most stalls:** allow `Bash(git worktree add *)` and writes under `/private/tmp/claude-501/`. Already added: `Bash(node --test *)`.
 - **Decision:** revive #144.
 - **Optionally** enable repo auto-merge with `gh repo edit --enable-auto-merge`.
+
+## Addendum: B1-09a red-team final (20:55)
+
+These are on top of §2's list.
+- **ACL hole, measured.** A directory ACL `everyone allow add_file,delete_child` lets another uid swap the binary, while the mode bits say it isn't writable, so the hybrid check runs it in place. The ruling's "not worker-writable" must include ACLs. This needs a founder or orchestrator ruling plus a test.
+- **Case 6 is flaky outside /tmp.** It passed 9 of 11 runs; in the other 2, `/bin/sh` workers hung about 18s until the 90% SIGINT. Unexplained, and looks environmental.
+- **Leftover scratch dirs** `~/.agentvibe/rt-b109a-*` from the earlier lost runs can be deleted by the founder.
