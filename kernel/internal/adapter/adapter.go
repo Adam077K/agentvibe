@@ -99,8 +99,8 @@ type ToolLease struct {
 }
 
 // LaunchSpec is 09a §8.2's LaunchSpec. AgentsPath, Record and SessionID are not in canon's type
-// but the pinned claude line needs them (--agents, --agent, --session-id); CodexProfile and
-// ResultPath likewise for the pinned codex line (-p, -o; B1-07).
+// but the pinned claude line needs them (--agents, --agent, --session-id); ResultPath, Worktree,
+// CodexHome, Home and BinaryDigest likewise for the locked codex line (B1-07).
 type LaunchSpec struct {
 	Cwd              string
 	ContextProfile   string // key into the pinned profile table; its row fills --setting-sources (ruling C)
@@ -118,11 +118,11 @@ type LaunchSpec struct {
 	AgentsPath       string            // --agents <compiled.json>
 	Record           string            // --agent <record>
 	SessionID        string            // --session-id <uuid>
-	CodexProfile     string            // codex -p <generated profile>: a profile name, never a path (B1-07)
+	CodexProfile     string            // codex: superseded (DR-B1-07 round 4, no profile); set is ErrSpec
 	ResultPath       string            // codex -o <result.json> (B1-07)
 	BinaryDigest     string            // codex: the binary's measured sha256; must equal the grant digest (DR-B1-07 1+3)
-	ProfileDigest    string            // codex: the generated profile's measured sha256; must equal InitExpect (DR-B1-07 1+3)
-	CodexProfileTOML string            // codex: the generated profile's exact bytes; sha256 = InitExpect, every required key set (DR-B1-07 r2)
+	ProfileDigest    string            // codex: superseded (DR-B1-07 round 4, no profile); set is ErrSpec
+	CodexProfileTOML string            // codex: superseded (DR-B1-07 round 4, no profile); set is ErrSpec
 	Worktree         string            // codex: the job's worktree; -C stays inside it, -o and CODEX_HOME stay outside (DR-B1-07 r2)
 	CodexHome        string            // codex: the pinned CODEX_HOME; Env[CODEX_HOME] is absent or exactly this (DR-B1-07 r2)
 	Home             string            // codex: the pinned HOME; Env[HOME] is absent or exactly this, clean, not / and outside the worktree (DR-B1-07 r3)

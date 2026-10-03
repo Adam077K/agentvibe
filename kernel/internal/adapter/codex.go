@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -32,14 +33,74 @@ var _ WorkerAdapter = (*Codex)(nil)
 // --ignore-user-config drops the user and project config (measured: no MCP server starts, a
 // worktree .codex/config.toml is ignored, auth is still read from CODEX_HOME), --ignore-rules
 // drops execpolicy .rules files, and every locked setting is a -c. There is no -p and no profile.
-var codexTemplate = [...]string{"exec", "-C", "<worktree>", "-s", "workspace-write", "--json",
+// Round 5: features={} measured as a no-op, so the line ends with one -c per feature that
+// `codex features list` (0.154.0) reports with a stage other than "removed", in listed order.
+var codexTemplate = append([]string{"exec", "-C", "<worktree>", "-s", "workspace-write", "--json",
 	"--output-schema", "<f>", "-o", "<result.json>", "--ephemeral", "--ignore-user-config", "--ignore-rules",
 	"-c", `approval_policy="never"`, "-c", `approvals_reviewer="user"`, "-c", `sandbox_mode="workspace-write"`,
 	"-c", "sandbox_workspace_write.network_access=false", "-c", "sandbox_workspace_write.writable_roots=[]",
 	"-c", "sandbox_workspace_write.exclude_tmpdir_env_var=true", "-c", "sandbox_workspace_write.exclude_slash_tmp=true",
 	"-c", `shell_environment_policy.inherit="core"`, "-c", "mcp_servers={}", "-c", `web_search="disabled"`,
 	"-c", `model_provider="openai"`, "-c", "model_providers={}", "-c", "notify=[]", "-c", "hooks={}",
-	"-c", "features={}", "-c", "tools={}", "-c", "projects={}"}
+	"-c", "tools={}", "-c", "projects={}"}, featurePins()...)
+
+// codexFeatures are pinned false, except shell_tool (the worker's command tool) and unified_exec
+// (measured: false leaves it true, so true records the truth). multi_agent and multi_agent_v2
+// are false: nested agents never (ruling 2). An unknown name is refused by codex, a tripwire.
+const codexFeatures = `apply_patch_preserve_line_endings apply_patch_streaming_events apps artifact
+auth_elicitation background_paginated_rollout_migration bedrock_setup_wizard browser_use
+browser_use_external browser_use_full_cdp_access chronicle code_mode code_mode_host
+code_mode_interrupt code_mode_only code_mode_prewarm compaction_image_budget computer_use
+concurrent_reasoning_summaries content_item_kinds context_management current_time_reminder
+cwd_relative_turn_diffs default_mode_request_user_input deferred_executor deferred_tool_world_state
+enable_mcp_apps enable_request_compression exec_permission_approvals executed_tool_call_metadata
+executor_capability_discovery external_agent_memory_import fast_mode goals guardian_approval
+guardian_enhanced_node_repl_transcripts guardian_ext guardian_node_repl_transcript_images
+guardian_reuse_parent_compaction guardianv2 guardianv2.thread_context hooks image_generation
+image_resize_notice in_app_browser in_app_chat in_app_dictation in_app_local_automation
+in_app_updates local_thread_store_compression mcp_2026_07_28 mcp_oauth_refresh_coordination
+memories mentions_v2 multi_agent multi_agent_v2 network_proxy non_prefixed_mcp_tool_names
+omit_app_server_notification_media personality plugin_sharing plugins powershell_shell_version
+prevent_idle_sleep psp reasoning_effort_override recommended_plugins remote_compaction_v2
+remote_plugin request_permissions_tool respect_system_proxy retain_client_developer_messages
+rollout_budget runtime_metrics secret_auth_storage shell_snapshot shell_snapshot_v2 shell_tool
+shell_zsh_fork skill_mcp_dependency_install skill_search skip_host_skill_discovery sleep_tool
+standalone_web_search step_model_switching terminal_visualization_instructions token_budget
+tool_call_mcp_elicitation tool_suggest transcript_v2 unbounded_connection_retries unified_exec
+unified_exec_tty unified_image_budget use_agent_identity use_legacy_landlock view_image
+web_search_cached web_search_request windows_sandbox_service workspace_dependencies worktrees
+write_stdin_approval`
+
+func featurePins() []string {
+	var out []string
+	for _, f := range strings.Fields(codexFeatures) {
+		on := f == "shell_tool" || f == "unified_exec"
+		out = append(out, "-c", "features."+f+"="+strconv.FormatBool(on))
+	}
+	return out
+}
+
+// codexEnvAllow is the Env allowlist (round 5, measured with env -i: codex needs PATH to find
+// node and one of HOME or CODEX_HOME; LANG is harmless). Any other key is ErrSpec.
+var codexEnvAllow = [...]string{"HOME", "CODEX_HOME", "PATH", "LANG"}
+
+// envOK: every key is allowed, and every PATH entry is a clean absolute path outside the
+// worktree after resolution (an empty entry is the cwd), so the worker plants no binary codex runs.
+func envOK(env map[string]string, wt string) bool {
+	for k := range env {
+		if !slices.Contains(codexEnvAllow[:], k) {
+			return false
+		}
+	}
+	if path, ok := env["PATH"]; ok {
+		for _, dir := range strings.Split(path, ":") {
+			if !outsideWorktree(dir, wt) {
+				return false
+			}
+		}
+	}
+	return true
+}
 
 // codexPin is init_expect for codex (round 4): the sha256 of the whole template, the tokens
 // joined by NUL (the launcher's ArgvTemplate digest).
@@ -115,6 +176,8 @@ func (c *Codex) Argv(spec LaunchSpec) ([]string, error) {
 		return nil, specErr("CODEX_HOME is not absent or the pinned %q outside the worktree", spec.CodexHome)
 	case !pinnedEnv(spec.Env, "HOME", spec.Home, wt):
 		return nil, specErr("HOME is not absent or the pinned %q outside the worktree", spec.Home)
+	case !envOK(spec.Env, wt):
+		return nil, specErr("Env holds a key beyond %v, or a PATH entry that is not outside the worktree", codexEnvAllow)
 	}
 	argv := make([]string, len(codexTemplate))
 	for i, tok := range codexTemplate {
@@ -216,8 +279,9 @@ type codexStream struct {
 
 // codexQuietItems are the item types (serde strings of codex-cli 0.154.0) that neither answer
 // nor signal; agent_message, collab_tool_call and error are handled apart. Byte-for-byte.
-var codexQuietItems = [...]string{"reasoning", "command_execution", "file_change", "mcp_tool_call",
-	"web_search", "todo_list"}
+// mcp_tool_call and web_search are not here: both are locked off, so such an item means the lock
+// failed and the run is UNPARSED (round 5).
+var codexQuietItems = [...]string{"reasoning", "command_execution", "file_change", "todo_list"}
 
 // dupFree: no JSON object anywhere in b repeats a key. encoding/json lets the last duplicate
 // win; the worker must never pick which one the adapter reads.
