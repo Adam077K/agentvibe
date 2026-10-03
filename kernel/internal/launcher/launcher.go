@@ -14,12 +14,17 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
+	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/Adam077K/agentvibe/kernel/internal/adapter"
@@ -64,32 +69,6 @@ var (
 	// truncated or corrupt. Every launch is refused until it is explicitly re-established.
 	ErrState = errors.New("launcher: persisted state missing or corrupt")
 )
-
-// B1-08 r4 surface, 2026-10-03 re-freeze r4 after review (build/done-tests/B0-17b.yml). Declared
-// here, not implemented: each stub below refuses, so nothing fails open before B1-08 lands it.
-//
-// RECEIPT LOG. A file-backed ReceiptSink. It is created only explicitly (CreateReceiptLog), never
-// implicitly by opening. Since and Append fail closed with ErrState on a log that is missing,
-// emptied, truncated (mid-record or at a record boundary) or corrupt (a changed byte, an appended
-// line). ReestablishReceiptLog is the only way back, and it never resets the count to 0: for an
-// hour after re-establishment the unknown history counts as full, so Since over a window that
-// reaches before the re-establishment fails closed.
-
-// CreateReceiptLog creates an empty receipt log at path; it refuses one that exists.
-func CreateReceiptLog(path string) error {
-	return fmt.Errorf("%w: CreateReceiptLog not implemented", ErrState)
-}
-
-// OpenReceiptLog opens the receipt log at path; it refuses one that was never created.
-func OpenReceiptLog(path string) (ReceiptSink, error) {
-	return nil, fmt.Errorf("%w: OpenReceiptLog not implemented", ErrState)
-}
-
-// ReestablishReceiptLog explicitly replaces a broken (or absent) log at path with one whose
-// history before at is unknown and counts as full for the trailing hour.
-func ReestablishReceiptLog(path string, at time.Time) error {
-	return fmt.Errorf("%w: ReestablishReceiptLog not implemented", ErrState)
-}
 
 // Holder is the only principal that may hold the grant (09a §8.5).
 const Holder = "kernel.launcher"
@@ -248,16 +227,19 @@ type Launcher interface {
 	End(ctx context.Context, jobID, lease string) error
 }
 
-func (l *launcher) End(context.Context, string, string) error {
-	return fmt.Errorf("%w: End not implemented", ErrLease)
-}
-
 // TemplateOf pins a WorkerAdapter's launch line for the binary at path: the grant's templates
 // are built from the adapters' Template(), never typed twice. B1-08 r4: the result is the full
-// template — every slot's pin included (claude's --setting-sources is pinned to "project").
+// template, every slot's pin included: --setting-sources is pinned to "project", the one value
+// of the adapter's pinned profile table (DR-B1-06 rulings C and D).
 func TemplateOf(path string, a adapter.WorkerAdapter) ArgvTemplate {
 	t := a.Template()
-	return ArgvTemplate{Binary: path, Tokens: t, Digest: digestOf(t)}
+	at := ArgvTemplate{Binary: path, Tokens: t, Digest: digestOf(t)}
+	for i := 1; i < len(t); i++ {
+		if t[i-1] == "--setting-sources" && isSlot(t[i]) {
+			at.Pinned = map[string]string{t[i]: "project"}
+		}
+	}
+	return at
 }
 
 func digestOf(tokens []string) string {
@@ -265,22 +247,86 @@ func digestOf(tokens []string) string {
 	return "sha256:" + hex.EncodeToString(s[:])
 }
 
+var (
+	agentName = regexp.MustCompile(`^[a-z][a-z0-9-]{0,63}$`)
+	uuidLower = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+)
+
+// slotRules is every slot's rule, keyed by the flag the slot is the value of (never by the
+// slot's display name). A slot whose flag is not here is refused by New.
+var slotRules = map[string]func(g *Grant, v string, capCents int64) bool{
+	"--setting-sources": pinnedOnly, "-p": pinnedOnly,
+	"--settings": jobFile, "--agents": jobFile, "--json-schema": jobFile, "--output-schema": jobFile, "-o": jobFile,
+	"-C":                func(g *Grant, v string, _ int64) bool { return inside(v, g.WorktreeRoot) },
+	"--agent":           func(_ *Grant, v string, _ int64) bool { return agentName.MatchString(v) },
+	"--allowedTools":    func(_ *Grant, v string, _ int64) bool { n, ok := tools(v); return ok && !n["Agent"] && !n["Task"] },
+	"--disallowedTools": func(_ *Grant, v string, _ int64) bool { n, ok := tools(v); return ok && n["Agent"] && n["Task"] },
+	"--max-budget-usd":  func(_ *Grant, v string, c int64) bool { n, ok := cents(v); return ok && n > 0 && n <= c },
+	"--session-id":      func(_ *Grant, v string, _ int64) bool { return uuidLower.MatchString(v) },
+	"-c":                func(g *Grant, v string, _ int64) bool { return slices.Contains(g.ConfigAllow, v) },
+}
+
+// pinnedOnly: the value is checked against the template's pin, which New requires.
+func pinnedOnly(*Grant, string, int64) bool { return true }
+
+func jobFile(g *Grant, v string, _ int64) bool {
+	return inside(v, g.JobRoot) && strings.HasSuffix(v, ".json")
+}
+
+// inside: a clean absolute path strictly inside root.
+func inside(v, root string) bool {
+	return filepath.IsAbs(v) && filepath.Clean(v) == v && strings.HasPrefix(v, root+"/")
+}
+
+// tools parses a comma-joined tool list into the set of base names (the part before any "(");
+// every name is non-empty, not a flag, and has no whitespace in its base.
+func tools(v string) (map[string]bool, bool) {
+	out := map[string]bool{}
+	for _, name := range strings.Split(v, ",") {
+		base, _, _ := strings.Cut(name, "(")
+		if base == "" || base[0] == '-' || strings.ContainsAny(base, " \t\r\n") {
+			return nil, false
+		}
+		out[base] = true
+	}
+	return out, true
+}
+
+// argvHeadless: claude's bare "-p" is print mode, and "codex exec" runs headless (09a §8.8).
+func argvHeadless(tokens []string) bool {
+	for i, t := range tokens {
+		if t == "-p" && (i+1 == len(tokens) || !isSlot(tokens[i+1])) {
+			return true
+		}
+	}
+	return len(tokens) > 0 && tokens[0] == "exec"
+}
+
+func cleanRoot(r string) bool { return filepath.IsAbs(r) && filepath.Clean(r) == r && r != "/" }
+
+// jobState is the launcher's persisted state under Deps.State: every lease consumed, ever, and
+// each running job with the lease it runs on. Only a recorded end removes a running job.
+type jobState struct {
+	Consumed map[string]bool   `json:"consumed"` // job + " " + lease
+	Running  map[string]string `json:"running"`  // job -> lease
+}
+
 type launcher struct {
-	g        Grant
-	d        Deps
-	mu       sync.Mutex // the admit lock: grant, lease, history and caps are one step
-	inflight int
-	running  map[string]bool // JobIDs between admit and Exec.Run's return
+	g  Grant
+	d  Deps
+	mu sync.Mutex // in-process half of the admit lock; the State flock is the cross-process half
 }
 
 // New returns a Launcher holding g. It refuses a template whose Digest does not match its
-// Tokens (ErrGrant) or that carries a forbidden flag (ErrForbiddenFlag).
+// Tokens (ErrGrant), that carries a forbidden flag (ErrForbiddenFlag), or that has a slot with no
+// rule, a pinned flag with no pin, or a literal -c off ConfigAllow (ErrGrant).
 func New(g Grant, d Deps) (Launcher, error) {
-	if d.Clock == nil || d.Exec == nil || d.Digester == nil || d.Receipts == nil || d.Leases == nil || d.Grant == nil {
+	if d.Clock == nil || d.Exec == nil || d.Digester == nil || d.Receipts == nil || d.Leases == nil || d.Grant == nil || d.State == "" {
 		return nil, ErrDeps
 	}
-	if g.Holder != Holder || g.Caps.Concurrent <= 0 || g.Caps.PerHour <= 0 || len(g.Templates) == 0 {
-		return nil, fmt.Errorf("%w: holder %q, caps %+v, %d templates", ErrGrant, g.Holder, g.Caps, len(g.Templates))
+	if g.Holder != Holder || g.Caps.Concurrent <= 0 || g.Caps.PerHour <= 0 || len(g.Templates) == 0 ||
+		!cleanRoot(g.WorktreeRoot) || !cleanRoot(g.JobRoot) {
+		return nil, fmt.Errorf("%w: holder %q, caps %+v, %d templates, roots %q %q", ErrGrant, g.Holder, g.Caps, len(g.Templates), g.WorktreeRoot, g.JobRoot)
 	}
 	for _, f := range g.ForbiddenFlags {
 		if !strings.HasPrefix(f, "-") {
@@ -306,12 +352,55 @@ func New(g Grant, d Deps) (Launcher, error) {
 		if f := forbidden(g.ForbiddenFlags, t.Tokens); f != "" {
 			return nil, fmt.Errorf("%w: template for %q carries %q", ErrForbiddenFlag, t.Binary, f)
 		}
+		for i, tok := range t.Tokens {
+			flag := ""
+			if i > 0 {
+				flag = t.Tokens[i-1]
+			}
+			_, ruled := slotRules[flag]
+			_, pinned := t.Pinned[tok]
+			switch {
+			case isSlot(tok) && !ruled,
+				isSlot(tok) && (flag == "--setting-sources" || flag == "-p") && !pinned,
+				!isSlot(tok) && flag == "-c" && !slices.Contains(g.ConfigAllow, tok):
+				return nil, fmt.Errorf("%w: template for %q: %s %s has no rule", ErrGrant, t.Binary, flag, tok)
+			}
+		}
 	}
 	g.Binaries = slices.Clone(g.Binaries)
 	g.Templates = slices.Clone(g.Templates)
 	g.ForbiddenFlags = slices.Clone(g.ForbiddenFlags)
 	g.EnvAllow = slices.Clone(g.EnvAllow)
-	return &launcher{g: g, d: d, running: map[string]bool{}}, nil
+	g.ConfigAllow = slices.Clone(g.ConfigAllow)
+	l := &launcher{g: g, d: d}
+	// A State directory with no state yet is initialised, under the flock; an existing one is kept.
+	unlock, err := l.flock()
+	if err != nil {
+		return nil, err
+	}
+	defer unlock()
+	if _, err := os.Stat(l.statePath()); errors.Is(err, fs.ErrNotExist) {
+		err = replace(l.statePath(), `{"consumed":{},"running":{}}`)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrState, err)
+	}
+	return l, nil
+}
+
+func (l *launcher) statePath() string { return filepath.Join(l.d.State, "state.json") }
+
+// flock takes the cross-process half of the admit lock: an exclusive flock on State/lock.
+func (l *launcher) flock() (func(), error) {
+	f, err := os.OpenFile(filepath.Join(l.d.State, "lock"), os.O_RDWR|os.O_CREATE, 0o600)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrState, err)
+	}
+	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX); err != nil {
+		f.Close()
+		return nil, fmt.Errorf("%w: flock: %v", ErrState, err)
+	}
+	return func() { f.Close() }, nil // closing releases the flock
 }
 
 // forbidden returns the first forbidden flag argv carries, in any spelling: "--f", "--f=v",
@@ -350,24 +439,15 @@ func matches(tokens, argv []string) bool {
 	return true
 }
 
-// slotRules checks each slot value against its adapter's rule: a Pinned slot equals its pin;
-// <worktree> (codex -C) is clean, absolute and not /; <B> (--max-budget-usd) is a decimal of
-// at most two places, above zero and within the budget cap.
-func slotRules(t ArgvTemplate, argv []string, capCents int64) error {
+// checkSlots applies each slot's pin and its flag's rule.
+func (l *launcher) checkSlots(t ArgvTemplate, argv []string, capCents int64) error {
 	for i, tok := range t.Tokens {
-		v := argv[i]
-		if pin, ok := t.Pinned[tok]; ok && v != pin {
-			return fmt.Errorf("%w: %s = %q, pinned %q", ErrSpec, tok, v, pin)
+		if !isSlot(tok) {
+			continue
 		}
-		switch tok {
-		case "<worktree>":
-			if !filepath.IsAbs(v) || filepath.Clean(v) != v || v == "/" {
-				return fmt.Errorf("%w: -C %q", ErrSpec, v)
-			}
-		case "<B>":
-			if c, ok := cents(v); !ok || c <= 0 || c > capCents {
-				return fmt.Errorf("%w: --max-budget-usd %q against a cap of %d cents", ErrSpec, v, capCents)
-			}
+		pin, pinned := t.Pinned[tok]
+		if pinned && argv[i] != pin || !slotRules[t.Tokens[i-1]](&l.g, argv[i], capCents) {
+			return fmt.Errorf("%w: %s %q", ErrSpec, t.Tokens[i-1], argv[i])
 		}
 	}
 	return nil
@@ -403,13 +483,11 @@ func (l *launcher) environ(env map[string]string) ([]string, error) {
 	return out, nil
 }
 
-// prerequisites checks per_launch_requires (09a §8.5). An unattended launch is headless.
+// prerequisites checks per_launch_requires (09a §8.5).
 func prerequisites(req Request) error {
 	p := req.Requires
 	miss := func(what string) error { return fmt.Errorf("%w: %s", ErrPrerequisite, what) }
 	switch {
-	case req.Unattended && !p.Headless:
-		return fmt.Errorf("%w: unattended but not headless", ErrSpec)
 	case req.JobID == "" || !p.AdmittedJob:
 		return miss("admitted Job")
 	case len(p.ToolLease) == 0:
@@ -456,10 +534,15 @@ func (l *launcher) Launch(ctx context.Context, req Request) (Receipt, error) {
 	if tmpl == nil {
 		return Receipt{}, ErrArgvNotPinned
 	}
+	// Headless is the argv's, not the request's: a headless line runs only unattended, and an
+	// unattended launch is always headless.
+	if h := argvHeadless(tmpl.Tokens); req.Requires.Headless != h || req.Unattended != h {
+		return Receipt{}, fmt.Errorf("%w: argv headless %v, request headless %v, unattended %v", ErrSpec, h, req.Requires.Headless, req.Unattended)
+	}
 	if err := prerequisites(req); err != nil {
 		return Receipt{}, err
 	}
-	if err := slotRules(*tmpl, req.Argv, req.Requires.BudgetCapCents); err != nil {
+	if err := l.checkSlots(*tmpl, req.Argv, req.Requires.BudgetCapCents); err != nil {
 		return Receipt{}, err
 	}
 	env, err := l.environ(req.Env)
@@ -473,51 +556,100 @@ func (l *launcher) Launch(ctx context.Context, req Request) (Receipt, error) {
 	if err != nil {
 		return Receipt{}, err
 	}
-	defer l.done(req.JobID)
 	// Exec hashes and execs the same open file against the pinned digest: no swap in between.
-	return rc, l.d.Exec.Run(ctx, bin.Path, bin.Digest, slices.Clone(req.Argv), env)
+	runErr := l.d.Exec.Run(ctx, bin.Path, bin.Digest, slices.Clone(req.Argv), env)
+	return rc, errors.Join(runErr, l.end(req.JobID, req.Requires.FencedLease, false))
 }
 
-// admit is one step under the admit lock: the grant is live, the job is not already running,
-// its fenced lease verifies at the launcher's clock, the durable receipt log holds fewer than
-// per_hour launches in the trailing hour, a concurrent slot is free, and the Receipt is
-// appended. Any refusal takes nothing.
-func (l *launcher) admit(req Request, digest, tmpl string) (Receipt, error) {
+// locked runs fn on the persisted state under the admit lock (this launcher's mutex, then an
+// exclusive flock on State/lock), writing the state back when fn says so. A missing or corrupt
+// state is ErrState.
+func (l *launcher) locked(fn func(s *jobState) (bool, error)) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	now := l.d.Clock.Now()
-	if err := l.d.Grant.Live(); err != nil {
-		return Receipt{}, fmt.Errorf("%w: not live: %v", ErrGrant, err)
-	}
-	if l.running[req.JobID] {
-		return Receipt{}, fmt.Errorf("%w: job %q is already running", ErrLease, req.JobID)
-	}
-	if err := l.d.Leases.Verify(req.JobID, req.Requires.FencedLease, now); err != nil {
-		return Receipt{}, fmt.Errorf("%w: %v", ErrLease, err)
-	}
-	recent, err := l.d.Receipts.Since(now.Add(-time.Hour))
+	unlock, err := l.flock()
 	if err != nil {
-		return Receipt{}, fmt.Errorf("%w: launch history unreadable: %v", ErrReceipt, err)
+		return err
 	}
-	if len(recent) >= l.g.Caps.PerHour {
-		return Receipt{}, fmt.Errorf("%w: %d in the trailing hour", ErrRateCap, len(recent))
+	defer unlock()
+	path := l.statePath()
+	var s jobState
+	if b, err := os.ReadFile(path); err != nil || json.Unmarshal(b, &s) != nil || s.Consumed == nil || s.Running == nil {
+		return fmt.Errorf("%w: %s missing or corrupt", ErrState, path)
 	}
-	if l.inflight >= l.g.Caps.Concurrent {
-		return Receipt{}, fmt.Errorf("%w: %d running", ErrConcurrentCap, l.inflight)
+	write, err := fn(&s)
+	if err != nil || !write {
+		return err
 	}
-	rc := Receipt{JobID: req.JobID, Binary: req.Binary, Digest: digest, Template: tmpl,
-		Argv: slices.Clone(req.Argv), At: now}
-	if err := l.d.Receipts.Append(rc); err != nil {
-		return Receipt{}, fmt.Errorf("%w: %v", ErrReceipt, err)
+	b, err := json.Marshal(s)
+	if err == nil {
+		err = replace(path, string(b))
 	}
-	l.inflight++
-	l.running[req.JobID] = true
-	return rc, nil
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrState, err)
+	}
+	return nil
 }
 
-func (l *launcher) done(job string) {
-	l.mu.Lock()
-	l.inflight--
-	delete(l.running, job)
-	l.mu.Unlock()
+// admit is one step under the admit lock: the grant is live, the job is not running, the lease
+// was never consumed and verifies at the launcher's clock, the receipt log holds fewer than
+// per_hour launches in the trailing hour, fewer than concurrent jobs run, and the Receipt is
+// appended. Then the lease is consumed and the job recorded running. A refusal takes nothing.
+func (l *launcher) admit(req Request, digest, tmpl string) (rc Receipt, err error) {
+	job, lease := req.JobID, req.Requires.FencedLease
+	err = l.locked(func(s *jobState) (bool, error) {
+		now := l.d.Clock.Now()
+		if err := l.d.Grant.Live(); err != nil {
+			return false, fmt.Errorf("%w: not live: %v", ErrGrant, err)
+		}
+		if _, running := s.Running[job]; running {
+			return false, fmt.Errorf("%w: job %q is already running", ErrLease, job)
+		}
+		if s.Consumed[job+" "+lease] {
+			return false, fmt.Errorf("%w: lease %q was already consumed", ErrLease, lease)
+		}
+		if err := l.d.Leases.Verify(job, lease, now); err != nil {
+			return false, fmt.Errorf("%w: %v", ErrLease, err)
+		}
+		recent, err := l.d.Receipts.Since(now.Add(-time.Hour))
+		if err != nil {
+			return false, fmt.Errorf("%w: launch history: %w", ErrState, err)
+		}
+		if len(recent) >= l.g.Caps.PerHour {
+			return false, fmt.Errorf("%w: %d in the trailing hour", ErrRateCap, len(recent))
+		}
+		if len(s.Running) >= l.g.Caps.Concurrent {
+			return false, fmt.Errorf("%w: %d running", ErrConcurrentCap, len(s.Running))
+		}
+		rc = Receipt{JobID: job, Binary: req.Binary, Digest: digest, Template: tmpl, Argv: slices.Clone(req.Argv), At: now}
+		if err := l.d.Receipts.Append(rc); err != nil {
+			return false, fmt.Errorf("%w: %v", ErrReceipt, err)
+		}
+		s.Consumed[job+" "+lease] = true
+		s.Running[job] = lease
+		return true, nil
+	})
+	return rc, err
+}
+
+// end records jobID's end on lease. strict refuses a job not running on that lease (End); the
+// launch's own end after an End already recorded it is not an error.
+func (l *launcher) end(job, lease string, strict bool) error {
+	return l.locked(func(s *jobState) (bool, error) {
+		if got, ok := s.Running[job]; !ok || got != lease {
+			if strict {
+				return false, fmt.Errorf("%w: job %q is not running on %q", ErrLease, job, lease)
+			}
+			return false, nil
+		}
+		delete(s.Running, job)
+		return true, nil
+	})
+}
+
+func (l *launcher) End(ctx context.Context, jobID, lease string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	return l.end(jobID, lease, true)
 }
