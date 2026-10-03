@@ -1097,7 +1097,7 @@ type fakeDeploy struct {
 	findErr   error
 }
 
-func (d *fakeDeploy) Deploy(_ context.Context, project, digest, marker string) error {
+func (d *fakeDeploy) Deploy(_ context.Context, project, digest, _, marker string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	d.n++
@@ -1121,7 +1121,7 @@ func (d *fakeDeploy) FindDeploy(_ context.Context, marker string) (bool, error) 
 // Do/Lookup onto a DeployHost (a fake: no network), and never deploys anything but a preview.
 func TestB112bPreviewDeployEffector(t *testing.T) {
 	d := &fakeDeploy{deploys: map[string]string{}}
-	e, err := effector.NewPreviewDeploy(effector.DeployConfig{Host: d})
+	e, err := effector.NewPreviewDeploy(effector.DeployConfig{Host: d, Projects: []string{"keel-site"}})
 	if err != nil {
 		t.Fatalf("NewPreviewDeploy: %v", err)
 	}

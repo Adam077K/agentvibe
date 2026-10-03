@@ -160,7 +160,10 @@ type MailPayload struct {
 
 // MailboxConfig configures the founder-mailbox effector. Dir is a Maildir (tmp, new, cur), created
 // if absent; a delivered message is a file under new/ or cur/ whose Message-ID header contains the
-// idem. To must equal Founder. VisibilityLag <= 0 leaves the outbox default (ruling A).
+// idem. To must equal Founder byte for byte: no display name, list, padding or case variant. A CR
+// or LF in any header field (To, Subject) is refused; the body may carry line breaks. An idem
+// that cannot name a file inside Dir is refused. VisibilityLag <= 0 leaves the outbox default
+// (ruling A).
 type MailboxConfig struct {
 	Dir           string
 	Founder       string
@@ -205,19 +208,25 @@ type DeployPayload struct {
 	Environment string `json:"environment"`
 }
 
-// DeployHost is where a preview is deployed. marker is the idem.
+// DeployHost is where a preview is deployed. marker is the idem. The environment is passed
+// explicitly and is always "preview" (r2, 2026-10-03): a host is never left to pick a default.
 type DeployHost interface {
-	Deploy(ctx context.Context, project, digest, marker string) error
+	Deploy(ctx context.Context, project, digest, environment, marker string) error
 	FindDeploy(ctx context.Context, marker string) (bool, error)
 }
 
-// DeployConfig configures the preview-deploy effector.
+// DeployConfig configures the preview-deploy effector. A project not in Projects is outside the
+// sandbox; with no Projects every deploy is refused until the list is widened (Q7).
 type DeployConfig struct {
 	Host          DeployHost
+	Projects      []string
 	VisibilityLag time.Duration
 }
 
 // NewPreviewDeploy returns the preview-deploy effector: class natural (09a §7.2, "digest-pinned
 // deploy … payload is the digest"). A payload whose digest is not a digest is rejected; any
-// environment but "preview" is outside the sandbox.
+// environment but exactly "preview", or any project not allow-listed, is outside the sandbox. A
+// payload is refused unless it is exactly one JSON object with only the three known keys, each
+// once: a production flag or target cannot ride along in an unknown key, a duplicate key or
+// trailing data (r2, 2026-10-03).
 func NewPreviewDeploy(cfg DeployConfig) (Effector, error) { return newPreviewDeploy(cfg) }

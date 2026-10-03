@@ -68,9 +68,55 @@
 #   venture check removed                            -> ProposeRefusals
 #   founder recipient matched case-insensitively     -> MailboxEffector
 # All 24 earlier mutants were re-run against this file and each is still killed: 28 of 28.
+#
+# RE-FREEZE r2 2026-10-03: 2026-10-03 re-freeze r2 after review. The Opus review PASSED d75c5c5,
+# the implementation of c982bb9, and left the gaps below. Added effector_r2_donetest_test.go.
+#
+# The round-1 file changed in two lines only, to follow the contract: fakeDeploy takes the new
+# environment argument, and the deploy test allow-lists its project. Its hash moves from 9633fe44…
+# to the one below. Contract change, in effector.go, which is unregistered: DeployHost.Deploy takes
+# the environment explicitly, DeployConfig gains Projects, and the payload and mailbox rules are
+# documented.
+#   1 MED deploy target: the host is told environment "preview"; the project is allow-listed (none
+#     listed refuses everything); a prod flag or target in an unknown key, a duplicate key or
+#     trailing data is refused, and the host is never called          -> R2DeployTargetIsPinned
+#   2 MED founder exact (founder@….evil, display-name, list, padding, case) -> R2MailboxFounderIsExact
+#     CR or LF in any header field (To, Subject); the body may break lines -> R2HeaderLineBreaksRefused
+#   3 LOW fence record never replaced by a later proposal               -> R2FenceRecordIsNeverReplaced
+#     cheap kills: unsafe idem, trailing data             -> R2MailboxRefusesUnsafeInput
+#                  empty target, PR without base/head/title -> R2IncompleteRequestsRefused
+#                  incomplete Gateway/effector Config       -> R2ConstructorsRefuseIncompleteConfig
+# ON d75c5c5: the package no longer compiles, because local.go calls the old Deploy, so every test
+# fails. With ONLY that call adapted (a compile shim, $TMPDIR), exactly one test fails:
+# R2DeployTargetIsPinned. The other 21 pass, the 7 round-2 tests among them.
+# MUTANTS, against a $TMPDIR reference (d75c5c5 plus the allow-list, the environment argument and a
+# duplicate-key check; never committed), each killed:
+#   founder check as strings.Contains (local.go:90)    -> R2MailboxFounderIsExact, R2HeaderLineBreaks…
+#   subject CR/LF check removed (local.go:93)          -> R2HeaderLineBreaksRefused
+#   fence overwritten: Stat bypassed + Link->Rename    -> R2FenceRecordIsNeverReplaced
+#   fence overwritten: Stat bypassed + WriteFile       -> R2FenceRecordIsNeverReplaced
+#   project allow-list removed / environment not passed / dup-key check removed / unknown keys
+#     allowed                                          -> R2DeployTargetIsPinned
+#   environment check removed                          -> PreviewDeployEffector, R2DeployTargetIsPinned
+#   trailing data allowed                              -> R2DeployTargetIsPinned, R2MailboxRefusesUnsafe…
+#   unsafe idem allowed                                -> R2MailboxRefusesUnsafeInput
+#   PR field check removed / empty target allowed      -> R2IncompleteRequestsRefused
+#   mailbox, Gateway or nil-effector config check removed -> R2ConstructorsRefuseIncompleteConfig
+# EQUIVALENT, judged and not pinned:
+#   - gateway.go:169's Stat check alone, or the Link alone swapped for Rename: each is covered by the
+#     other line, because Link never replaces an existing file and Stat is a fast path. A mutant that
+#     defeats both is killed (above).
+#   - parseTokens' m == nil, r == "", and checkFence's len(resources) == 0 and fenceOf's len == 0:
+#     the input is refused anyway, by ErrNoLease, the Fence, or the record never being empty.
+#   - fencePath's opID check: find() refuses an unknown id first.
+#   - fenced.Do with no fence in the context: unreachable, since the outbox calls Do only from Dispatch.
+# The reviewer's other surviving mutants were not listed by line in the brief, so these are this
+# builder's own sweep, not a one-to-one answer to the 13.
 register: B1-12b
 jobs:
   - id: B1-12b
     files:
       - path: kernel/internal/effector/effector_donetest_test.go
-        sha256: 9633fe443f52f5b17b79c35c9328b9453202040e2242e109ee1d2d5ad39aa6ec
+        sha256: 401fb96fa64ae9b57e3b9ce090092ab9ce671d5e2fef57480545cea6ca50c853
+      - path: kernel/internal/effector/effector_r2_donetest_test.go
+        sha256: 5fa3a66447607b70c685f1ddfeffe68d43c66e49973a040832a63a03fb7c06ee
