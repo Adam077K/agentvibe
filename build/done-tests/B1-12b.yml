@@ -1,0 +1,56 @@
+# Done-test register, B1-12b: the second half of the outbox (docs/vision-v3/14-BUILD-PLAN.md §6, B1-12:
+# "Outbox + Operation IDs + reconciler; local effectors: git PR, preview deploy, founder-mailbox
+# email"). B1-12a, the outbox core, is registered in B0-17b.yml. Scope: propose_effect over the B1-03
+# socket into the outbox, dispatch fencing on lease tokens, and the three local effectors.
+# Canon: 09a §2, §6, §7, §7.1, §7.2; founder rulings A-C in
+# docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md.
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest ./internal/effector/
+# kernel/internal/effector/effector.go is NOT registered: it is the contract the job implements.
+#
+# Frozen red on 2026-10-03 against the ErrNotImplemented stub: 13 of 14 tests fail. The 14th,
+# EffectorsReachNoNetwork, is a guard on imports and passes on the stub by design.
+# Green against a reference implementation kept in $TMPDIR only (never committed), sandboxed. The
+# socket test binds under $TMPDIR, which the sandbox allows, so all 14 run sandboxed.
+#
+# MUTANTS. 24, each applied to a $TMPDIR copy of the reference, each killed:
+#   fence re-check before Do removed        -> LeaseLostAfterDispatchingSendsNothing
+#   fence check at Dispatch removed         -> DispatchRefusesStaleLease
+#   fence check at propose removed          -> ProposeRefusals
+#   fence record kept per worker            -> FenceSurvivesRestart (+4)
+#   Config.Crash not passed to the outbox   -> LeaseLost..., CrashBetweenLeaseLossAndDispatch...
+#   effector's visibility lag not forwarded -> LagGuardThroughGateway
+#   lookup always Unknown                   -> CrashBetween..., LagGuard..., RulingsBAndC...
+#   ambiguous provider error made definite  -> RulingsBAndC..., EffectorClassReachesOutbox
+#   class hardcoded check_before            -> EffectorClassReachesOutbox
+#   empty lease_tokens accepted             -> ProposeRefusals
+#   non-string target accepted              -> ProposeRefusals
+#   ErrHostRejected not mapped to ErrRejected -> GitPREffector, PreviewDeployEffector
+#   mailbox lag ignored / read error as Absent / any recipient / no dedupe -> MailboxEffector (4)
+#   git repo allowlist removed / no query before create -> GitPREffector (2)
+#   any environment / any digest / class check_before -> PreviewDeployEffector (3)
+#   net/smtp imported                       -> EffectorsReachNoNetwork
+#   outbox per worker                       -> ConcurrentDuplicatesAcrossGateways (+5)
+#   business_ref dropped from the key       -> every Gateway test (coarse: fails at propose)
+#
+# OPEN (canon silent; the test expects ErrUndecided or pins the reading named here):
+#   O1 venture: propose_effect names none. Pinned: one Gateway per venture (Config.Venture).
+#   O2 no lease: lease_tokens {} -> ErrUndecided.
+#   O3 Target: 09a names it, never defines it. A JSON string is the target; any other type ->
+#      ErrUndecided.
+#   O4 TokenSet wire form: pinned as {resource: B1-02 bigint string}.
+#   O5 request id: propose_effect has none; the business key is the only deduplication.
+#   O6 a lease lost between journaling dispatching and the provider call: pinned as a definite
+#      failure (nothing sent), so the lease's new holder may dispatch it.
+#   O7 effector payload shapes and sandbox rules: founder recipient only, allow-listed repos,
+#      environment "preview" only, digest "sha256:" + 64 lowercase hex.
+# NOT COVERED: the gateway epoch (09a §15 external fencing authority); a raw socket(2) through
+# syscall (the import guard allows syscall, which the outbox's flock needs); a Reconcile that
+# dispatches is caught only through send counts in LagGuard.
+register: B1-12b
+jobs:
+  - id: B1-12b
+    files:
+      - path: kernel/internal/effector/effector_donetest_test.go
+        sha256: 6e0e5b6e7442dbfd2429b6f152b796470bfb21ffad511895b871b98365d00a88
