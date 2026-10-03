@@ -100,6 +100,9 @@ type Request struct {
 	Resources []string
 	Policy    Policy
 	TTL       time.Duration
+	// MaxWait is lease_request.max_wait_s (09a §6): the detector's hard cap on how long this
+	// request may stay an outstanding wait. Contract in hot.go (B1-04 remainder).
+	MaxWait time.Duration
 }
 
 // Grant is a satisfied Request: one fencing token per requested resource, all issued together.
@@ -152,6 +155,11 @@ type Coordinator interface {
 	// victim holds and dropping its wait — journals one TypeDeadlockBroken event per break, and
 	// returns the breaks. A wait that is not on a cycle is never broken.
 	Detect(ctx context.Context) ([]Break, error)
+
+	// AddHot, HotSet and HotCandidates: the hot-resource map. Contract in hot.go.
+	AddHot(ctx context.Context, resource string) error
+	HotSet(ctx context.Context) ([]string, error)
+	HotCandidates(ctx context.Context) ([]string, error)
 }
 
 // NewCoordinator returns the Coordinator whose leases live in j; now is its clock.
