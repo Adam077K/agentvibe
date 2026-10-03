@@ -62,7 +62,7 @@ crash freely. So the substrate is a microkernel [S12 §2.1–2.2].
 
 Go, not Rust: as safe here and faster for both families to write and review; not TypeScript, for the trusted part
 only: tens of vetted modules instead of an npm graph. **The Kernel's size is
-enforced:** a lint caps it at ~8,000 lines (parameter) with a named list of allowed modules, and adding one is a
+enforced:** a lint caps it at ~11,000 lines (parameter; founder decision 2026-10-03, `_process/DR-KERNEL-BUDGET-2026-10-02.md`) with a named list of allowed modules, and adding one is a
 protected-base change (§14) [S12 §7 risk 5].
 
 **Userland reaches the Kernel only through a command socket** (`avk:avd`, mode 660). The Kernel validates each command
