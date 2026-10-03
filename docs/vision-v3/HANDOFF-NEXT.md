@@ -298,7 +298,7 @@ Raising `maxTurns` is a separate founder PR (irreversible tier).
 - grant status;
 - B1-14a policy compiler;
 - the B1-04 remainder;
-- cross-family (Codex) reviews for #158–#164.
+- cross-family (Codex) reviews for #158–#164 and #166 (B1-08).
 
 **Update to the FINAL block:** the B1-08 r7 tests are DONE. They are on `origin/build/b1-08-tests-r7` @ 0cfe7ea; all 4 items kill their mutants (19/19). These fail on 160381f, as intended:
 - R7_StateOutOfWorkerReach
@@ -310,3 +310,21 @@ Raising `maxTurns` is a separate founder PR (irreversible tier).
 - Base: 0cfe7ea plus the latest main, which includes #164.
 - Fix on `build/b1-08`.
 - Then: Opus re-review → PR → merge train.
+
+## B1-08 follow-ups (2026-10-03)
+
+**PR #166**, B1-08 launcher r7. Opus 5.5 SHIP at 113d31f:
+- no HIGH and no MED-sec; 1 MED-failsafe and 4 LOW;
+- 12 mutants, 8 killed;
+- verdict recorded at d715c18;
+- labelled `risk:full`, single family, so it is on the cross-family debt list.
+
+These follow-ups do not block the merge. **F1 and F3 are due BEFORE the launcher is wired.**
+- **F1:** reserve `kernel.launcher` in socket `stream()` (command.go:176-189). Today Userland `propose_event` can force ErrState and burn a lease.
+- **F2:** make the journal append use `context.WithoutCancel`.
+- **F3:** add `EnvPinned[HOME]` to `outOfReach`, and rule on requests that carry no HOME.
+- **F4:** catch a root that resolves to `/` (launcher.go:505).
+- **F5:** compare paths case-insensitively and firmlink-aware.
+- **F6:** validate the HOME and PATH pins: clean, absolute, and no PATH entry under a worker root.
+- **F7:** add tests for a dangling root, and for the genesis and reach checks running before State init.
+- **F8:** read the journal incrementally, so admit stops being O(all launches).
