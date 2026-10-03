@@ -1,0 +1,43 @@
+# Done-test register, B1-08d: the launcher's real dependencies, the Consume store and GrantStatus
+# (B1-08, docs/vision-v3/14-BUILD-PLAN.md §6 row B1-08; interfaces LeaseVerifier and GrantStatus in
+# kernel/internal/launcher/launcher.go). Canon: 09a §4.2 (leases and authority transitions are
+# canonical in the Journal; a Constitution record's release is journalled as policy.released with
+# its file digest), §6 (the job:// verifier is "the launcher's claim row"), §8.5 (launcher_grant:
+# a Constitution record, revocable instantly; per_launch_requires a fenced lease on job://<id>);
+# docs/vision-v3/_process/DR-B1-08-THREAT-MODEL-2026-10-03.md (consumption is authoritative in the
+# lease store, not in State).
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest -run B1_08d ./internal/lease/ ./internal/launcher/
+#
+# kernel/internal/lease/launch.go and kernel/internal/launcher/grantstatus.go are NOT registered:
+# they are the contract stubs the job implements (the B0-17 pattern). launch.go: ErrConsumed,
+# LaunchVerifier, FencedLease, NewLaunchVerifier. grantstatus.go: GrantStream, ReleaseGrant,
+# RevokeGrant, NewGrantStatus.
+#
+# Round 1, 2026-10-03 (base origin/build/b1-08 @ d715c18): 6 tests, all FAIL against the stubs.
+#   a1 TestB1_08d_ConsumeIsCompareAndSet   a2 TestB1_08d_LeaseMustBeLiveAndFenced
+#   a3 TestB1_08d_ConsumptionSurvivesRestart  a4 TestB1_08d_NeverIssuedRefused
+#   b  TestB1_08d_GrantStatusIsReal         e2e TestB1_08d_ReplayRefusedEndToEnd
+# Reachability NOT yet shown: the reference-implementation run was refused by the permission layer
+# and was not retried. The red-team pass (DR-BUILD-SPEED rule 1) must run one before implementation.
+#
+# OPEN (founder questions, not decided here; a ruling re-freezes):
+# 1. Grant expiry: 09a §8.5's launcher_grant has no expiry field. ReleaseGrant takes `until`; the
+#    tests pin "expired fails" and never pass a zero until.
+# 2. Grant storage: tests take GrantStream in the main Journal as the status's home, with the
+#    founder-signature check upstream (Grant's doc comment). The signed file and passkey are unbuilt.
+# 3. Does a later release supersede the grant a running launcher holds (pinned: yes, fail-safe)?
+#    Is re-release after a revocation live (not pinned)?
+# 4. Wound-wait: the job:// claim (lease.go) has no wound-wait; only the Coordinator (fence.go) does.
+#    Whether a Coordinator lease on job://<id> may also admit a launch is not pinned.
+# 5. Cross-process: journal.Open is single-writer (ErrLocked), so "two store instances on the same
+#    dir" is pinned as two LaunchVerifiers over one Journal handle.
+register: B1-08d
+jobs:
+  - id: B1-08d
+    files:
+      - path: kernel/internal/lease/launch_donetest_test.go
+        sha256: 8c2db9df9ad39d8298c7a7509c151f1f3bd8a033be9f24734d57fa624ddd96e1
+      - path: kernel/internal/launcher/grantstatus_donetest_test.go
+        sha256: 02591c668676e96132c0e1f0a6aa5d74eaaa8b2db9d886d04ba7ad096f252fd5
