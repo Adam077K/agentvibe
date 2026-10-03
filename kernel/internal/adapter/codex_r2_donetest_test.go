@@ -19,6 +19,10 @@
 //   - The review's surviving mutants: answer dupFree, abort on no pin, turn.failed order and
 //     reason, item id required, Children exact.
 //
+// ROUND 4 (2026-10-03, DR-B1-07 "Round 4"): the profile is superseded, so its helpers and
+// R2_ProfileLoadsAndRulesIgnored and R2_ProfileRequiredKeys are removed; the bullets above on the
+// profile are history. The worktree, -o, CODEX_HOME and review-mutant tests stand.
+//
 // Hashed in build/done-tests/B1-07.yml. Run: go -C kernel test -count=1 -tags donetest -run B1_07 ./internal/adapter/
 package adapter
 
@@ -35,129 +39,9 @@ import (
 	"testing"
 )
 
-// cxRequiredKeys: every key the pinned profile must set itself (DR-B1-07 round 2). Dotted keys
-// live in the table before the dot.
-var cxRequiredKeys = []string{
-	"approval_policy", "approvals_reviewer", "sandbox_mode",
-	"sandbox_workspace_write.network_access", "sandbox_workspace_write.writable_roots",
-	"sandbox_workspace_write.exclude_tmpdir_env_var", "sandbox_workspace_write.exclude_slash_tmp",
-	"shell_environment_policy.inherit", "mcp_servers", "web_search", "model_provider",
-	"model_providers", "notify", "hooks", "features", "tools", "projects",
-}
-
-// cxProfileLines renders a profile that sets every required key, leaving out omit (a key of
-// cxRequiredKeys) and replacing it with swap when swap is not empty. The values were loaded by
-// codex-cli 0.154.0 under --strict-config.
-func cxProfileLines(omit, swap string) string {
-	top := []string{
-		`approval_policy = "never"`, `approvals_reviewer = "user"`, `sandbox_mode = "workspace-write"`,
-		`mcp_servers = {}`, `web_search = "disabled"`, `model_provider = "openai"`, `model_providers = {}`,
-		`notify = []`, `hooks = {}`, `features = {}`, `tools = {}`, `projects = {}`,
-	}
-	tables := map[string][]string{
-		"sandbox_workspace_write": {`network_access = false`, `writable_roots = []`,
-			`exclude_tmpdir_env_var = true`, `exclude_slash_tmp = true`},
-		"shell_environment_policy": {`inherit = "core"`},
-	}
-	keep := func(table, line string) string {
-		key := strings.SplitN(line, " = ", 2)[0]
-		if table != "" {
-			key = table + "." + key
-		}
-		if key == omit {
-			return swap
-		}
-		return line
-	}
-	var b strings.Builder
-	b.WriteString("# agentvibe generated codex profile (B1-07 done-test)\n")
-	for _, l := range top {
-		if l = keep("", l); l != "" {
-			b.WriteString(l + "\n")
-		}
-	}
-	for _, table := range []string{"sandbox_workspace_write", "shell_environment_policy"} {
-		b.WriteString("\n[" + table + "]\n")
-		for _, l := range tables[table] {
-			if l = keep(table, l); l != "" {
-				b.WriteString(l + "\n")
-			}
-		}
-	}
-	return b.String()
-}
-
-var cxProfileTOML = cxProfileLines("", "")
-
-// cxLookalike swaps the first a, e, o or i of s for its Cyrillic lookalike.
-func cxLookalike(s string) string {
-	for i, r := range s {
-		if j := strings.IndexRune("aeoi", r); j >= 0 {
-			return s[:i] + string([]rune("\u0430\u0435\u043e\u0456")[j]) + s[i+1:]
-		}
-	}
-	panic("no lookalike for " + s)
-}
-
 func cxSHA(s string) string {
 	h := sha256.Sum256([]byte(s))
 	return "sha256:" + hex.EncodeToString(h[:])
-}
-
-// cxWithProfile puts toml in the spec with both digests equal to its own, so the profile's
-// content is the only thing under test.
-func cxWithProfile(toml string) LaunchSpec {
-	s := cxSpec()
-	s.CodexProfileTOML, s.ProfileDigest, s.InitExpect = toml, cxSHA(toml), cxSHA(toml)
-	return s
-}
-
-func TestB1_07_R2_ProfileLoadsAndRulesIgnored(t *testing.T) {
-	argv := cxArgv(t, cxSpec())
-	if slices.Contains(argv, "--ignore-user-config") || slices.ContainsFunc(argv, func(a string) bool {
-		return strings.HasPrefix(a, "--ignore-user-config=")
-	}) {
-		t.Errorf("argv carries --ignore-user-config, which stops -p loading the profile: %q", argv)
-	}
-	if i := slices.Index(argv, "-p"); i < 0 || i+1 >= len(argv) || argv[i+1] != cxSpec().CodexProfile ||
-		slices.Contains(argv[i+1:], "-p") {
-		t.Errorf("argv must carry -p %s exactly once: %q", cxSpec().CodexProfile, argv)
-	}
-	if n := slices.Index(argv, "--ignore-rules"); n < 0 || slices.Contains(argv[n+1:], "--ignore-rules") {
-		t.Errorf("argv must carry --ignore-rules exactly once: %q", argv)
-	}
-	if tmpl := NewCodex(cxDigest).Template(); slices.Contains(tmpl, "--ignore-user-config") {
-		t.Errorf("Template carries --ignore-user-config: %q", tmpl)
-	}
-}
-
-func TestB1_07_R2_ProfileRequiredKeys(t *testing.T) {
-	cxArgv(t, cxWithProfile(cxProfileTOML)) // exactly the required keys: accepted
-	cxArgv(t, cxWithProfile(cxProfileTOML+"model = \"gpt-6-astra\"\n"))
-	for _, k := range cxRequiredKeys {
-		cxRefused(t, "profile omits "+k, cxWithProfile(cxProfileLines(k, "")), ErrSpec)
-		leaf := k[strings.LastIndex(k, ".")+1:]
-		cxRefused(t, "profile has "+k+" only in a comment", cxWithProfile(cxProfileLines(k, "# "+leaf+" = x")), ErrSpec)
-		cxRefused(t, "profile spells "+k+" in upper case", cxWithProfile(cxProfileLines(k, strings.ToUpper(leaf)+" = 1")), ErrSpec)
-		cxRefused(t, "profile spells "+k+" with a lookalike", cxWithProfile(cxProfileLines(k, cxLookalike(leaf)+" = 1")), ErrSpec)
-	}
-	// A nested key at top level is a different key.
-	moved := strings.Replace(cxProfileLines("sandbox_workspace_write.network_access", ""),
-		"approval_policy", "network_access = false\napproval_policy", 1)
-	cxRefused(t, "network_access at top level", cxWithProfile(moved), ErrSpec)
-	// A top-level key under a table is a different key.
-	under := cxProfileLines("approval_policy", "") + "\n[other]\napproval_policy = \"never\"\n"
-	cxRefused(t, "approval_policy under [other]", cxWithProfile(under), ErrSpec)
-	cxRefused(t, "duplicate key in one table", cxWithProfile(cxProfileLines("approval_policy", "approval_policy = \"never\"\napproval_policy = \"on-request\"")), ErrSpec)
-	cxRefused(t, "duplicate table", cxWithProfile(cxProfileTOML+"\n[shell_environment_policy]\ninherit = \"all\"\n"), ErrSpec)
-	cxRefused(t, "empty profile", cxWithProfile(""), ErrSpec)
-	// The profile's bytes are pinned: other bytes under the same two digests are refused.
-	s := cxSpec()
-	s.CodexProfileTOML = cxProfileLines("", "") + "notify_extra = 1\n"
-	cxRefused(t, "profile bytes differ from the pin", s, ErrSpec)
-	s = cxSpec()
-	s.CodexProfileTOML = ""
-	cxRefused(t, "profile bytes missing", s, ErrSpec)
 }
 
 func TestB1_07_R2_WorktreeBounds(t *testing.T) {
@@ -275,7 +159,7 @@ func TestB1_07_R2_ReviewMutants(t *testing.T) {
 
 	// :167 a run with no well-formed pin aborts once, as harness, before reading.
 	ok := cxFixture(t, "success.jsonl")
-	for _, pin := range []string{"", "x", strings.ToUpper(cxProfileDigest)} {
+	for _, pin := range []string{"", "x", strings.ToUpper(cxPin)} {
 		r := cxRunRaw(bytes.NewReader(ok), pin, cxWithFile(ok, ExitInfo{}))
 		if !reflect.DeepEqual(r.aborts, []Reason{ReasonHarness}) || !errors.Is(r.err, ErrHarness) {
 			t.Errorf("pin %q: aborts %v, err %v; want one abort(harness) and ErrHarness", pin, r.aborts, r.err)

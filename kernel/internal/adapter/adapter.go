@@ -125,6 +125,7 @@ type LaunchSpec struct {
 	CodexProfileTOML string            // codex: the generated profile's exact bytes; sha256 = InitExpect, every required key set (DR-B1-07 r2)
 	Worktree         string            // codex: the job's worktree; -C stays inside it, -o and CODEX_HOME stay outside (DR-B1-07 r2)
 	CodexHome        string            // codex: the pinned CODEX_HOME; Env[CODEX_HOME] is absent or exactly this (DR-B1-07 r2)
+	Home             string            // codex: the pinned HOME; Env[HOME] is absent or exactly this, clean, not / and outside the worktree (DR-B1-07 r3)
 }
 
 // ChildJob is one nested agent, keyed by the tool_use id that spawned it; its events carry that

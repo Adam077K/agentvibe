@@ -155,3 +155,113 @@ check the values. Two holes remain:
   replacing it. This is unmeasured.
 
 Pinning required values, and measuring how tables merge, are the next step.
+
+## Round 3 (2026-10-03): the re-review's MED findings
+
+An Opus re-review passed `b0f1e27` on the security and adversarial lenses, with no critical or high finding.
+It raised four MED findings and one surviving mutant. The round-3 tests in `codex_r3_donetest_test.go` pin
+all of them. The required-key list, rulings 1–3 and 5–6, and round 2's decisions are unchanged.
+
+1. **The profile is read as TOML, not line by line.** A required key that appears only inside a string
+   counts as missing. This covers a `"""` or `'''` multi-line string whose closing delimiter shares a line
+   with a key-shaped line, which is the re-review's case. The same holds for a key that appears only in a
+   comment, an inline table, an array of tables, a sub-table or a multi-line array.
+   - A duplicate key in any spelling (quoted, or dotted against a table) is `ErrSpec`.
+   - A value that is not TOML (a bare word, an unterminated string, a missing value) is `ErrSpec`.
+   - **No Go TOML library is available offline.** The module cache at `~/.agentvibe/gomod` holds only
+     `modernc.org/sqlite` and its dependencies. The tests therefore pin behaviour, not a library: a minimal
+     strict parser that refuses anything it does not understand passes them.
+2. **`-o`, `CODEX_HOME` and `HOME` are compared to the worktree after resolution.** The resolution takes
+   the longest existing prefix through `EvalSymlinks`, then checks identity with `os.SameFile` against the
+   worktree and each ancestor. So each of the following is inside the worktree:
+   - a path reached through a symlink;
+   - a path reached when the worktree is named by an alias;
+   - a path in another letter case, on a case-insensitive filesystem.
+3. **`-C` is resolved through symlinks and must land inside the worktree.** A `-C` inside the worktree that
+   is a symlink to `/` or to the worktree's parent is `ErrSpec`.
+4. **`HOME` is checked; XDG is not.** This was measured on codex-cli 0.154.0, using throwaway homes with no
+   credential, so no model turn was served:
+   - With `CODEX_HOME` unset, codex loads `$HOME/.codex/config.toml`; the banner showed `model:
+     home-model`.
+   - It does not load config from `XDG_CONFIG_HOME`, `XDG_DATA_HOME` or `XDG_STATE_HOME`; the banner
+     showed the default model in each case.
+
+   So `Env["HOME"]` must be absent, which means the launcher's own value (the real user home), or exactly
+   the pinned `LaunchSpec.Home`. The pinned value must be clean, not `/`, and outside the worktree.
+5. **`noSymlink`: any `Lstat` error other than not-exist refuses.** This covers permission denied and "not
+   a directory", and kills the re-review's surviving mutant at `:96`.
+
+**Follow-up, needs founder consent.** Precedence between the profile and the user config is still
+unmeasured: whether a profile key overrides the same key in `~/.codex/config.toml`, and whether a table
+such as `mcp_servers` or `features` is replaced or deep-merged. The banner shows only the model, approval
+and sandbox mode, and settling the rest needs a served model turn. A served turn spends the founder's
+subscription, so it waits for his consent.
+
+**Residual, noted and not pinned.** The binary also reads environment variables that can change its
+behaviour, for example `CODEX_SANDBOX`, `CODEX_SANDBOX_NETWORK_DISABLED`, `CODEX_CA_CERTIFICATE` and the
+`CODEX_*_BASE_URL` family. This list comes from the binary's strings and was not measured. The adapter
+pins only `CODEX_HOME` and `HOME`. Allowing a fixed set of environment variables is the launcher's work
+(B1-08).
+
+## Round 4 (2026-10-03): the profile approach is superseded
+
+**Why.** The Opus review FAILED 763ed2c with two HIGH findings, measured on codex-cli 0.154.0 with a
+throwaway home and no model turn. First, MCP servers declared in the user config survive the profile's
+`mcp_servers = {}`, and one was launched. Second, when the user config trusts the repo,
+`<worktree>/.codex/config.toml` overrides the profile; it turned network on and launched an MCP server.
+The worker writes the worktree, so a profile that honours the user config cannot lock anything.
+
+**Founder ruling, 2026-10-03.** Ruling 4 is restored and the Round 2 approach (`-p`, a profile file,
+required keys) is withdrawn:
+
+- always pass `--ignore-user-config`;
+- drop `-p` and the profile file;
+- pass every locked setting directly as `-c key=value`;
+- pin the sha256 of the whole argv template (`init_expect`) and of the codex binary (the grant digest).
+
+Any difference is ErrSpec. `--ignore-rules` stays.
+
+**The locked line** (adapter `Template()`, B1-08 `codexTokens`, 09a §8.2):
+
+```
+exec -C <worktree> -s workspace-write --json --output-schema <f> -o <result.json> --ephemeral
+  --ignore-user-config --ignore-rules
+  -c approval_policy="never" -c approvals_reviewer="user" -c sandbox_mode="workspace-write"
+  -c sandbox_workspace_write.network_access=false -c sandbox_workspace_write.writable_roots=[]
+  -c sandbox_workspace_write.exclude_tmpdir_env_var=true -c sandbox_workspace_write.exclude_slash_tmp=true
+  -c shell_environment_policy.inherit="core" -c mcp_servers={} -c web_search="disabled"
+  -c model_provider="openai" -c model_providers={} -c notify=[] -c hooks={} -c features={}
+  -c tools={} -c projects={}
+```
+
+These are the 17 keys of Round 2. Each was accepted under `--strict-config`.
+
+**Measured before freezing** (codex 0.154.0, binary sha256 `4f8598…afcc`).
+
+Setup: a throwaway HOME and CODEX_HOME. The user `config.toml` sets a model, an `[mcp_servers.usermcp]` whose command touches a marker file, and `[projects."<worktree>"] trust_level = "trusted"`. A hostile `<worktree>/.codex/config.toml` sets another model, `network_access = true`, and a second MCP server with its own marker. Network to the model endpoint was denied, so no turn could be served.
+
+| Run | MCP markers | Banner |
+|---|---|---|
+| Control, no flags | user and project both **created** | `model: project-model-qqq`, `sandbox: workspace-write [workdir, /tmp, $TMPDIR] (network access enabled)` |
+| `--ignore-user-config` alone | neither | (no banner match; default model) |
+| The locked line + `--strict-config` | **neither** | `model: gpt-6-astra` (default; the project's is not applied), `approval: never`, `sandbox: workspace-write [workdir]` (no /tmp, no network) |
+
+The project config is therefore **ignored, not refused**: no test requires refusing a `.codex/config.toml` in the worktree.
+
+**Login is still found under `--ignore-user-config`:**
+
+- `codex login status` (with and without the locked `-c` set) printed `Logged in using an API key - sk-agent***y-000` from `$CODEX_HOME/auth.json`.
+- In a separate run, `api.openai.com` was allowed and the key was FAKE. `exec --ignore-user-config` sent that key and the server answered `401 … invalid_api_key`. With no `auth.json` it answered `Missing bearer or basic authentication`.
+
+So auth still comes from CODEX_HOME, as `--help` says. A fake key cannot be served a turn, so no model turn ran. The real login (`~/.codex`) is deny-read in this sandbox and was not touched. A subscription (ChatGPT) login was not measured, only an API-key `auth.json`.
+
+**Tests** (B1-07 register RE-FREEZE r5):
+
+- `codex_r4_donetest_test.go` adds:
+  - `R4_LockedLine`;
+  - `R4_ArgvAndBinaryPinned`: an extra, changed, removed or reordered `-c` is ErrSpec, as are `-p`, `--strict-config` and the r3 line;
+  - `R4_ProfileFieldsRefused`: `CodexProfile`, `CodexProfileTOML` and `ProfileDigest` set is ErrSpec;
+  - `R4_DanglingSymlinkRefused`: pins the `resolve` `:227` gap, where a dangling symlink is never a not-yet-existing path.
+- The profile-parser tests are removed: R2_ProfileLoadsAndRulesIgnored, R2_ProfileRequiredKeys and R3_ProfileIsParsedAsTOML.
+- `codex_profile.go` is dead code under this ruling. The implementer deletes it, keeping the path helpers it hosts (`cleanAbs`, `within`, `noSymlink`, `resolve`, `inWorktree`, `outsideWorktree`, `pinnedEnv`).
+- Mutants: 9 of 9 killed.
