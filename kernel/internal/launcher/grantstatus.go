@@ -25,12 +25,15 @@ var errGrantNotImplemented = errors.New("launcher: grant status not implemented"
 // ReleaseGrant journals the release of the launcher_grant record whose file digest is digest
 // ("sha256:" + 64 lowercase hex), live until until. A later release supersedes an earlier one.
 // Rulings Q1-Q2 (2026-10-03): until is required and must be in the future; a digest ever revoked
-// is refused, forever.
+// is refused, forever. A digest that is not "sha256:" + 64 lowercase hex is refused and nothing is
+// written (red-team r1).
 func ReleaseGrant(ctx context.Context, j journal.Journal, digest string, until time.Time) error {
 	return errGrantNotImplemented
 }
 
 // RevokeGrant journals the revocation of the released record digest; it binds the next Live().
+// Ruling G16 (2026-10-03): a revoke after any release wins, so nothing is live until a new digest
+// is released. A malformed digest is refused and nothing is written.
 func RevokeGrant(ctx context.Context, j journal.Journal, digest string) error {
 	return errGrantNotImplemented
 }
@@ -38,8 +41,8 @@ func RevokeGrant(ctx context.Context, j journal.Journal, digest string) error {
 // NewGrantStatus returns the status of the grant whose record digest the launcher holds. Live()
 // reads GrantStream at every call and returns nil only when its latest transition releases exactly
 // digest, that digest was never revoked anywhere in the stream, and now() is before that
-// release's until. Anything else, including a stream it
-// cannot read or cannot parse, is an error: it fails closed.
+// release's until. Every record in the stream is parsed strictly, not only the head: one it cannot
+// read, of any type at any position, is an error, as is a stream it cannot read. It fails closed.
 func NewGrantStatus(j journal.Journal, digest string, now func() time.Time) (GrantStatus, error) {
 	return nil, errGrantNotImplemented
 }

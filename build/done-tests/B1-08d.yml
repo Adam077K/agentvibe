@@ -34,6 +34,31 @@
 #      resource, at its own token or token 1, is ErrLease and fails Verify (e2e subtest).
 #   Still red: 6 of 6 against the stubs.
 #
+# RE-FREEZE 2026-10-03: "2026-10-03 red-team r1 gaps + rulings". The red-team on 26000de proved
+# reachability and found 8 of 33 mutants surviving. Its 7 proposed tests are adapted into two NEW
+# files; the r1 files are unchanged (hashes identical). Stub contracts (launch.go, grantstatus.go)
+# updated to state each ruling. Red: 16 of 16 against the stubs (R8 got a positive control so the
+# refuse-everything stub cannot pass it).
+#   launch_r2_donetest_test.go
+#     R1 HIGH canonical encoding "job://<id>#<decimal>": "#01" "#00N" "#+N" "# N" refused before and
+#        after Consume; consumption keyed by the parsed (job, token)   TestB1_08d_R2_CanonicalEncoding
+#     R2 HIGH CAS under a 3 ms Append, 64 goroutines, exactly 1 wins   TestB1_08d_R2_CASUnderSlowAppend
+#     R3 HIGH StateHash changes on Consume; an independent Journal with the same job and token still
+#        consumes (kills a process-global map)                         TestB1_08d_R2_ConsumptionIsInTheJournal
+#     R4 MED Append-only failure fails Consume and consumes nothing   TestB1_08d_R2_AppendOnlyFailureFailsClosed
+#     R5 MED healthy Verify, then a read failure: no last-known-good  TestB1_08d_R2_NoLastKnownGood
+#     Ruling Verify-then-CAS: a deterministic hook (an Append wrapper) releases and re-claims the job
+#        between Consume's read and its write; the stale token must not be consumed, the new one
+#        must be. The CAS is conditioned on the job's current claim.  TestB1_08d_R2_VerifyThenCASIsConditioned
+#     Ruling ErrStaleToken kept, and named in launch.go's contract.
+#   grantstatus_r2_donetest_test.go
+#     R1 HIGH end to end: "#0N" and "#+N" replays are ErrLease, 1 exec  TestB1_08d_R2_NonCanonicalReplayEndToEnd
+#     R6 MED strict over the whole stream: a bad record below a replayed valid release fails Live
+#                                                                      TestB1_08d_R2_StrictOverWholeStream
+#     R7 LOW Release and Revoke refuse malformed digests, write nothing  TestB1_08d_R2_MalformedDigestRefused
+#     G16 ruling: the latest TRANSITION wins; revoke(A) after release(B) leaves nothing live until a
+#        new digest is released                                        TestB1_08d_R2_LatestTransitionWins
+#
 # OPEN (not decided here):
 # 1. Cross-process: journal.Open is single-writer (ErrLocked), so "two store instances on the same
 #    dir" is pinned as two LaunchVerifiers over one Journal handle.
@@ -45,3 +70,7 @@ jobs:
         sha256: 8c2db9df9ad39d8298c7a7509c151f1f3bd8a033be9f24734d57fa624ddd96e1
       - path: kernel/internal/launcher/grantstatus_donetest_test.go
         sha256: adc28e1133e8900102708066d5c2fffa3bab822937e68b25cf64f37ba5d8ca12
+      - path: kernel/internal/lease/launch_r2_donetest_test.go
+        sha256: 5273fbcc1a14de2cb5378a8ef8cd97d84661681e0a38283923e6fe94c28c0861
+      - path: kernel/internal/launcher/grantstatus_r2_donetest_test.go
+        sha256: 4cd423060e333273d25573d14bf130c74946e9e0b99de2ef3a2d50b396d8cc58

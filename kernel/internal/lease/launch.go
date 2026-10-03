@@ -24,16 +24,26 @@ var ErrConsumed = errors.New("lease: fenced lease already consumed")
 // LaunchVerifier is launcher.LeaseVerifier, backed by the job:// claim rows.
 type LaunchVerifier interface {
 	// Verify returns nil iff lease is FencedLease of a Claim this package issued for jobID, and
-	// that claim is the job's current live claim at now. Verify never consumes.
+	// that claim is the job's current live claim at now. Verify never consumes. A lease whose token
+	// is not the job's current live token (released, re-claimed, expired) wraps ErrStaleToken; a
+	// lease that is not the canonical rendering is refused. It reads the Journal at every call: a
+	// read error is an error, never a last-known-good answer.
 	Verify(jobID, lease string, now time.Time) error
 	// Consume is Verify at the LaunchVerifier's own clock, then an atomic compare-and-set in the
-	// Journal that records (jobID, token) consumed. A second Consume of the same lease wraps
-	// ErrConsumed. Consuming does not end the claim: its runner still Releases it.
+	// Journal that records the parsed (jobID, token) consumed. A second Consume of the same lease
+	// wraps ErrConsumed. Consuming does not end the claim: its runner still Releases it.
+	//
+	// Ruling 2026-10-03 (red-team r1): the compare-and-set is conditioned on the job's CURRENT
+	// claim, not only on the consumption record. A release and re-claim that lands between
+	// Consume's read and its write must make the write fail and the stale token stay unconsumed
+	// (ErrStaleToken), so the CAS's expected state names the claim row the read saw. A failed
+	// Append is an error, never success.
 	Consume(jobID, lease string) error
 }
 
-// FencedLease renders c as the launcher's Prerequisites.FencedLease: "job://<id>" plus its
-// fencing token. The encoding is the implementer's; it must name the job unambiguously.
+// FencedLease renders c as the launcher's Prerequisites.FencedLease, canonically:
+// "job://" + JobID + "#" + the token in decimal, with no sign and no leading zero (ruling
+// 2026-10-03, red-team r1). Only this exact rendering verifies; "#01" or "#+1" never does.
 func FencedLease(c Claim) string {
 	return ""
 }
