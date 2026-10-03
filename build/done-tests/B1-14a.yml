@@ -15,9 +15,27 @@
 # with no D at a level defaults to the founder, never an agent holder. Orchestrator (fail-safe) —
 # never > held > co_sign > ask > notify > auto; ties apply the highest precedence (lowest P). Out of scope, left to B1-14b / B2-13a: classify, dispose,
 # fog (step 4), valid_until (step 6).
+#
+# RE-FREEZE r2 2026-10-03: 2026-10-03 red-team r1 gaps + rulings. The red-team on 7cf986d returned
+# GAPS (23 of 41 mutants survived, 3 fail-open). Added, all in policy_donetest_test.go:
+#   verb * matches all; verbs match exactly, never as a prefix (continuity included); continuity
+#   respects the venture; scope applies at P1 and P3..P8; a non-admission P1 never blocks; one
+#   snapshot address and one rule set give one contract (overlay order, blocker order); blockers
+#   carry owner, remedy, expiry; the base is validated; NewRights uses and copies its input;
+#   Decider is false for an unknown row or level; P8 consequence admission refused; the snapshot
+#   encoding is injective, nil = empty, repeated set members (and repeated ids/inputs in keyed
+#   sets) are ErrSnapshot, sub-second instants are content, whatever parses re-encodes exactly.
+# Orchestrator rulings: R1 the seed is compiled in, never read from docs at runtime; new
+#   TestB1_14a_SeedCompiledIn runs SeedRights from an empty cwd, SeedRightsEveryCell stays the
+#   drift test against 05 §5. R2 a rule equal to the base does not decide (Applied 0). R3 the drift
+#   parser errors on any unparseable condition or empty/reversed range ("A1–A0", "<A0"); checked
+#   by checkParser inside the red test. R4 a canon row or column change re-freezes.
+# Red 9 of 9 against the stub. The scratch reference passes (-race); the red-team reference passes
+# every test except repeated continuity ids / freshness inputs (a fail-safe addition here).
+# Mutants: 54 of 54 killed (16 new: the red-team's classes, plus delimited join, R2 tie).
 register: B1-14a
 jobs:
   - id: B1-14a
     files:
       - path: kernel/internal/policy/policy_donetest_test.go
-        sha256: 0db970cda07411fea0d8fc15b45c51a765b1d0ea003f19a956ec4abb28a436bd
+        sha256: e35dfad0361e7c79ae0ccf01bb985168025de72595f8d3b452021b2681698277

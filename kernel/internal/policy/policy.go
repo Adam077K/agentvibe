@@ -79,7 +79,8 @@ type DecisionRow struct {
 // Rights is a validated, immutable decision-rights matrix.
 type Rights struct{}
 
-// SeedRights returns the seed matrix: 05 §5, compiled into the Kernel.
+// SeedRights returns the seed matrix: 05 §5, compiled into the Kernel as a generated table or a
+// literal. It never reads a file at runtime (orchestrator ruling R1, 2026-10-03).
 func SeedRights() (*Rights, error) { return nil, errStub }
 
 // NewRights validates rows (known holders, letters and levels; at most one D per row per level;
@@ -200,7 +201,8 @@ type Freshness struct {
 }
 
 // Snapshot is the policy snapshot of 09a §5: immutable and content-addressed. Every list in it is
-// a set.
+// a set: order is not content, nil equals empty, and a repeated member (or a repeated id or input
+// in a keyed set) is ErrSnapshot.
 type Snapshot struct {
 	JournalOffset      uint64
 	Constitution       Version
@@ -255,7 +257,9 @@ type Contract struct {
 	Blockers    []Blocker
 }
 
-// Walk applies the P1→P8 precedence walk of 09a §5 to action a under snap, on top of base.
+// Walk applies the P1→P8 precedence walk of 09a §5 to action a under snap, on top of base. A base
+// that is not a Disposition is an error. A rule that only equals the base does not decide (ruling R2).
+// One snapshot address and one rule set give one Contract, whatever the input order.
 func Walk(p *Policy, snap Snapshot, a Action, base Disposition) (Contract, error) {
 	return Contract{}, errStub
 }

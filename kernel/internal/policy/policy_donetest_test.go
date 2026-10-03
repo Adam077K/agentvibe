@@ -18,6 +18,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"reflect"
 	"regexp"
@@ -70,25 +71,25 @@ var (
 	reLvl  = regexp.MustCompile(`^A([0-4])$`)
 )
 
-func levelIdx(t *testing.T, s string) int {
-	t.Helper()
+func levelIdx(s string) (int, error) {
 	m := reLvl.FindStringSubmatch(s)
 	if m == nil {
-		t.Fatalf("05 §5: level %q is not A0..A4", s)
+		return 0, fmt.Errorf("level %q is not A0..A4", s)
 	}
 	n, _ := strconv.Atoi(m[1])
-	return n
+	return n, nil
 }
 
-// parseCell reads one matrix cell. Grammar, as 05 §5 writes it: optional **bold**; parts joined by
-// " · "; each part a letter and an optional level condition (A3, <A4, ≥A2, A0–A1, or "below" =
-// every level no other part names); one trailing parenthetical is the note.
-func parseCell(t *testing.T, where, raw string) docCell {
-	t.Helper()
+// parseCellText reads one matrix cell. Grammar, as 05 §5 writes it: optional **bold**; parts joined
+// by " · "; each part a letter and an optional level condition (A3, <A4, ≥A2, A0–A1, or "below" =
+// every level no other part names); one trailing parenthetical is the note. Anything else — an
+// unknown condition, an empty or reversed range ("<A0", "A1–A0"), a level named twice — is an
+// error, never an empty cell (orchestrator ruling R3, 2026-10-03).
+func parseCellText(raw string) (docCell, error) {
 	s := strings.TrimSpace(strings.ReplaceAll(raw, "**", ""))
 	c := docCell{at: map[Level]Right{}}
 	if s == "" {
-		return c
+		return c, nil
 	}
 	if m := reNote.FindStringSubmatch(s); m != nil {
 		s, c.note = m[1], m[2]
@@ -97,50 +98,96 @@ func parseCell(t *testing.T, where, raw string) docCell {
 	for _, part := range strings.Split(s, " · ") {
 		m := rePart.FindStringSubmatch(strings.TrimSpace(part))
 		if m == nil {
-			t.Fatalf("%s: cell part %q is not a matrix letter with an optional level condition", where, part)
+			return c, fmt.Errorf("cell part %q is not a matrix letter with an optional level condition", part)
 		}
 		r, cond := Right(m[1]), m[2]
-		var at []int
+		var lo, hi int
+		var err, err2 error
 		switch {
 		case cond == "":
-			at = []int{0, 1, 2, 3, 4}
+			lo, hi = 0, 4
 		case cond == "below":
 			if below != "" {
-				t.Fatalf("%s: two \"below\" parts", where)
+				return c, fmt.Errorf("two \"below\" parts in %q", raw)
 			}
 			below = r
 			continue
 		case strings.HasPrefix(cond, "<"):
-			for i := 0; i < levelIdx(t, cond[1:]); i++ {
-				at = append(at, i)
-			}
+			hi, err = levelIdx(cond[1:])
+			hi--
 		case strings.HasPrefix(cond, "≥"):
-			for i := levelIdx(t, strings.TrimPrefix(cond, "≥")); i <= 4; i++ {
-				at = append(at, i)
-			}
+			lo, err = levelIdx(strings.TrimPrefix(cond, "≥"))
+			hi = 4
 		case strings.Contains(cond, "–"):
-			lo, hi, _ := strings.Cut(cond, "–")
-			for i := levelIdx(t, lo); i <= levelIdx(t, hi); i++ {
-				at = append(at, i)
+			a, b, _ := strings.Cut(cond, "–")
+			lo, err = levelIdx(a)
+			hi, err2 = levelIdx(b)
+			if err == nil && err2 == nil && lo >= hi {
+				err = fmt.Errorf("range %q is empty or reversed", cond)
 			}
 		default:
-			at = []int{levelIdx(t, cond)}
+			lo, err = levelIdx(cond)
+			hi = lo
 		}
-		for _, i := range at {
+		if err = errors.Join(err, err2); err != nil {
+			return c, err
+		}
+		if lo > hi {
+			return c, fmt.Errorf("condition %q names no level", cond)
+		}
+		for i := lo; i <= hi; i++ {
 			if _, dup := c.at[levels[i]]; dup {
-				t.Fatalf("%s: level %s named twice in %q", where, levels[i], raw)
+				return c, fmt.Errorf("level %s named twice in %q", levels[i], raw)
 			}
 			c.at[levels[i]] = r
 		}
 	}
 	if below != "" {
+		n := 0
 		for _, l := range levels {
 			if _, ok := c.at[l]; !ok {
 				c.at[l] = below
+				n++
 			}
 		}
+		if n == 0 {
+			return c, fmt.Errorf("\"below\" names no level in %q", raw)
+		}
+	}
+	return c, nil
+}
+
+func parseCell(t *testing.T, where, raw string) docCell {
+	t.Helper()
+	c, err := parseCellText(raw)
+	if err != nil {
+		t.Fatalf("%s: %v", where, err)
 	}
 	return c
+}
+
+// The drift parser refuses what it cannot place, so a grammar 05 §5 starts using cannot be read as
+// an empty cell. Run inside the red tests, ahead of the seed comparison.
+func checkParser(t *testing.T) {
+	t.Helper()
+	for raw, want := range map[string]map[Level]Right{
+		"**D** ≥A3 · P below": {"A0": "P", "A1": "P", "A2": "P", "A3": "D", "A4": "D"},
+		"D <A4":               {"A0": "D", "A1": "D", "A2": "D", "A3": "D"},
+		"D A0–A1":             {"A0": "D", "A1": "D"},
+		"**D** A4 · P A3":     {"A3": "P", "A4": "D"},
+		"V (envelope)":        {"A0": "V", "A1": "V", "A2": "V", "A3": "V", "A4": "V"},
+	} {
+		c, err := parseCellText(raw)
+		if err != nil || !maps.Equal(c.at, want) {
+			t.Fatalf("parser control %q: %v, %v; want %v", raw, c.at, err, want)
+		}
+	}
+	for _, raw := range []string{"D A1–A0", "D A1–A1", "D <A0", "D A5", "D ≥A9", "D <", "D A3 · P A3",
+		"D · P below · I below", "D · P below", "D foo", "X", "D A-1", "DA3", "D A0-A1"} {
+		if c, err := parseCellText(raw); err == nil {
+			t.Fatalf("parser accepted %q as %v; want an error", raw, c.at)
+		}
+	}
 }
 
 // loadDocMatrix parses 05 §5. It fails the test on anything it cannot place.
@@ -223,6 +270,7 @@ func loadDocMatrix(t *testing.T) []docRow {
 // B1-14a acceptance 1: "100% table tests on the seed rights matrix". Every holder × level of every
 // row, plus each row's name, enforcement and every cell note, against 05 §5.
 func TestB1_14a_SeedRightsEveryCell(t *testing.T) {
+	checkParser(t)
 	doc := loadDocMatrix(t)
 	r, err := SeedRights()
 	if err != nil || r == nil {
@@ -324,6 +372,28 @@ func TestB1_14a_RightsRefuseUnknown(t *testing.T) {
 		if got, err := r.Right(c.n, c.h, c.l); !errors.Is(err, ErrRights) {
 			t.Errorf("Right(%d, %q, %q) = %q, %v; want ErrRights", c.n, c.h, c.l, got, err)
 		}
+		// Red-team r1: the founder default is for a known row with no D, never for an unknown one.
+		if c.h == Founder {
+			if h, ok := r.Decider(c.n, c.l); ok {
+				t.Errorf("Decider(%d, %q) = %q, true; want false: an unknown decision or level has no decider", c.n, c.l, h)
+			}
+		}
+	}
+}
+
+// Orchestrator ruling R1 (2026-10-03): the Kernel never reads docs at runtime. The seed is compiled
+// in; SeedRightsEveryCell is the drift test that holds it to 05 §5.
+func TestB1_14a_SeedCompiledIn(t *testing.T) {
+	t.Chdir(t.TempDir())
+	r, err := SeedRights()
+	if err != nil || r == nil {
+		t.Fatalf("SeedRights from an empty cwd: %v", err)
+	}
+	if n := len(r.Rows()); n != canonDecisions {
+		t.Fatalf("SeedRights from an empty cwd: %d rows, want %d", n, canonDecisions)
+	}
+	if got, err := r.Right(11, Acceptance, "A2"); err != nil || got != Decides {
+		t.Fatalf("SeedRights from an empty cwd: Right(11, acceptance, A2) = %q, %v; want D", got, err)
 	}
 }
 
@@ -355,6 +425,30 @@ func TestB1_14a_NewRightsValidates(t *testing.T) {
 	rows[0].Name = "mutated"
 	if got, _ := seed.Right(1, Founder, "A0"); got != Decides {
 		t.Errorf("mutating Rows()' result changed the matrix: Right(1, founder, A0) = %q", got)
+	}
+
+	// Red-team r1: NewRights builds from ITS input, not from the seed, and keeps its own copy.
+	in := seed.Rows()
+	in[10].Cells[Acceptance] = Cell{Rights: []LevelRight{{Right: Inform}}} // row 11, merge to main: Accept D -> I
+	m, err := NewRights(in)
+	if err != nil || m == nil {
+		t.Fatalf("NewRights(row 11 without a D): %v", err)
+	}
+	for _, l := range levels {
+		if got, _ := m.Right(11, Acceptance, l); got != Inform {
+			t.Errorf("NewRights ignored its input: Right(11, acceptance, %s) = %q, want I", l, got)
+		}
+		if got, ok := m.Decider(11, l); !ok || got != Founder {
+			t.Errorf("row 11 with no D: Decider(11, %s) = %q, %v; want founder", l, got, ok)
+		}
+	}
+	in[10].Cells[Acceptance] = Cell{Rights: []LevelRight{{Right: Decides}}}
+	in[0].Cells[CoFounder] = Cell{Rights: []LevelRight{{Right: Decides}}}
+	if got, _ := m.Right(11, Acceptance, "A0"); got != Inform {
+		t.Errorf("editing NewRights' input afterwards changed the matrix: Right(11, acceptance, A0) = %q", got)
+	}
+	if _, err := NewRights(m.Rows()); err != nil {
+		t.Errorf("editing NewRights' input afterwards leaked into Rows(): %v", err)
 	}
 
 	edit := func(name string, f func(rows []DecisionRow) []DecisionRow) {
@@ -663,8 +757,9 @@ func TestB1_14a_SnapshotContentAddressed(t *testing.T) {
 			}
 			continue
 		}
-		if got, err := s.Digest(); err == nil && got == d {
-			t.Errorf("byte %d flipped: parsed to the original address", i)
+		// Red-team r1: whatever parses is canonical — it re-encodes to exactly the bytes read.
+		if c2, err := s.Canonical(); err != nil || string(c2) != string(b) {
+			t.Errorf("byte %d flipped: ParseSnapshot accepted bytes that are not their own canonical encoding", i)
 		}
 	}
 
@@ -677,6 +772,57 @@ func TestB1_14a_SnapshotContentAddressed(t *testing.T) {
 	bad.Charter.Level = "A5"
 	if _, err := bad.Digest(); !errors.Is(err, ErrSnapshot) {
 		t.Errorf("charter level A5: Digest err = %v, want ErrSnapshot", err)
+	}
+
+	// Red-team r1: a set member repeated is refused, in every set.
+	for name, f := range map[string]func(*Snapshot){
+		"mandates":           func(s *Snapshot) { s.Mandates = append(s.Mandates, s.Mandates[0]) },
+		"grants":             func(s *Snapshot) { s.Charter.Grants = append(s.Charter.Grants, s.Charter.Grants[1]) },
+		"continuity ids":     func(s *Snapshot) { s.SafeState.Continuity[1].ID = s.SafeState.Continuity[0].ID },
+		"freshness inputs":   func(s *Snapshot) { s.InputsFreshness[1].Input = s.InputsFreshness[0].Input },
+		"overlay scope verb": func(s *Snapshot) { s.Overlays[0].Scope.Verbs = append(s.Overlays[0].Scope.Verbs, "ads.spend") },
+		"route scope verb":   func(s *Snapshot) { s.SafeState.Continuity[0].Scope.Verbs[1] = "payments.refund" },
+	} {
+		s := baseSnap()
+		f(&s)
+		if _, err := s.Digest(); !errors.Is(err, ErrSnapshot) {
+			t.Errorf("repeated member in %s: Digest err = %v, want ErrSnapshot", name, err)
+		}
+	}
+
+	// Red-team r1: the encoding is injective — a member holding a separator is not two members.
+	joined := baseSnap()
+	joined.Mandates = []string{"m_ads_v1,m_refund_v3"}
+	if dj, err := joined.Digest(); err == nil && dj == d {
+		t.Errorf(`mandates {"m_ads_v1,m_refund_v3"} and {"m_ads_v1","m_refund_v3"}: one address`)
+	}
+	split := baseSnap()
+	split.Overlays[0].Scope.Verbs = []string{"payments.*,ads.spend"}
+	if ds, err := split.Digest(); err == nil && ds == d {
+		t.Errorf(`verbs {"payments.*,ads.spend"} and {"payments.*","ads.spend"}: one address`)
+	}
+
+	// Red-team r1: nil and empty are the same (empty) set.
+	for name, f := range map[string][2]func(*Snapshot){
+		"overlays":   {func(s *Snapshot) { s.Overlays = nil }, func(s *Snapshot) { s.Overlays = []Overlay{} }},
+		"mandates":   {func(s *Snapshot) { s.Mandates = nil }, func(s *Snapshot) { s.Mandates = []string{} }},
+		"grants":     {func(s *Snapshot) { s.Charter.Grants = nil }, func(s *Snapshot) { s.Charter.Grants = []string{} }},
+		"continuity": {func(s *Snapshot) { s.SafeState.Continuity = nil }, func(s *Snapshot) { s.SafeState.Continuity = []ContinuityRoute{} }},
+		"freshness":  {func(s *Snapshot) { s.InputsFreshness = nil }, func(s *Snapshot) { s.InputsFreshness = []Freshness{} }},
+	} {
+		a, b := baseSnap(), baseSnap()
+		f[0](&a)
+		f[1](&b)
+		if da, db := digest(t, a), digest(t, b); da != db {
+			t.Errorf("nil and empty %s: two addresses for one content", name)
+		}
+	}
+
+	// Red-team r1: sub-second precision is content.
+	ms := baseSnap()
+	ms.InputsFreshness[0].ObservedAt = ms.InputsFreshness[0].ObservedAt.Add(500 * time.Millisecond)
+	if digest(t, ms) == d {
+		t.Errorf("observed_at +500ms: same address")
 	}
 }
 
@@ -852,6 +998,94 @@ func TestB1_14a_WalkPrecedence(t *testing.T) {
 			expect(t, "P3, P4, P7 all ask", c, Ask, 3)
 		}
 	})
+	// ---- red-team r1, 2026-10-03 ----
+	t.Run("verb * matches every verb", func(t *testing.T) {
+		all := admit("never.all", 1, Invariant, []string{"*"}, Never)
+		c := walk(t, mustPolicy(t, all), noOverlays(snap), act("keel", "support.reply"), Auto)
+		expect(t, "P1 verbs [*], support.reply", c, Never, 1)
+	})
+	t.Run("a verb matches exactly, never as a prefix", func(t *testing.T) {
+		c := walk(t, mustPolicy(t), snap, act("keel", "payments.refund_everything"), Auto)
+		expect(t, "freeze vs a verb a continuity route only prefixes", c, Held, 2)
+		one := admit("never.charge", 1, Invariant, []string{"payments.charge"}, Never)
+		c = walk(t, mustPolicy(t, one), noOverlays(snap), act("keel", "payments.chargeback"), Auto)
+		expect(t, "P1 payments.charge vs payments.chargeback", c, Auto, 0)
+	})
+	t.Run("continuity respects the venture", func(t *testing.T) {
+		all := admit("kill.payments.all", 2, Invariant, []string{"payments.*"}, Held)
+		all.Scope.Venture = "*"
+		c := walk(t, mustPolicy(t, all), noOverlays(snap), act("other", "payments.refund"), Auto)
+		expect(t, "keel's continuity route vs venture other", c, Held, 2)
+	})
+	t.Run("scope applies at P1 and at P3..P8", func(t *testing.T) {
+		one := admit("never.charge", 1, Invariant, []string{"payments.charge"}, Never)
+		c := walk(t, mustPolicy(t, one), noOverlays(snap), act("keel", "support.reply"), Auto)
+		expect(t, "P1 out of scope", c, Auto, 0)
+		p4 := admit("limits.never", 4, Consequence, []string{"payments.*"}, Never)
+		for _, a := range []Action{act("keel", "support.reply"), act("other", "payments.charge")} {
+			c := walk(t, mustPolicy(t, p4), noOverlays(snap), a, Auto)
+			expect(t, "P4 out of scope "+a.Venture+" "+a.Verb, c, Auto, 0)
+			if len(c.Blockers) != 0 {
+				t.Errorf("out-of-scope rule listed as a blocker: %v", blockerIDs(c))
+			}
+		}
+	})
+	t.Run("a P1 rule that is not an admission rule never blocks", func(t *testing.T) {
+		adv := admit("advice.p1", 1, Invariant, []string{"payments.*"}, Never)
+		adv.Admission = false
+		c := walk(t, mustPolicy(t, adv), noOverlays(snap), act("keel", "payments.charge"), Auto)
+		expect(t, "non-admission P1", c, Auto, 0)
+	})
+	t.Run("one snapshot address, one contract: overlay order", func(t *testing.T) {
+		s := baseSnap()
+		s.Overlays[1].Scope.Verbs = append(s.Overlays[1].Scope.Verbs, "payments.charge")
+		r := s
+		r.Overlays = slices.Clone(s.Overlays)
+		slices.Reverse(r.Overlays)
+		if digest(t, s) != digest(t, r) {
+			t.Fatal("precondition: one set, one digest")
+		}
+		a := walk(t, mustPolicy(t), s, act("keel", "payments.charge"), Auto)
+		b := walk(t, mustPolicy(t), r, act("keel", "payments.charge"), Auto)
+		if !reflect.DeepEqual(a, b) {
+			t.Errorf("one snapshot address, two contracts: %+v vs %+v", a.Blockers, b.Blockers)
+		}
+	})
+	t.Run("one rule set, one contract: blockers in a deterministic order", func(t *testing.T) {
+		p4b := admit("limits.aaa", 4, Consequence, []string{"payments.*"}, Notify)
+		rules := []Rule{p4n, p5, p7, p4b, p6}
+		a := walk(t, mustPolicy(t, rules...), noOverlays(snap), act("keel", "payments.charge"), Auto)
+		for _, order := range [][]Rule{reversed(rules), {p6, p4b, p7, p4n, p5}} {
+			b := walk(t, mustPolicy(t, order...), noOverlays(snap), act("keel", "payments.charge"), Auto)
+			if !reflect.DeepEqual(a, b) {
+				t.Errorf("same rule set, two contracts: %v vs %v", blockerIDs(a), blockerIDs(b))
+			}
+		}
+	})
+	t.Run("blockers carry the rule's owner, remedy and expiry", func(t *testing.T) {
+		c := walk(t, mustPolicy(t, p4a), noOverlays(snap), act("keel", "payments.charge"), Auto)
+		if want := (Blocker{Rule: p4a.ID, Precedence: 4, Owner: p4a.Owner, Remedy: p4a.Remedy, Expires: p4a.Expires}); len(c.Blockers) != 1 || c.Blockers[0] != want {
+			t.Errorf("P4 blockers %+v, want exactly %+v", c.Blockers, want)
+		}
+		c = walk(t, mustPolicy(t), snap, act("keel", "payments.charge"), Auto)
+		if len(c.Blockers) != 1 || c.Blockers[0].Rule != "ov_4471" || c.Blockers[0].Precedence != 2 || !c.Blockers[0].Expires.Equal(snap.Overlays[0].Expires) {
+			t.Errorf("overlay blockers %+v, want ov_4471 at P2 with the overlay's expiry", c.Blockers)
+		}
+	})
+	t.Run("a rule that only equals the base does not decide (ruling R2)", func(t *testing.T) {
+		free := noOverlays(snap)
+		c := walk(t, mustPolicy(t, p4a), free, act("keel", "payments.charge"), Ask)
+		expect(t, "base ask, P4 ask", c, Ask, 0)
+		c = walk(t, mustPolicy(t, p4a, p5), free, act("keel", "payments.charge"), Ask)
+		expect(t, "base ask, P4 ask, P5 co_sign", c, CoSign, 5)
+	})
+	t.Run("the base disposition is validated", func(t *testing.T) {
+		for _, b := range []Disposition{"", "bogus", "Auto", "co-sign", " ask"} {
+			if c, err := Walk(mustPolicy(t), noOverlays(snap), act("keel", "payments.charge"), b); err == nil {
+				t.Errorf("base %q accepted: disposition %q", b, c.Disposition)
+			}
+		}
+	})
 	t.Run("no rule loosens the base", func(t *testing.T) {
 		c := walk(t, mustPolicy(t, p4n, p7), noOverlays(snap), act("keel", "payments.charge"), CoSign)
 		expect(t, "base co_sign, rules notify/ask", c, CoSign, 0)
@@ -952,6 +1186,7 @@ func TestB1_14a_UnknownRuleTypeRejected(t *testing.T) {
 		refuse(fmt.Sprintf("admission effect %q", eff), admit("r", 4, Consequence, []string{"payments.*"}, eff))
 	}
 	refuse("admission rule at P8 (optional methods never block)", admit("r", 8, Invariant, []string{"payments.*"}, Ask))
+	refuse("consequence admission rule at P8", admit("r", 8, Consequence, []string{"payments.*"}, Ask))
 	refuse("empty id", admit("", 4, Consequence, []string{"payments.*"}, Ask))
 	if _, err := NewPolicy([]Rule{admit("same", 4, Consequence, []string{"payments.*"}, Ask), admit("same", 5, Consequence, []string{"ads.*"}, Ask)}); !errors.Is(err, ErrRule) {
 		t.Errorf("duplicate rule id: err %v, want ErrRule", err)
