@@ -1,0 +1,30 @@
+# Done-test register, B1-18 (docs/vision-v3/14-BUILD-PLAN.md:307: "Budget Ledger v1 on the Journal: four
+# resources, tranches with completion reserves"; acceptance "The acceptance reserve cannot be spent on
+# execution; the projection carries `journal_offset`"). Each frozen file with the sha256 of its bytes,
+# computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    node --test userland/test/budget.donetest.test.ts   (Node 24; node:sqlite is built in, no new dependency)
+#
+# Canon: 09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md §1, §3, §3.1, §4; 09a-ENGINEERING.md §4.1-§4.2.
+#
+# First frozen 2026-10-03 by a test builder that is not the implementer. Location: Userland
+# (userland/src/budget.ts), because B1-18 is protected_base: false and Allocation is not Kernel. The ledger
+# reaches the Journal through an injected JournalPort (propose with expect_seq, read). The tests supply the
+# port: an in-memory one, and a file-backed one for the SIGKILL child. userland/src/budget.ts is NOT
+# registered: it is the interface the job implements (the B1-02 pattern). Orchestrator to confirm the
+# location; the Go alternative is kernel/internal/budget over journal.Journal.
+#
+# Fifteen tests. Two pin the acceptance line; the rest pin the brief's money-safety edges: replay and
+# lost-ack idempotency, CAS under concurrency and a forced cut-in, a quantity grammar with a 2^63-1 bound,
+# full precision, append-only, restart over same, stale, deleted and garbage projections, SIGKILL, and
+# fail-closed on a read or write error.
+# Red against the stub: 15/15. Green against a $TMPDIR reference: 15/15, five runs.
+# Mutants, 12 of 12 killed: number arithmetic, BigInt() parsing, no catch-up, no idempotency, a loose
+# idempotency digest, no pool check, execution spilling into acceptance, no unit check, append at a fresh
+# head, no per-resource sum bound, no completion-reserve check, no projection writes.
+register: B1-18
+jobs:
+  - id: B1-18
+    files:
+      - path: userland/test/budget.donetest.test.ts
+        sha256: a619d4e36a61a22cf296c5595182f5f18f98c6738f6f4c7c97bdcfc455281454
