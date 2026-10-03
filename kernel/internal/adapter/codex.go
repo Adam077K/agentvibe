@@ -6,14 +6,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"io"
-	"io/fs"
-	"os"
-	"path/filepath"
 	"regexp"
 	"slices"
-	"strings"
 )
 
 // Codex is the WorkerAdapter for the `codex` CLI (09a §8.1: codex-cli 0.154.0, `exec` with -s, -p,
@@ -42,63 +37,6 @@ var codexRequiredKeys = [...]string{"approval_policy", "approvals_reviewer", "sa
 	"sandbox_workspace_write.exclude_tmpdir_env_var", "sandbox_workspace_write.exclude_slash_tmp",
 	"shell_environment_policy.inherit", "mcp_servers", "web_search", "model_provider",
 	"model_providers", "notify", "hooks", "features", "tools", "projects"}
-
-var (
-	tomlTable = regexp.MustCompile(`^\[([A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*)\]$`)
-	tomlKey   = regexp.MustCompile(`^([A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*)[ \t]*=[ \t]*\S`)
-)
-
-// profileComplete reads the generated profile line by line: blank lines, '#' comments, [table]
-// headers and single-line `bare.key = value` pairs, nothing else (a multi-line value is refused).
-// It refuses a repeated table or key, and requires every codexRequiredKeys entry by exact bytes.
-// It checks presence only, never values (DR round 2, residual risk).
-func profileComplete(toml string) bool {
-	seen := map[string]bool{}
-	table := ""
-	for _, line := range strings.Split(toml, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" || line[0] == '#' {
-			continue
-		}
-		if m := tomlTable.FindStringSubmatch(line); m != nil {
-			if seen["["+m[1]+"]"] {
-				return false
-			}
-			seen["["+m[1]+"]"], table = true, m[1]+"."
-			continue
-		}
-		m := tomlKey.FindStringSubmatch(line)
-		if m == nil || seen[table+m[1]] {
-			return false
-		}
-		seen[table+m[1]] = true
-	}
-	for _, k := range codexRequiredKeys {
-		if !seen[k] {
-			return false
-		}
-	}
-	return true
-}
-
-// cleanAbs: an absolute printable-ASCII path that filepath.Clean leaves unchanged (no "..", ".",
-// doubled or trailing slash).
-func cleanAbs(v string) bool { return absASCII(v) && filepath.Clean(v) == v }
-
-// within: p is root or below it. Both are clean absolute paths.
-func within(p, root string) bool { return p == root || strings.HasPrefix(p, root+"/") }
-
-// noSymlink: neither p nor any existing ancestor is a symlink. An ancestor that does not exist
-// yet is fine; any other Lstat error is refused.
-func noSymlink(p string) bool {
-	for ; p != "/"; p = filepath.Dir(p) {
-		fi, err := os.Lstat(p)
-		if err == nil && fi.Mode()&os.ModeSymlink != 0 || err != nil && !errors.Is(err, fs.ErrNotExist) {
-			return false
-		}
-	}
-	return true
-}
 
 // Family is "codex".
 func (c *Codex) Family() string { return "codex" }
@@ -134,8 +72,8 @@ func absASCII(v string) bool {
 // codex), a claude-only field, a context profile outside the pinned table and a budget that is
 // not finite and positive are ErrSpec too. Round 2: CodexProfileTOML must hash to the pin and set
 // every codexRequiredKeys entry; -C is clean and inside Worktree (never "/"); -o is clean, outside
-// Worktree and reaches no symlink; Env[CODEX_HOME] is absent or exactly the pinned CodexHome,
-// which is clean and outside Worktree.
+// Worktree and reaches no symlink; Env[CODEX_HOME] and Env[HOME] are absent or exactly the pinned
+// CodexHome and Home, clean and outside Worktree. Round 3: paths are compared after resolution.
 func (c *Codex) Argv(spec LaunchSpec) ([]string, error) {
 	switch {
 	case !harnessHash.MatchString(c.digest) || spec.BinaryDigest != c.digest:
@@ -166,15 +104,17 @@ func (c *Codex) Argv(spec LaunchSpec) ([]string, error) {
 			return nil, specErr("slot %s value %q is not a clean absolute ASCII path", slot, v)
 		}
 	}
-	wt, home := spec.Worktree, spec.CodexHome
-	envHome, homeSet := spec.Env["CODEX_HOME"]
+	wt := spec.Worktree
+	cwdIn, cwdOK := inWorktree(spec.Cwd, wt) // round 3: resolved, so a symlink out of it is out
 	switch {
-	case !cleanAbs(wt) || wt == "/" || !within(spec.Cwd, wt):
+	case !cleanAbs(wt) || wt == "/" || !within(spec.Cwd, wt) || !cwdIn || !cwdOK:
 		return nil, specErr("-C %q is not inside the worktree %q", spec.Cwd, wt)
-	case within(spec.ResultPath, wt) || !noSymlink(spec.ResultPath):
+	case !noSymlink(spec.ResultPath) || !outsideWorktree(spec.ResultPath, wt):
 		return nil, specErr("-o %q is inside the worktree or passes through a symlink", spec.ResultPath)
-	case home != "" && (!cleanAbs(home) || within(home, wt)), homeSet && (home == "" || envHome != home):
-		return nil, specErr("CODEX_HOME %q is not the pinned %q outside the worktree", envHome, home)
+	case !pinnedEnv(spec.Env, "CODEX_HOME", spec.CodexHome, wt):
+		return nil, specErr("CODEX_HOME is not absent or the pinned %q outside the worktree", spec.CodexHome)
+	case !pinnedEnv(spec.Env, "HOME", spec.Home, wt):
+		return nil, specErr("HOME is not absent or the pinned %q outside the worktree", spec.Home)
 	}
 	fill["<profile>"] = spec.CodexProfile
 	argv := make([]string, len(codexTemplate))
