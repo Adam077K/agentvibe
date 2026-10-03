@@ -37,7 +37,12 @@ var ErrConsumed = errors.New("lease: fenced lease already consumed")
 // ErrBadLease: the string is not the canonical rendering (FencedLease) of a token for this job.
 var ErrBadLease = errors.New("lease: not a canonical fenced lease for this job")
 
-// TypeConsumed is the event type of a consumption in a job's lease stream.
+// TypeConsumed (review r1, 2026-10-03) is the event type of a consumption in the job's own lease
+// stream (Stream), appended with ExpectSeq the seq of the claim it consumes and carrying that
+// claim's row unchanged. A consumed claim is still the live claim: ClaimJob is ErrHeld and Check
+// passes until it expires or is released. A lease.consumed head that is not exactly that (another
+// row, another token, a second consumption, a consumption after a release) is ErrCorrupt on every
+// operation; a transition that commits while one is being read is never ErrCorrupt.
 const TypeConsumed = "lease.consumed"
 
 // LaunchVerifier is launcher.LeaseVerifier, backed by the job:// claim rows.

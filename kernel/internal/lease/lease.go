@@ -162,7 +162,10 @@ func (c *claimer) load(ctx context.Context, jobID string) (state, error) {
 	if len(evs) == 0 || evs[0].Seq != seq {
 		return state{}, fmt.Errorf("%w: %s head seq %d not readable", ErrCorrupt, stream, seq)
 	}
-	ev := evs[0]
+	// A transition may commit between the Head and this Read; the Read then returns it too, and the
+	// newest event it returned is the head the decision is made on.
+	ev := evs[len(evs)-1]
+	seq = ev.Seq
 	var r row
 	if err := json.Unmarshal(ev.Data, &r); err != nil {
 		return state{}, fmt.Errorf("%w: %s seq %d: %v", ErrCorrupt, stream, seq, err)
