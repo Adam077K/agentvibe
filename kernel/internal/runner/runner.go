@@ -58,13 +58,21 @@ type ExecConfig struct {
 }
 
 // NewExec returns the real launcher.Exec, or ErrSpec for a malformed cfg. Run executes only bytes
-// that hash to digest. It execs in place only when the binary, symlinks resolved at exec time, and
-// EVERY ancestor directory lie outside all WorkerRoots and are not writable by the worker (owner,
-// group and other mode bits against WorkerUID and WorkerGIDs); it then execs the resolved path.
-// Otherwise it copies the bytes it hashed into a private directory and execs the copy. The worker
-// runs in a new process group, with exactly env as the environment (nil env is ErrSpec; nothing is
-// inherited from the Kernel), and Run returns only after the group and every descendant are dead.
-// ctx cancellation kills the tree and returns ctx.Err().
+// that hash to digest, on both paths below. It execs in place only when the binary, symlinks resolved
+// at exec time, and EVERY ancestor directory of the resolved path lie outside all WorkerRoots and are
+// not writable by the worker (owner, group and other mode bits against WorkerUID and WorkerGIDs); it
+// then execs the resolved path. "Not writable" includes ACLs and fails closed (r3, orchestrator
+// ceo-1, 2026-10-04): an extended ACL entry on the binary or any resolved ancestor that grants a
+// write-class right (write, append, add_file, add_subdirectory, delete, delete_child, writeattr,
+// writeextattr, writesecurity, chown) to anyone other than root or the daemon's uid, or an ACL that
+// cannot be read, makes it writable. Otherwise it copies into a private directory and execs the
+// copy, and the bytes it execs are the bytes it hashed: never hash once and read the file again.
+// The worker runs in a new process group, with exactly env as the environment (nil env is ErrSpec;
+// nothing is inherited from the Kernel), and Run returns only after the group and every descendant
+// are dead, however the leader ended, a leader that exits 0 included. The 90% SIGINT goes to the
+// whole process group. ctx cancellation kills the tree and returns ctx.Err(). A worker that exits
+// non-zero, or dies by a signal that no backstop and no ctx sent, is reported as an error wrapping
+// its *exec.ExitError (r3).
 func NewExec(cfg ExecConfig) (launcher.Exec, error) { return stubExec{}, nil }
 
 type stubExec struct{}
@@ -91,11 +99,30 @@ type Job struct {
 	Limits Limits
 }
 
+// Identity is a process's identity: its pid and the kernel's start time for it. The kernel reuses
+// pids, so a pid alone names no process; a pid whose start time differs is another process (r3, the
+// pid-reuse guard).
+type Identity struct {
+	PID   int
+	Start time.Time
+}
+
+// ProcIdentity returns pid's identity from the kernel's process table (kern.proc.pid on darwin; never
+// a ps subprocess), or an error wrapping syscall.ESRCH when no live process has that pid.
+func ProcIdentity(pid int) (Identity, error) { return Identity{}, ErrNotImplemented }
+
 // Config configures a Runner.
 type Config struct {
 	State    string            // the runner's persisted state directory; it survives the daemon
 	Capacity int               // at most Capacity jobs at once; 0 means 4; above 12 (the launcher cap) or negative is ErrSpec
 	Launcher launcher.Launcher // the Kernel launcher, built with NewExec()
+	// Identify is the pid-reuse guard's only source of process identity (r3); nil means
+	// ProcIdentity. Run records the identity Identify returns for the job's leader. Reconcile
+	// signals a recorded process, its process group, or any process found through either, only while
+	// Identify still returns the recorded identity; a differing start time means the pid was reused
+	// and nothing is signalled through it. When Identify reports the leader gone (syscall.ESRCH),
+	// Reconcile still kills what survives in its process group and every descendant.
+	Identify func(pid int) (Identity, error)
 }
 
 // Runner admits jobs and launches them under their Limits.
@@ -107,7 +134,9 @@ func New(cfg Config) (*Runner, error) { return nil, ErrNotImplemented }
 // Run admits job (ErrState before Reconcile has completed on this Runner; ErrCapacity when Capacity
 // jobs are already admitted; both before Launch is called),
 // records it running with its process identity in State before the worker can outlive the daemon,
-// launches it under job.Limits and returns the Launch error once the whole tree is dead.
+// launches it under job.Limits (every one of Wall, Idle, Stdout and Dir) and returns the Launch error
+// once the whole tree is dead. It then records the job StatusKilled when that error is ErrWall,
+// ErrIdle or ctx's error, and StatusExited otherwise (r3); a restart's Reconcile leaves either alone.
 func (r *Runner) Run(ctx context.Context, job Job) error { return ErrNotImplemented }
 
 // Reconcile runs after a restart: for every job State records as running, it kills the surviving
