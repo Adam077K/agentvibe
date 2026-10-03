@@ -32,7 +32,7 @@ import (
 	"testing"
 )
 
-// cxLocked: the 17 locked settings, key -> the value the argv pins (DR-B1-07 "Round 4").
+// cxLocked: the 16 locked settings (r5: features={} is replaced by one pin per feature, codex_r5_donetest_test.go), key -> the value the argv pins (DR-B1-07 "Round 4").
 var cxLocked = map[string]string{
 	"approval_policy":                                `"never"`,
 	"approvals_reviewer":                             `"user"`,
@@ -48,7 +48,6 @@ var cxLocked = map[string]string{
 	"model_providers":                                `{}`,
 	"notify":                                         `[]`,
 	"hooks":                                          `{}`,
-	"features":                                       `{}`,
 	"tools":                                          `{}`,
 	"projects":                                       `{}`,
 }

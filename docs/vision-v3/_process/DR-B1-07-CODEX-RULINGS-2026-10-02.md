@@ -265,3 +265,50 @@ So auth still comes from CODEX_HOME, as `--help` says. A fake key cannot be serv
 - The profile-parser tests are removed: R2_ProfileLoadsAndRulesIgnored, R2_ProfileRequiredKeys and R3_ProfileIsParsedAsTOML.
 - `codex_profile.go` is dead code under this ruling. The implementer deletes it, keeping the path helpers it hosts (`cleanAbs`, `within`, `noSymlink`, `resolve`, `inWorktree`, `outsideWorktree`, `pinnedEnv`).
 - Mutants: 9 of 9 killed.
+
+## Round 5 (2026-10-03): Env allowlist, every feature pinned, locked-off items
+
+The Opus review PASSED 9faaaef on security, with two MED-security findings. These are the orchestrator's fail-safe calls; the founder rulings are unchanged.
+
+**1. Env is an allowlist** (finding: `Argv` accepted `OPENAI_BASE_URL`, `CODEX_CA_CERTIFICATE`, `OPENAI_API_KEY`).
+
+Measured with `env -i`, codex-cli 0.154.0, network denied, no model turn:
+- `codex` is a `#!/usr/bin/env node` launcher, so it does not start without a PATH that finds `node`.
+- With PATH, it starts given CODEX_HOME alone or HOME alone, and does not start with neither ("failed to initialize in-process app-server client").
+- Nothing else is needed.
+
+The allowlist is therefore HOME, CODEX_HOME, PATH and LANG. LANG is not required, but it is harmless and is on the launcher grant's EnvAllow.
+
+- **Any other key is ErrSpec.** This includes `AV_JOB`, every `OPENAI_*` and `CODEX_*` key the native binary names, proxy and certificate variables, `NODE_OPTIONS`, and the `LD_`/`DYLD_` loader variables. The native binary names `OPENAI_API_KEY`, `CODEX_API_KEY`, `CODEX_ACCESS_TOKEN`, `CODEX_AUTH`, `CODEX_CA_CERTIFICATE`, `CODEX_SQLITE_HOME`, `CODEX_URL`, `HTTP(S)_PROXY`, `ALL_PROXY`, `NO_PROXY` and `SSL_CERT_FILE`.
+- **PATH entries** must be clean and absolute, and outside the worktree after resolution, with no empty entry, because an empty entry is the cwd. Otherwise the worker could plant a `node` or a tool that codex runs. This rule is the orchestrator's extension of the allowlist.
+- **Follow-up for B1-08:** the launcher must not send AV_JOB on a codex launch.
+
+**2. Every feature flag is pinned** (finding: `features={}` left defaults on).
+
+Measured with `codex features list` under a throwaway HOME and CODEX_HOME:
+- `-c features={}` changes nothing.
+- Defaults that are on include `apps`, `plugins`, `remote_plugin`, `plugin_sharing`, `multi_agent`, `computer_use`, `browser_use`, `browser_use_external`, `browser_use_full_cdp_access`, `image_generation`, `in_app_*`, `hooks`, `goals`, `shell_snapshot`, `skill_search`, `skill_mcp_dependency_install`, `tool_suggest`, `tool_call_mcp_elicitation`, `auth_elicitation`, `view_image`, `workspace_dependencies`, `sleep_tool` and `fast_mode`.
+- `--strict-config` refuses an unknown feature name (`unknown configuration field features.no_such_feature_zz`). The pin list therefore also trips if the binary changes.
+
+The line now pins every feature whose stage is not `removed`: 103 of the 140 listed, in listed order, as `-c features.<name>=<bool>`.
+- All are `false` except two:
+  - **shell_tool = true**: required, because it is the worker's command tool.
+  - **unified_exec = true**: measured, `-c features.unified_exec=false` leaves it true. It is the command runner, and pinning it true records the truth.
+- `multi_agent` and `multi_agent_v2` are `false`, as founder ruling 2 requires: nested agents never.
+- Removed features are not pinned. The binary marks them inert, and five of them report true even when set false.
+- Not measured: whether a real turn works with these pins, because no turn was run.
+
+**3. LOW.** An `mcp_tool_call` or `web_search` item is now UNPARSED and never a pass. Both are locked off, so such an item means the lock failed.
+
+**4. The review's two test gaps**, both now pinned by tests:
+- a non-string `agent_message` text followed by a valid one is UNPARSED;
+- `-C` named through an alias outside the worktree that resolves into it is ErrSpec, so the lexical check stays.
+
+**Implementer note:** the `LaunchSpec` comments at `adapter.go:121-125` still describe the `-p` profile (`CodexProfile`, `ProfileDigest`, `CodexProfileTOML`). Those fields are now refused, so remove the stale comments.
+
+**Tests** (register RE-FREEZE r6):
+- Seven new tests in `codex_r5_donetest_test.go`.
+- r1-r3 Env fixtures use LANG instead of AV_JOB.
+- 19 tests fail on 9faaaef.
+- Mutants: 16 of 16 killed. "PATH entry not cleanAbs" is equivalent and was dropped.
+- **Follow-up:** 09a §8.2 and B1-08's `codexTokens` must take the 103 feature pins.

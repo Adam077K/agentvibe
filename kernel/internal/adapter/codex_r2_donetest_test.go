@@ -126,7 +126,7 @@ func TestB1_07_R2_CodexHomePinned(t *testing.T) {
 	env := func(home, pinned string, set bool) LaunchSpec {
 		s := cxSpec()
 		s.CodexHome = pinned
-		s.Env = map[string]string{"AV_JOB": "job-1"}
+		s.Env = map[string]string{"LANG": "C.UTF-8"}
 		if set {
 			s.Env["CODEX_HOME"] = home
 		}
