@@ -255,3 +255,20 @@ Wrap every network call in a retry. CI does NOT need session-file `qa_verdict` f
 - run Codex as a parallel second reviewer when it works.
 
 Raising `maxTurns` is a separate founder PR (irreversible tier).
+
+**State at end of build-2d (latest, supersedes the in-flight table above):**
+
+- **B1-07 codex adapter**
+  - The implementation at 9faaaef was reviewed by Opus and PASSED on security. It does not yet meet the ship bar because of 2 MED-security findings:
+    - Env accepts `OPENAI_BASE_URL`, `CODEX_CA_CERTIFICATE` and `OPENAI_API_KEY`;
+    - `features={}` leaves `multi_agent`, `computer_use`, `plugins` and `apps` on, which violates the "nested never" ruling.
+  - A test builder is writing r5 on `build/b1-07-tests-r5`:
+    - an Env allowlist;
+    - every feature flag pinned off;
+    - `mcp_tool_call` and `web_search` events treated as UNPARSED.
+  - **Next:** the implementer (fix on build/b1-07) → short re-review → PR.
+- **B1-08 launcher**
+  - The implementation is at `build/b1-08` @ f9f54d6, on tests 7275a72. Kernel is at 9,432.
+  - An Opus re-review is running. Its key question: can two State dirs bypass lease consumption or the hourly count? If yes, that is HIGH.
+  - B1-08 contains B1-07, so B1-08 must be rebased onto B1-07's final head and merged after it.
+- **Main is green.** Nothing else is in flight.
