@@ -20,7 +20,11 @@
 //   - One Journal stream. A tranche opening and a debit are each ONE event, appended with expect_seq equal to
 //     the head the decision was made at. Every grant is backed by a new event the Journal acknowledged: the
 //     projection alone never grants. A failed read, a failed write or exhausted conflict retries is
-//     `unavailable`, and nothing is granted.
+//     `unavailable`: no grant is reported, and the caller retries with the same key (see the last bullet).
+//   - DECISIONS ARE MADE ON A STATE FOLDED FROM THE JOURNAL, in memory, never on the file. The SQLite file is
+//     a cache of that state: on first use it is compared with the folded state and rebuilt if it differs in
+//     any row, and after every append it is compared again. A corrupt page, a partial restore or a hand edit
+//     of the file therefore cannot change what is granted.
 //   - After a seq_conflict the ledger re-reads and decides again from the new head, so a balance another
 //     ledger spent is never granted twice.
 //   - Each event names the digest of the event before it (`prev`), so the head event's digest commits to the
@@ -31,8 +35,9 @@
 //   - Each event reaches the projection in one SQLite transaction, with its own seq as the journal_offset of
 //     every row it changed. An event that does not validate on the way in (a bad digest, an overspend, a gap in
 //     seq) stops catch-up: the ledger reports `unavailable` rather than guess.
-//   - A lost acknowledgement (the append landed, the answer did not) is reported as `unavailable`; the retry
-//     with the same key finds the event and returns it as a replay, so the money is counted once.
+//   - `unavailable` means UNCERTAIN, not "nothing happened": a lost acknowledgement (the append landed, the
+//     answer did not) is reported as `unavailable`. Retry with the same key: it finds the event and returns
+//     it as a replay, so the money is counted once.
 //
 // The projection file is the ledger's own: a file that is not a budget projection is refused, never
 // overwritten. Delete a budget projection and it rebuilds.
@@ -96,7 +101,7 @@ export type RefusalCode =
   | 'unknown_tranche'
   | 'incomplete' // a tranche without its completion reserve
   | 'idempotency_conflict' // the key was used before for a different debit (or the tranche id for another spec)
-  | 'unavailable'; // the Journal or projection could not be read or written: fail closed, nothing granted
+  | 'unavailable'; // uncertain: the Journal could not be read or written, so no grant is reported; an append may have landed, so retry with the same key
 
 export type Granted = { ok: true; seq: number; replayed: boolean };
 export type Refused = { ok: false; code: RefusalCode };
@@ -160,9 +165,10 @@ function member<T extends string>(list: readonly T[], v: unknown): T | null {
   return list.find((x) => x === v) ?? null;
 }
 
-// An id, key or label: a non-empty string without control characters.
+// An id, key or label: a non-empty string without control characters or lone surrogates (which a Journal
+// and SQLite would store as different text than the caller sent, so two keys could collide).
 function text(v: unknown): string | null {
-  return typeof v === 'string' && v.length >= 1 && v.length <= MAX_TEXT && !CONTROL.test(v) ? v : null;
+  return typeof v === 'string' && v.length >= 1 && v.length <= MAX_TEXT && !CONTROL.test(v) && v.isWellFormed() ? v : null;
 }
 
 function parseAmount(v: unknown): Amount | null {
@@ -374,7 +380,7 @@ function openStore(path: string) {
 
   // applyEvent folds one Journal event into the projection, atomically. It throws on anything that does not
   // validate: an event out of sequence, one whose `prev` is not the head, a malformed or mis-digested payload,
-  // a duplicate id, or a debit the hold cannot cover. The caller stops catching up and denies.
+  // a duplicate id, or a debit the hold cannot cover. The caller stops catching up and reports unavailable.
   function applyEvent(e: PortEvent, at: Head): Head {
     if (!isRecord(e) || e.stream !== STREAM || e.seq !== at.seq + 1) throw new Error(`budget: journal event out of sequence after ${at.seq}`);
     const data = e.data;
@@ -413,6 +419,21 @@ function openStore(path: string) {
       for (const e of events) at = applyEvent(e, at);
       return at;
     },
+    // dump is every row of every table, in a fixed order: two stores hold the same state iff their dumps match.
+    dump(): string {
+      const rows: string[] = [];
+      for (const [table, order] of [
+        ['meta', 'id'],
+        ['tranches', 'id'],
+        ['balances', 'tranche, hold, resource'],
+        ['idempotency', 'idempotency_key'],
+      ]) {
+        for (const r of query(`SELECT * FROM ${table} ORDER BY ${order}`).all()) {
+          rows.push(`${table} ${JSON.stringify(r, (_k, v) => (typeof v === 'bigint' ? String(v) : v))}`);
+        }
+      }
+      return rows.join('\n');
+    },
     // reset empties the projection (the ledger reads the Journal again from the start).
     reset(): void {
       atomic(() => {
@@ -434,7 +455,17 @@ type Append = { type: string; data: Record<string, unknown> };
 
 export async function openLedger(opts: { journal: JournalPort; projectionPath: string }): Promise<Ledger> {
   const { journal } = opts;
-  const store = openStore(opts.projectionPath);
+  // `cache` is the SQLite file at projectionPath; it is opened first so a file that is not a budget
+  // projection refuses the ledger. `store` is the same schema in memory and is the only state a decision is
+  // read from: it is folded from the Journal alone, so nothing that happens to the file can change a grant.
+  const cache = openStore(opts.projectionPath);
+  let store: ReturnType<typeof openStore>;
+  try {
+    store = openStore(':memory:');
+  } catch (e) {
+    cache.close();
+    throw e;
+  }
   let closed = false;
 
   // One operation at a time per ledger: the head a decision is made at must not move under it except by
@@ -455,17 +486,40 @@ export async function openLedger(opts: { journal: JournalPort; projectionPath: s
     return events;
   }
 
-  // catchUp brings the projection to the Journal's head and returns it. It reads the stored head event back
-  // and compares its digest: a projection that is not a prefix of this Journal is emptied and rebuilt. A
-  // read that fails throws.
+  // mirror brings the file to the state the Journal gave. A file that is not byte-for-byte that state (a
+  // different head, a stale or foreign copy, an edited row, a failed write) is emptied and refilled.
+  async function mirror(fresh: PortEvent[], before: Head, after: Head): Promise<void> {
+    const at = cache.head();
+    if (fresh.length > 0 && at.seq === before.seq && at.digest === before.digest) {
+      try {
+        cache.apply(fresh, before);
+      } catch {
+        // refilled below
+      }
+    }
+    if (cache.head().seq === after.seq && cache.dump() === store.dump()) return;
+    cache.reset();
+    cache.apply(await readFrom(1), EMPTY);
+  }
+
+  // catchUp brings the in-memory state to the Journal's head, then the file after it, and returns the head.
+  // It reads the stored head event back and compares its digest: a state that is not a prefix of this Journal
+  // is emptied and rebuilt. A read that fails throws. The file is never read for a decision.
   async function catchUp(): Promise<Head> {
     const at = store.head();
     if (at.seq > 0) {
       const [tip, ...fresh] = await readFrom(at.seq);
-      if (tip !== undefined && tip.seq === at.seq && tip.stream === STREAM && eventDigest(tip) === at.digest) return store.apply(fresh, at);
+      if (tip !== undefined && tip.seq === at.seq && tip.stream === STREAM && eventDigest(tip) === at.digest) {
+        const head = store.apply(fresh, at);
+        await mirror(fresh, at, head);
+        return head;
+      }
       store.reset();
     }
-    return store.apply(await readFrom(1), EMPTY);
+    const events = await readFrom(1);
+    const head = store.apply(events, EMPTY);
+    await mirror(events, EMPTY, head);
+    return head;
   }
 
   // admit decides from the Journal's head and appends. `decide` returns a final answer (a refusal or a
@@ -492,7 +546,7 @@ export async function openLedger(opts: { journal: JournalPort; projectionPath: s
         if (r.reason !== 'seq_conflict') return refuse('unavailable');
       }
     } catch {
-      // The Journal or the projection could not be read or written: deny.
+      // The Journal or the projection could not be read or written: no grant is reported (uncertain).
     }
     return refuse('unavailable');
   }
@@ -552,6 +606,7 @@ export async function openLedger(opts: { journal: JournalPort; projectionPath: s
         if (closed) return;
         closed = true;
         store.close();
+        cache.close();
       }),
   };
 }
