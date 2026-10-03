@@ -26,8 +26,10 @@
 // diff.renames, diff.context, ...) and on GIT_DIFF_OPTS / GIT_EXTERNAL_DIFF in the environment. So
 // `computeSubject` pins every output-shaping option on the command line and runs git with an
 // environment stripped of those variables and of global/system config. What remains is the
-// repository's own content plus its committed `.gitattributes`. `merge-gate.test.mjs` executes
-// each pin: remove one and its case fails.
+// repository's own content plus its committed `.gitattributes`; the one residue no flag reaches is
+// a checkout-local `.git/info/attributes` or `.git/config` `core.attributesFile` marking a path
+// `-diff`, which is a property of the checkout and not of the change. `merge-gate.test.mjs`
+// executes each pin: remove one and its case fails.
 //
 // THE ANCHOR, AND WHY THIS ONE
 // PR #77 keyed a verdict to a HEAD SHA. That anchor stops existing the instant the verdict is
@@ -177,7 +179,9 @@ function git(repo, args, env = process.env, childEnv = undefined) {
       ...(childEnv ? { env: childEnv } : {}),
     });
   } catch (e) {
-    const cmd = `git ${args.slice(0, 2).join(' ')}`;
+    // Skip leading `-c k=v` pins so the message names the subcommand, not a config key.
+    const sub = args.filter((a, i) => a !== '-c' && args[i - 1] !== '-c');
+    const cmd = `git ${sub.slice(0, 2).join(' ')}`;
     // NAME WHAT HAPPENED, NOT WHAT IT RESEMBLES. `spawnSync git ENOBUFS` is the message Node
     // produces here, and it reads as a fault in git or in the repository. It is neither: the
     // command succeeded and this process declined to hold the answer. A reader who is told "git
@@ -248,11 +252,18 @@ const SUBJECT_DIFF_ARGS = [
 ];
 
 /**
- * The environment git runs in for the subject. GIT_DIFF_OPTS and GIT_EXTERNAL_DIFF change diff
- * output directly; GIT_CONFIG_* (COUNT/KEY_n/VALUE_n/PARAMETERS/GLOBAL/SYSTEM) inject config that
- * would otherwise outrank files; and global/user config is pointed at an empty directory so
- * ~/.gitconfig and $XDG_CONFIG_HOME/git cannot supply an option the command line does not pin
- * (core.attributesFile, for one). The caller removes `home` afterwards.
+ * The environment git runs in for the subject.
+ *  - GIT_DIFF_OPTS and GIT_EXTERNAL_DIFF change diff output directly, and no command-line flag
+ *    outranks GIT_DIFF_OPTS, so they are removed.
+ *  - GIT_CONFIG_COUNT/KEY_n/VALUE_n/PARAMETERS inject config that outranks files, and the `-c` pins
+ *    are only known to win for the options they name, so the whole family is removed rather than
+ *    reasoned about.
+ *  - ~/.gitconfig, $XDG_CONFIG_HOME/git and /etc/gitconfig could still supply an option the command
+ *    line does not pin (core.attributesFile marking files `-diff` prints "Binary files differ").
+ *    GIT_CONFIG_GLOBAL/SYSTEM go to /dev/null, NOSYSTEM is set, and HOME / XDG_CONFIG_HOME point at an
+ *    empty directory the caller removes afterwards, which also empties the default attributes file.
+ * What remains is the repository's own content, its committed .gitattributes, and its own
+ * .git/config, whose diff-shaping keys the command-line pins outrank.
  */
 function subjectEnv(home) {
   const env = {};
@@ -260,6 +271,12 @@ function subjectEnv(home) {
     if (k === 'GIT_DIFF_OPTS' || k === 'GIT_EXTERNAL_DIFF' || k.startsWith('GIT_CONFIG')) continue;
     env[k] = v;
   }
+  env.HOME = home;
+  env.XDG_CONFIG_HOME = home;
+  env.GIT_CONFIG_GLOBAL = '/dev/null';
+  env.GIT_CONFIG_SYSTEM = '/dev/null';
+  env.GIT_CONFIG_NOSYSTEM = '1';
+  env.GIT_ATTR_NOSYSTEM = '1';
   return env;
 }
 
