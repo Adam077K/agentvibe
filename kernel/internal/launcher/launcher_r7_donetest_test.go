@@ -304,15 +304,26 @@ func TestB108_R7_EnvTakesOnlyPinnedValues(t *testing.T) {
 	} {
 		r4Refused(t, c[0]+"="+c[1], r3Grant(), env(c[0], c[1]), ErrSpec)
 	}
+	// 2026-10-03 orchestrator ruling: HOME pin required. A grant with no HOME pin is refused at New
+	// (ErrGrant), before any request can carry HOME unpinned.
+	noHomePin := func(name string, g Grant) {
+		if _, err := New(pinned(g, newR4(t, at0300()).deps())); !errors.Is(err, ErrGrant) {
+			t.Errorf("%s: New %v, want ErrGrant", name, err)
+		}
+	}
 	for _, name := range []string{"HOME", "CODEX_HOME", "PATH"} {
 		g := r3Grant()
 		g.EnvPinned = maps.Clone(r7EnvPins)
 		delete(g.EnvPinned, name)
+		if name == "HOME" {
+			noHomePin(name+" with no pin", g)
+			continue
+		}
 		r4Refused(t, name+" with no pin", g, env(name, r7EnvPins[name]), ErrSpec)
 	}
 	g := r3Grant()
 	g.EnvPinned = map[string]string{}
-	r4Refused(t, "HOME with an empty pin table", g, env("HOME", "/h"), ErrSpec)
+	noHomePin("HOME with an empty pin table", g)
 }
 
 // TestB108_R7_ReceiptGenesisChecked: item 3 (launcher.go:191).

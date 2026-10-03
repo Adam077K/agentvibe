@@ -87,6 +87,7 @@ func adapterGrant(concurrent int, state string) Grant {
 		ForbiddenFlags: []string{"--dangerously-skip-permissions", "--bare", "-s danger-full-access"},
 		Caps:           Caps{Concurrent: concurrent, PerHour: 120},
 		WorktreeRoot:   "/w", JobRoot: "/r", ConfigAllow: cfg, State: state,
+		EnvAllow: []string{"HOME"}, EnvPinned: map[string]string{"HOME": "/h"},
 	}
 }
 
@@ -108,6 +109,7 @@ func fill(job string, tokens []string) []string {
 
 func req(job string) Request {
 	return Request{JobID: job, Binary: tBin, Argv: fill(job, adapter.NewClaude(tDigest).Template()), Unattended: true,
+		Env: map[string]string{"HOME": "/h"},
 		Requires: Prerequisites{AdmittedJob: true, ToolLease: []string{"Agent", "Task"}, ContextProfile: "launch-pack",
 			Isolation: 2, Headless: true, ProviderMode: "sub", BudgetCapCents: 1, FencedLease: "job://" + job + "#7"}}
 }

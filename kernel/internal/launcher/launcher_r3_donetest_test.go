@@ -237,7 +237,7 @@ func (r *r3Rig) issue(job string) {
 func (r *r3Rig) req(job string) Request {
 	r.issue(job)
 	q := request(job)
-	q.Env = map[string]string{"LANG": "C.UTF-8"} // B1-07 r5: AV_JOB is no longer passed
+	q.Env = map[string]string{"HOME": "/h", "LANG": "C.UTF-8"} // B1-07 r5: AV_JOB is no longer passed; 2026-10-03 re-freeze B1-08h founder ruling: HOME required
 	return q
 }
 
@@ -485,7 +485,7 @@ func TestB108_R3_ExecGetsPinnedDigestAndAllowListedEnv(t *testing.T) {
 	t.Setenv("KERNEL_SECRET", "s3cret")
 	r := r3New(t, at0300())
 	q := r.req("job-env")
-	q.Env = map[string]string{"LANG": "C", "PATH": "/usr/bin"}
+	q.Env = map[string]string{"HOME": "/h", "LANG": "C", "PATH": "/usr/bin"} // 2026-10-03 re-freeze B1-08h founder ruling: HOME required
 	if _, err := r.l.Launch(context.Background(), q); err != nil {
 		t.Fatalf("Launch: %v", err)
 	}
@@ -493,26 +493,27 @@ func TestB108_R3_ExecGetsPinnedDigestAndAllowListedEnv(t *testing.T) {
 	if c.digest != claudeDigest {
 		t.Errorf("Exec digest = %q, want the pinned %q (Exec must exec the bytes it hashes)", c.digest, claudeDigest)
 	}
-	if want := []string{"LANG=C", "PATH=/usr/bin"}; !slices.Equal(c.env, want) {
+	if want := []string{"HOME=/h", "LANG=C", "PATH=/usr/bin"}; !slices.Equal(c.env, want) {
 		t.Errorf("Exec env = %q, want exactly %q", c.env, want)
 	}
 
 	r = r3New(t, at0300())
 	q = r.codexReq("job-empty")
-	q.Env = nil
+	q.Env = map[string]string{"HOME": "/h"} // 2026-10-03 re-freeze B1-08h founder ruling: HOME required: the least env is HOME alone, never nil
 	if _, err := r.l.Launch(context.Background(), q); err != nil {
-		t.Fatalf("Launch with no env: %v", err)
+		t.Fatalf("Launch with HOME alone: %v", err)
 	}
-	if c := r.exec.calls[0]; c.env == nil || len(c.env) != 0 || c.digest != codexDigest {
-		t.Errorf("Exec env = %#v digest %q, want an empty non-nil env (nil inherits) and %q", c.env, c.digest, codexDigest)
+	if c := r.exec.calls[0]; !slices.Equal(c.env, []string{"HOME=/h"}) || c.digest != codexDigest {
+		t.Errorf("Exec env = %#v digest %q, want exactly HOME (nothing inherited) and %q", c.env, c.digest, codexDigest)
 	}
 
 	for name, env := range map[string]map[string]string{
-		"a name not on the allow-list": {"AV_JOB": "j", "ANTHROPIC_API_KEY": "sk-x"},
-		"an inherited secret by name":  {"KERNEL_SECRET": "s3cret"},
-		"a name holding =":             {"AV_JOB=x": "y"},
-		"an empty name":                {"": "y"},
-		"a NUL in a value":             {"LANG": "a\x00b"},
+		// 2026-10-03 re-freeze B1-08h founder ruling: HOME required: each carries HOME at its pin, so only the named fault refuses it.
+		"a name not on the allow-list": {"HOME": "/h", "AV_JOB": "j", "ANTHROPIC_API_KEY": "sk-x"},
+		"an inherited secret by name":  {"HOME": "/h", "KERNEL_SECRET": "s3cret"},
+		"a name holding =":             {"HOME": "/h", "AV_JOB=x": "y"},
+		"an empty name":                {"HOME": "/h", "": "y"},
+		"a NUL in a value":             {"HOME": "/h", "LANG": "a\x00b"},
 	} {
 		r3Launch(t, "env: "+name, func(_ *r3Rig, q *Request) { q.Env = env }, ErrSpec)
 	}
