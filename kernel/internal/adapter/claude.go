@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"regexp"
 	"slices"
 	"strconv"
@@ -127,8 +126,8 @@ func (c *Claude) Argv(spec LaunchSpec) ([]string, error) {
 	if !harnessHash.MatchString(spec.InitExpect) {
 		return nil, specErr("init_expect %q is not a harness hash", spec.InitExpect)
 	}
-	if b := spec.BudgetUSD; math.IsNaN(b) || math.IsInf(b, 0) || b <= 0 {
-		return nil, specErr("budget %v is not finite and positive", b)
+	if !budgetOK(spec.BudgetUSD) {
+		return nil, specErr("budget %v is not finite and positive", spec.BudgetUSD)
 	}
 	for name, v := range map[string]string{"--settings": spec.SettingsPath, "--agents": spec.AgentsPath,
 		"--agent": spec.Record, "--json-schema": spec.SchemaPath, "--session-id": spec.SessionID} {
@@ -592,13 +591,10 @@ func (c *Claude) Classify(t Transcript, exit ExitInfo) WorkerOutcome {
 		o.Status, o.Reason = s, r
 		return o
 	}
+	if st, r, ok := stopped(t.aborted || t.init == nil, exit.Killed); ok {
+		return set(st, r)
+	}
 	switch {
-	case t.aborted || t.init == nil || exit.Killed == KilledHarness:
-		return set(Unresolved, ReasonHarness)
-	case exit.Killed == KilledWall || exit.Killed == KilledIdle:
-		return set(Unresolved, ReasonTimeout)
-	case exit.Killed != NotKilled:
-		return set(Unresolved, "")
 	case t.unknown > 0: // ruling E; r4 assumption: no typed outcome, so UNPARSED
 		return set(Unresolved, ReasonUnparsed)
 	case t.readErr || t.unparsed > 0 || t.results != 1 || t.trailing > 0 || res == nil ||

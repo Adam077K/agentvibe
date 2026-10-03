@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"math"
 )
 
 var (
@@ -85,8 +86,10 @@ const (
 
 // ExitInfo is how the worker process ended.
 type ExitInfo struct {
-	Code   int
-	Killed Kill
+	Code           int
+	Killed         Kill
+	ResultFile     string // codex: the -o file's bytes, read by the runner after exit (DR-B1-07 5)
+	ResultFileRead bool   // codex: false when the -o file was missing or unreadable
 }
 
 // ToolLease is the job's tool lease (09a §8.4: tool leases carry a forbidden list).
@@ -96,7 +99,8 @@ type ToolLease struct {
 }
 
 // LaunchSpec is 09a §8.2's LaunchSpec. AgentsPath, Record and SessionID are not in canon's type
-// but the pinned launch line needs them (--agents, --agent, --session-id).
+// but the pinned claude line needs them (--agents, --agent, --session-id); ResultPath, Worktree,
+// CodexHome, Home and BinaryDigest likewise for the locked codex line (B1-07).
 type LaunchSpec struct {
 	Cwd              string
 	ContextProfile   string // key into the pinned profile table; its row fills --setting-sources (ruling C)
@@ -114,6 +118,14 @@ type LaunchSpec struct {
 	AgentsPath       string            // --agents <compiled.json>
 	Record           string            // --agent <record>
 	SessionID        string            // --session-id <uuid>
+	CodexProfile     string            // codex: superseded (DR-B1-07 round 4, no profile); set is ErrSpec
+	ResultPath       string            // codex -o <result.json> (B1-07)
+	BinaryDigest     string            // codex: the binary's measured sha256; must equal the grant digest (DR-B1-07 1+3)
+	ProfileDigest    string            // codex: superseded (DR-B1-07 round 4, no profile); set is ErrSpec
+	CodexProfileTOML string            // codex: superseded (DR-B1-07 round 4, no profile); set is ErrSpec
+	Worktree         string            // codex: the job's worktree; -C stays inside it, -o and CODEX_HOME stay outside (DR-B1-07 r2)
+	CodexHome        string            // codex: the pinned CODEX_HOME; Env[CODEX_HOME] is absent or exactly this (DR-B1-07 r2)
+	Home             string            // codex: the pinned HOME; Env[HOME] is absent or exactly this, clean, not / and outside the worktree (DR-B1-07 r3)
 }
 
 // ChildJob is one nested agent, keyed by the tool_use id that spawned it; its events carry that
@@ -129,16 +141,35 @@ type ChildJob struct {
 // Transcript is what Watch read. Its fields are the implementation's; the zero Transcript is a
 // run whose harness was never verified, and classifies as unresolved(harness).
 type Transcript struct {
-	events   []event   // every event Watch parsed, in stream order, up to where it stopped
-	init     *initInfo // the verified system/init; nil when none was verified
-	aborted  bool      // Watch refused the harness (and called abort, unless the stream had ended)
-	readErr  bool      // the stream failed before EOF after system/init
-	unparsed int       // lines after system/init that are not a JSON event with a string type
-	unknown  int       // top-level events whose type is not system, assistant, user or result
-	results  int       // top-level result events (more than one is not a typed outcome)
-	trailing int       // events after the first top-level result
-	result   *event    // the first top-level result event
+	events   []event      // every event Watch parsed, in stream order, up to where it stopped
+	init     *initInfo    // the verified system/init; nil when none was verified
+	aborted  bool         // Watch refused the harness (and called abort, unless the stream had ended)
+	readErr  bool         // the stream failed before EOF after system/init
+	unparsed int          // lines after system/init that are not a JSON event with a string type
+	unknown  int          // top-level events whose type is not system, assistant, user or result
+	results  int          // top-level result events (more than one is not a typed outcome)
+	trailing int          // events after the first top-level result
+	result   *event       // the first top-level result event
+	cx       *codexStream // codex only: the pinned run Watch read; nil when never pinned
 }
+
+// stopped is the run-level mapping every family shares, ahead of its own stream rules: an
+// unverified harness or an abort → unresolved(harness); a wall-clock or idle kill →
+// unresolved(timeout); any other kill → unresolved. ok is false when the run was not stopped.
+func stopped(unverified bool, k Kill) (Status, Reason, bool) {
+	switch {
+	case unverified || k == KilledHarness:
+		return Unresolved, ReasonHarness, true
+	case k == KilledWall || k == KilledIdle:
+		return Unresolved, ReasonTimeout, true
+	case k != NotKilled:
+		return Unresolved, "", true
+	}
+	return "", "", false
+}
+
+// budgetOK: a budget is finite and positive.
+func budgetOK(b float64) bool { return !math.IsNaN(b) && !math.IsInf(b, 0) && b > 0 }
 
 // WorkerAdapter is 09a §8.2's contract with launch split into Argv (adapter) + exec (launcher)
 // + Watch (adapter). resume is not here: no resume line is pinned in 09a §8.2 or on the grant.
