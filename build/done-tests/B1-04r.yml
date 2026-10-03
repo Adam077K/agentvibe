@@ -51,11 +51,25 @@
 #   Red 14 of 14 on f2ed126. Each new test fails on its intended assertion (starvation, the stubs).
 #   OUT OF SCOPE (follow-up job): renew, heartbeat, ttl and shared mode. OPEN questions 1-4, 7 and 8
 #   below are answered by these rulings; 5 and 6 move to that follow-up job.
+#
+# RE-FREEZE r3 2026-10-03: 2026-10-03 red-team r1 gaps + rulings. The red team on 86c1740 proved
+#   reachability; 14 of 43 mutants survived. fence_r_donetest_test.go 5c0513f1... -> f501c6f3...
+#   r1/r2 tests unchanged except one comment (the inclusive-end mutant was NOT killed there). Added:
+#   NightlyAfterMidnight (first Tick at 01:00 / 03:59:59 on 2 Oct fires night 2026-10-01; 04:00
+#   does not), NightlyFireOnceBarrier (8 callers held after Read/Head on NightlyStream; exactly one
+#   fires), HotUnderWoundWait, HotCountsOnlyCycleEdges (three 3-job cycles with unrelated holdings ->
+#   exactly r1 r2 r3), DetectStarvesEveryOverCapWait, StarvationsAreNotCycles,
+#   HotSetValidationAndOrder (sorted; no '#', empty path or anchor, not a ResourceUri refused; file =
+#   before the FIRST '#'), MaxWaitRulings (R1: a re-wait after a grant starts a new clock; R2: a
+#   negative MaxWait is refused; a replacement's MaxWait is the cap). DST: accepted gap, not tested.
+#   Red 22 of 22 on the stubs. Satisfiability, against a COPY of the red team's reference with its
+#   probes removed (-race -count=2): everything passes except the two new validations the reference
+#   predates (AddHot "file#" accepted; MaxWait -1s accepted), each a one-line guard.
 register: B1-04r
 jobs:
   - id: B1-04
     files:
       - path: kernel/internal/lease/fence_r_donetest_test.go
-        sha256: 5c0513f1d04952dd0d8f3233b64cc0405f10a3d066598a4bf71c0e5500eb1f66
+        sha256: f501c6f389f40fae0528641f4d2f9b8a506393b06e09b4e6ea38217afbd76529
       - path: kernel/internal/lease/testdata/sp2/b0-greedy.json
         sha256: 4c49c99136af858d19056aa377f75ea6871d0e736ac2319ecee981f8a558380e

@@ -28,8 +28,11 @@
 // journals it." Orchestrator rulings 2026-10-03: Detect starves every wait outstanding longer than
 // its request's MaxWait (DefaultMaxWait when MaxWait is zero; never unbounded), whether the waiter is
 // younger or older than its holders: every lease the waiter holds is released, its wait is dropped,
-// and one TypeStarved event naming it is journaled. A wait's age runs from the job's first wait on
-// that resource: replacing the wait does not restart it. The age is read from the Journal, never
+// and one TypeStarved event naming it is journaled; one Detect starves every over-cap wait. A
+// wait's age runs from the job's first wait on that resource since its last grant or release of it:
+// replacing the wait does not restart it, a re-wait after a grant does, and the replacement's
+// MaxWait is the cap. A negative MaxWait is refused by Acquire (red-team rulings 2026-10-03).
+// Starvations are not broken cycles and never count toward HotCandidates. The age is read from the Journal, never
 // from a Coordinator's memory. Requeueing a starved job is the caller's. No hot-resource exemptions
 // in v0. Renew, heartbeat, ttl and shared mode are a follow-up job, not this contract.
 package lease
@@ -52,7 +55,9 @@ const DefaultMaxWait = 120 * time.Second
 // HotCycleThreshold is "three cycles a week" (09a §6, a parameter).
 const HotCycleThreshold = 3
 
-// AddHot adds resource to the hot set. Adding a resource already in the set is a no-op.
+// AddHot adds resource to the hot set. Adding a resource already in the set is a no-op. A resource
+// that is not a ResourceUri, has no '#', or has an empty path before or an empty anchor after its first '#' is refused and
+// changes nothing.
 func (c *coordinator) AddHot(ctx context.Context, resource string) error {
 	return ErrNotImplemented
 }

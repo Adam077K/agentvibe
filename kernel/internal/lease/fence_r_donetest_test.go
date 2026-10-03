@@ -372,8 +372,9 @@ var r04Window = lease.NightWindow{Start: 23 * time.Hour, Length: 5 * time.Hour, 
 // The window is half-open. Malformed construction is refused.
 //
 // Kills: firing on the first Tick whatever the hour (12:00 fires); keying the night by now's date
-// (02:00 fires again); an inclusive end (04:00 fires); firing once ever (the next night is silent);
-// firing on every Tick in the window.
+// (02:00 fires again); firing once ever (the next night is silent); firing on every Tick in the
+// window. The inclusive-end mutant is NOT killed here (the night is already claimed at 04:00);
+// TestB1_04R_NightlyAfterMidnight kills it.
 func TestB1_04R_NightlyFiresOncePerWindow(t *testing.T) {
 	j, _ := b104Open(t)
 	day := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
@@ -806,4 +807,327 @@ func TestB1_04R_NightlyCrashAfterClaim(t *testing.T) {
 	if runs := r04Runs(t, n2); len(runs) != 1 || runs[0].Night != "2026-10-01" || runs[0].Passed {
 		t.Fatalf("Runs = %+v, want one failed run for 2026-10-01", runs)
 	}
+}
+
+// ---------------------------------------------------------------------------------------------
+// Re-freeze r3, "2026-10-03 red-team r1 gaps + rulings": the red team's surviving mutants on
+// 86c1740, and rulings R1 (a re-wait after a grant starts a new clock) and R2 (negative MaxWait
+// refused). DST is an accepted gap and is not tested.
+
+// TestB1_04R_NightlyAfterMidnight: the after-midnight half of a crossing window belongs to the
+// previous date's night, on a fresh Journal; the end is exclusive.
+//
+// Kills: computing the window only from today's midnight (01:00 and 03:59:59 are silent); an
+// inclusive end (04:00 fires); naming the night by now's date (2026-10-02).
+func TestB1_04R_NightlyAfterMidnight(t *testing.T) {
+	for _, tc := range []struct {
+		at   time.Time
+		fire bool
+	}{
+		{time.Date(2026, 10, 2, 1, 0, 0, 0, time.UTC), true},
+		{time.Date(2026, 10, 2, 3, 59, 59, 0, time.UTC), true},
+		{time.Date(2026, 10, 2, 4, 0, 0, 0, time.UTC), false},
+	} {
+		t.Run(tc.at.Format("15:04:05"), func(t *testing.T) {
+			j, _ := b104Open(t)
+			clk := &b104Clock{t: tc.at}
+			var calls atomic.Int32
+			n := r04Nightly(t, j, r04Window, clk, &calls, nil)
+			r04Tick(t, n, tc.fire, tc.at)
+			runs := r04Runs(t, n)
+			if tc.fire && (len(runs) != 1 || runs[0].Night != "2026-10-01") {
+				t.Fatalf("Runs = %+v, want one run for night 2026-10-01", runs)
+			}
+			if !tc.fire && (len(runs) != 0 || calls.Load() != 0) {
+				t.Fatalf("at the window's end: Runs = %+v, run called %d times; want nothing", runs, calls.Load())
+			}
+		})
+	}
+}
+
+// r04Barrier holds the first n Read/Head calls on stream, after the real call returns, until all n
+// have arrived: every caller has seen the same empty head before any of them appends. The timeout is
+// a liveness guard for an implementation that reads less; it never decides the verdict.
+type r04Barrier struct {
+	journal.Journal
+	stream string
+	n      int
+	mu     sync.Mutex
+	seen   int
+	all    chan struct{}
+}
+
+func (b *r04Barrier) wait(stream string) {
+	if stream != b.stream {
+		return
+	}
+	b.mu.Lock()
+	if b.seen >= b.n {
+		b.mu.Unlock()
+		return
+	}
+	b.seen++
+	if b.seen == b.n {
+		close(b.all)
+	}
+	b.mu.Unlock()
+	select {
+	case <-b.all:
+	case <-time.After(5 * time.Second):
+	}
+}
+
+func (b *r04Barrier) Read(ctx context.Context, s string, from uint64) ([]journal.Event, error) {
+	evs, err := b.Journal.Read(ctx, s, from)
+	b.wait(s)
+	return evs, err
+}
+
+func (b *r04Barrier) Head(ctx context.Context, s string) (uint64, string, error) {
+	seq, h, err := b.Journal.Head(ctx, s)
+	b.wait(s)
+	return seq, h, err
+}
+
+// TestB1_04R_NightlyFireOnceBarrier: eight schedulers all read the empty stream before any appends;
+// exactly one fires.
+//
+// Kills, deterministically: an append that does not carry ExpectSeq = the head it read (all eight
+// fire); treating any append error as fired.
+func TestB1_04R_NightlyFireOnceBarrier(t *testing.T) {
+	j, _ := b104Open(t)
+	bj := &r04Barrier{Journal: j, stream: lease.NightlyStream("sp2-drill"), n: 8, all: make(chan struct{})}
+	clk := &b104Clock{t: time.Date(2026, 10, 1, 23, 10, 0, 0, time.UTC)}
+	var calls, fired atomic.Int32
+	ns := make([]lease.Nightly, 8)
+	for i := range ns {
+		ns[i] = r04Nightly(t, bj, r04Window, clk, &calls, nil)
+	}
+	var wg sync.WaitGroup
+	for _, n := range ns {
+		wg.Add(1)
+		go func(n lease.Nightly) {
+			defer wg.Done()
+			if ok, _ := n.Tick(context.Background()); ok {
+				fired.Add(1)
+			}
+		}(n)
+	}
+	wg.Wait()
+	if fired.Load() != 1 || calls.Load() != 1 {
+		t.Fatalf("eight Ticks past one barrier: %d fired, run called %d times; want 1 and 1", fired.Load(), calls.Load())
+	}
+}
+
+// TestB1_04R_HotUnderWoundWait: the auto-added hot resource is part of a wound-wait request. An
+// older job touching config.ts wounds a younger holder of <header>; a younger job touching it waits
+// on an older holder.
+//
+// Kills: auto-adding only under AllOrNothing; adding the hot resource after the wound decision (the
+// younger keeps <header>, or the older is granted without it).
+func TestB1_04R_HotUnderWoundWait(t *testing.T) {
+	const p = "repo://shop-core/"
+	hdr, a, b, cc := p+"src/config.ts#<header>", p+"src/config.ts#a", p+"src/config.ts#b", p+"src/config.ts#c"
+	j, _ := b104Open(t)
+	clk := &b104Clock{t: b104Epoch}
+	c := b104Coord(t, j, clk)
+	v := b104Verifier(t, j)
+	r04AddHot(t, c, hdr)
+	oldBorn, youngBorn := b104Epoch.Add(-time.Hour), b104Epoch.Add(-time.Minute)
+	gy := r04Grant(t, c, b104Req("young", youngBorn, lease.AllOrNothing, a), []string{a, hdr})
+	go1 := r04Grant(t, c, b104Req("old", oldBorn, lease.WoundWait, b), []string{b, hdr})
+	if h, tok := holder(t, c, hdr); h != "old" || tok != go1.Tokens[hdr] {
+		t.Fatalf("Holder(%s) = %q token %d, want old token %d", hdr, h, tok, go1.Tokens[hdr])
+	}
+	refuse(t, v, lease.Push{Job: "young", Tokens: map[string]uint64{hdr: gy.Tokens[hdr]}, Touched: []string{hdr}},
+		[]error{lease.ErrStaleToken}, []string{hdr})
+	mustWait(t, c, b104Req("young", youngBorn, lease.WoundWait, cc))
+	wantWait(t, c, "young", cc, hdr)
+	if h, _ := holder(t, c, cc); h != "" {
+		t.Fatalf("young granted %s beside an older holder of %s", cc, hdr)
+	}
+}
+
+// TestB1_04R_HotCountsOnlyCycleEdges: three 3-job cycles over r1, r2, r3, whose jobs also hold
+// unrelated resources. Only the resources on the cycle's edges are counted.
+//
+// Kills: counting every resource the cycle's jobs hold (u1, u2, u3 proposed); counting only the
+// victim's rows; counting only two-job cycles.
+func TestB1_04R_HotCountsOnlyCycleEdges(t *testing.T) {
+	const p = "repo://x/"
+	r := []string{p + "src/r1.ts#<header>", p + "src/r2.ts#<header>", p + "src/r3.ts#<header>"}
+	u := []string{p + "src/u1.ts#x", p + "src/u2.ts#x", p + "src/u3.ts#x"}
+	j, _ := b104Open(t)
+	clk := &b104Clock{t: b104Epoch}
+	c := b104Coord(t, j, clk)
+	ctx := context.Background()
+	for round := 0; round < 3; round++ {
+		born := b104Epoch.Add(time.Duration(round) * time.Hour)
+		clk.t = born
+		jobs := []string{"x" + string(rune('1'+round)), "y" + string(rune('1'+round)), "z" + string(rune('1'+round))}
+		for i, job := range jobs {
+			r04Grant(t, c, b104Req(job, born.Add(time.Duration(i)*time.Second), lease.AllOrNothing, r[i], u[i]), []string{r[i], u[i]})
+		}
+		for i, job := range jobs {
+			mustWait(t, c, b104Req(job, born.Add(time.Duration(i)*time.Second), lease.AllOrNothing, r[(i+1)%3]))
+		}
+		if br := detect(t, c); len(br) != 1 || br[0].Victim != jobs[2] {
+			t.Fatalf("round %d: Detect = %+v, want one break at %s", round+1, br, jobs[2])
+		}
+		for _, job := range jobs {
+			if err := c.Release(ctx, job); err != nil {
+				t.Fatalf("Release(%s): %v", job, err)
+			}
+		}
+	}
+	clk.t = b104Epoch.Add(3 * time.Hour)
+	if got := r04Candidates(t, c); !r04Same(got, r04Sorted(r...)) {
+		t.Fatalf("HotCandidates = %v, want exactly %v", got, r)
+	}
+}
+
+// TestB1_04R_DetectStarvesEveryOverCapWait: one Detect starves every over-cap wait, not one per call.
+//
+// Kills: returning after the first starvation.
+func TestB1_04R_DetectStarvesEveryOverCapWait(t *testing.T) {
+	const p = "repo://x/"
+	held, w1r, w2r := p+"src/held.ts#f", p+"src/w1.ts#f", p+"src/w2.ts#f"
+	j, _ := b104Open(t)
+	clk := &b104Clock{t: b104Epoch}
+	c := b104Coord(t, j, clk)
+	h := b104Req("holder", b104Epoch.Add(-time.Hour), lease.AllOrNothing, held)
+	h.TTL = time.Hour
+	r04Grant(t, c, h, []string{held})
+	for i, w := range []struct{ job, r string }{{"w1", w1r}, {"w2", w2r}} {
+		born := b104Epoch.Add(time.Duration(i-2) * time.Minute)
+		g := b104Req(w.job, born, lease.AllOrNothing, w.r)
+		g.TTL = time.Hour
+		r04Grant(t, c, g, []string{w.r})
+		q := b104Req(w.job, born, lease.AllOrNothing, held)
+		q.TTL, q.MaxWait = time.Hour, 120*time.Second
+		mustWait(t, c, q)
+	}
+	clk.Advance(121 * time.Second)
+	detect(t, c)
+	for _, w := range []struct{ job, r string }{{"w1", w1r}, {"w2", w2r}} {
+		r04Starved(t, j, c, w.job, "holder", w.r, held, true)
+	}
+}
+
+// TestB1_04R_StarvationsAreNotCycles: three starvations on one resource in a morning propose
+// nothing.
+//
+// Kills: counting a starvation's resources as a broken cycle's.
+func TestB1_04R_StarvationsAreNotCycles(t *testing.T) {
+	const p = "repo://x/"
+	ra, rb := p+"src/a.ts#<header>", p+"src/b.ts#<header>"
+	j, _ := b104Open(t)
+	clk := &b104Clock{t: b104Epoch}
+	c := b104Coord(t, j, clk)
+	ctx := context.Background()
+	for round := 0; round < 3; round++ {
+		born := b104Epoch.Add(time.Duration(round) * time.Hour)
+		clk.t = born
+		hj, wj := "h"+string(rune('1'+round)), "w"+string(rune('1'+round))
+		r04Starve(t, c, clk, hj, born.Add(-time.Hour), wj, born.Add(-time.Minute), rb, ra, 120*time.Second)
+		clk.Advance(121 * time.Second)
+		detect(t, c)
+		r04Starved(t, j, c, wj, hj, rb, ra, true)
+		if err := c.Release(ctx, hj); err != nil {
+			t.Fatalf("Release(%s): %v", hj, err)
+		}
+	}
+	if got := r04Candidates(t, c); len(got) != 0 {
+		t.Fatalf("HotCandidates = %v after three starvations and no cycle, want none", got)
+	}
+}
+
+// TestB1_04R_HotSetValidationAndOrder: HotSet is sorted; AddHot refuses what is not a hot resource
+// and changes nothing; a hot resource's file is everything before its FIRST '#'.
+//
+// Kills: HotSet in insertion order; accepting a resource with no anchor (it would be added to every
+// footprint naming the file, and its own file is undefined); splitting on the last '#'.
+func TestB1_04R_HotSetValidationAndOrder(t *testing.T) {
+	ctx := context.Background()
+	const p = "repo://x/"
+	j, _ := b104Open(t)
+	clk := &b104Clock{t: b104Epoch}
+	c := b104Coord(t, j, clk)
+	z, a, m := p+"src/z.ts#<eof>", p+"src/a.ts#b#c", p+"src/m.ts#<header>"
+	r04AddHot(t, c, z, a, m)
+	if got := r04HotSet(t, c); !r04Same(got, []string{a, m, z}) {
+		t.Fatalf("HotSet = %v, want sorted [%s %s %s]", got, a, m, z)
+	}
+	for _, bad := range []string{"", p + "src/q.ts", p + "src/q.ts#", "src/q.ts#<header>", "repo://#x"} {
+		if err := c.AddHot(ctx, bad); err == nil {
+			t.Fatalf("AddHot(%q) accepted", bad)
+		}
+	}
+	if got := r04HotSet(t, c); !r04Same(got, []string{a, m, z}) {
+		t.Fatalf("HotSet = %v after refused adds, want unchanged", got)
+	}
+	r04Grant(t, c, b104Req("job_a", b104Epoch, lease.AllOrNothing, p+"src/a.ts#other"), []string{p + "src/a.ts#other", a})
+}
+
+// TestB1_04R_MaxWaitRulings: R1, a re-wait after a grant starts a new clock; R2, a negative MaxWait
+// is refused and writes nothing; and a replacement's MaxWait is the cap.
+//
+// Kills: one clock per job and resource for ever (the re-wait starves 60 s in); a negative cap
+// accepted (as "already over"); the first wait's cap kept after replacement.
+func TestB1_04R_MaxWaitRulings(t *testing.T) {
+	const p = "repo://x/"
+	r1, r2 := p+"src/one.ts#f", p+"src/two.ts#g"
+	oldBorn, youngBorn := b104Epoch.Add(-time.Hour), b104Epoch.Add(-time.Minute)
+	ctx := context.Background()
+	req := func(job string, born time.Time, maxWait time.Duration, rs ...string) lease.Request {
+		q := b104Req(job, born, lease.AllOrNothing, rs...)
+		q.TTL, q.MaxWait = time.Hour, maxWait
+		return q
+	}
+	t.Run("R1 re-wait after grant", func(t *testing.T) {
+		j, _ := b104Open(t)
+		clk := &b104Clock{t: b104Epoch}
+		c := b104Coord(t, j, clk)
+		r04Starve(t, c, clk, "old", oldBorn, "young", youngBorn, r1, r2, 120*time.Second)
+		clk.Advance(10 * time.Second)
+		if err := c.Release(ctx, "old"); err != nil {
+			t.Fatal(err)
+		}
+		r04Grant(t, c, req("young", youngBorn, 120*time.Second, r1, r2), []string{r1, r2})
+		if err := c.Release(ctx, "young"); err != nil {
+			t.Fatal(err)
+		}
+		r04Grant(t, c, req("old", oldBorn, 0, r2), []string{r2})
+		r04Grant(t, c, req("young", youngBorn, 0, r1), []string{r1})
+		clk.Advance(200 * time.Second)
+		mustWait(t, c, req("young", youngBorn, 120*time.Second, r2))
+		clk.Advance(60 * time.Second)
+		detect(t, c)
+		r04Starved(t, j, c, "young", "old", r1, r2, false)
+	})
+	t.Run("R2 negative refused", func(t *testing.T) {
+		j, _ := b104Open(t)
+		c := b104Coord(t, j, &b104Clock{t: b104Epoch})
+		g, err := c.Acquire(ctx, req("job_a", b104Epoch, -time.Second, r1))
+		if err == nil || errors.Is(err, lease.ErrWait) || len(g.Tokens) != 0 {
+			t.Fatalf("Acquire with MaxWait -1s = %+v, %v; want refused", g, err)
+		}
+		if h, _ := holder(t, c, r1); h != "" {
+			t.Fatalf("refused request left %s held by %q", r1, h)
+		}
+	})
+	t.Run("replacement's cap", func(t *testing.T) {
+		j, _ := b104Open(t)
+		clk := &b104Clock{t: b104Epoch}
+		c := b104Coord(t, j, clk)
+		r04Starve(t, c, clk, "old", oldBorn, "young", youngBorn, r1, r2, 300*time.Second)
+		clk.Advance(10 * time.Second)
+		mustWait(t, c, req("young", youngBorn, 60*time.Second, r2))
+		clk.Advance(49 * time.Second) // 59 s since the first wait
+		detect(t, c)
+		r04Starved(t, j, c, "young", "old", r1, r2, false)
+		clk.Advance(2 * time.Second) // 61 s
+		detect(t, c)
+		r04Starved(t, j, c, "young", "old", r1, r2, true)
+	})
 }
