@@ -20,7 +20,7 @@ Run `caffeinate -dis` in a separate terminal so the Mac stays awake.
 - #170 B1-08d real Consume store and grant status
 - #173 B1-18 Userland budget ledger
 - #171 B1-04r lease remainder
-- #168 verdict subject hardening, merged LAST if the merge loop finished. Check: `gh pr view 168`. If it's still open and `Verify QA Lead PASS` failed with `reason=absent`, a reviewer re-records its verdict with the branch's own `verdict.mjs`, using no core.abbrev env.
+- #168 verdict subject hardening, merged LAST (main = 6d331a6).
 
 **After #168, verdicts no longer need the `core.abbrev=8` env.** Record with plain `node scripts/verdict.mjs record …`.
 
