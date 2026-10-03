@@ -272,3 +272,30 @@ Raising `maxTurns` is a separate founder PR (irreversible tier).
   - An Opus re-review is running. Its key question: can two State dirs bypass lease consumption or the hourly count? If yes, that is HIGH.
   - B1-08 contains B1-07, so B1-08 must be rebased onto B1-07's final head and merged after it.
 - **Main is green.** Nothing else is in flight.
+
+## FINAL state, end of session build-2d (2026-10-03). This block supersedes every block above it.
+
+**Main = 9f11123**, plus whatever the founder has merged since. Check with `git log origin/main`.
+
+**PR #164, B1-07 codex adapter.** Opus PASS at 1b36714; meets the ship bar. The merge-train script targets `PRS=(164)` with local branch `fin-build-b1-07` = 1b36714. If it has not merged yet, the founder runs the train. (The script lives in the old session's scratchpad. Recreate it from the steps in the build-2d block if it is gone.)
+
+**B1-08 launcher, in flight.** It contains B1-07, so it merges AFTER #164.
+- Implementation at `build/b1-08` @ 160381f. Opus FAILED it with three MED-sec findings.
+- **Founder ruling, threat model** (`docs/vision-v3/_process/DR-B1-08-THREAT-MODEL-2026-10-03.md`): the launcher defends against workers and bugs, NOT against someone who can edit its own State dir. Two findings are therefore accepted:
+  - the log truncated to genesis with `.head` rewritten;
+  - state.json and its lock deleted, then re-initialised.
+- **r7 tests.** A test builder is writing them on `build/b1-08-tests-r7` (DR at 51c0df3). If its report is lost, check the branch head; if it has no r7 tests, re-dispatch. The tests must pin:
+  1. State dir outside every worker-writable root, with symlinks resolved;
+  2. CODEX_HOME, HOME and PATH each equal to a pinned value;
+  3. ReceiptGenesis checked;
+  4. each launch also appended to the main journal, with receipt-log and journal counts agreeing (fail closed).
+- **Then:** the implementer (fix on `build/b1-08`, merging the latest main once #164 is in) → Opus re-review with the ship bar → PR → merge train.
+- **Implementation is still unbuilt** for real Exec, the Consume store and grant status. These are injected interfaces, and the launcher refuses when any is nil. They are the next jobs.
+
+**Next jobs after B1-08**, under the speed rules in `DR-BUILD-SPEED-2026-10-03.md`:
+- the real Consume store, backed by the lease package;
+- real Exec;
+- grant status;
+- B1-14a policy compiler;
+- the B1-04 remainder;
+- cross-family (Codex) reviews for #158–#164.
