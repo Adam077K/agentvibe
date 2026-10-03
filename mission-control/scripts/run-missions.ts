@@ -27,6 +27,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { appendMissionLine } from '../server/index-cache.ts';
+import { withDecisions } from './decisions.ts';
 import {
   boardPath,
   eventsPath,
@@ -161,7 +162,7 @@ function sha256File(p: string): { sha256: string; bytes: number } | null {
 
 // ── Builder: Claude Code ─────────────────────────────────────────────────────────────────────
 
-async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: RunnerDeps) {
+async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: RunnerDeps, extraPrompt: string[] = []) {
   const prompt = [
     `You are the Builder on a mission from a Mission Control board.`,
     `Mission title: ${m.title}`,
@@ -169,6 +170,7 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
     ``,
     `Work in the current directory. Write only the file(s) the goal names. Do not modify anything else.`,
     `When done, reply with one short paragraph naming each file you wrote.`,
+    ...extraPrompt,
   ].join('\n');
   const launchId = randomUUID();
   const args = builderArgs(prompt);
@@ -369,7 +371,10 @@ export async function runMission(m: Mission, deps: RunnerDeps = REAL_DEPS) {
   const emit = emitter(m.id);
   emit(RUNNER, { kind: 'status', text: `claimed by runner pid ${process.pid}; workdir ${WORKDIR}` });
   console.log(`[runner] mission ${m.id} "${m.title}" — builder starting`);
-  const built = await runBuilder(m, emit, deps);
+  const built = await withDecisions(m.id, (extra) => runBuilder(m, emit, deps, extra), {
+    note: (text, data) => emit(RUNNER, { kind: 'receipt', text, data }),
+  });
+  if (!built) return; // asked the founder, no answer in time: withDecisions put the card back on Waiting
   if (built.refused) {
     // Not a generic failure, and not a Done card. The Builder broke the one-process rule, so its
     // output is not the Builder's alone and the Referee is not asked to judge it. The card goes

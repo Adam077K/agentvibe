@@ -16,6 +16,7 @@ import { createApi } from './routes/api.ts';
 import { createStream } from './routes/stream.ts';
 import { crossSiteGuard } from './routes/guard.ts';
 import { createMissionsApi } from './routes/missions.ts';
+import { createDecisionsApi } from './routes/decisions.ts';
 
 export function createApp(state: LiveState = live): Hono {
   const app = new Hono();
@@ -28,6 +29,7 @@ export function createApp(state: LiveState = live): Hono {
   app.get('/api/health', (c) => c.json({ ok: true, port: PORT, host: HOST }));
   // Mounted before /api so the more specific prefix is matched first.
   app.route('/api/missions', createMissionsApi());
+  app.route('/api/decisions', createDecisionsApi());
   app.route('/api', createApi(state));
   app.route('/', createStream(state));
 

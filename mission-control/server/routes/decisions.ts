@@ -1,0 +1,133 @@
+// server/routes/decisions.ts — v3 thin slice: /api/decisions.
+//
+//   GET  /api/decisions               { pending: Decision[], answered: Decision[] } — answered is the
+//                                     most recent RECENT_ANSWERED, newest first; expired ones ride
+//                                     along in it, marked by status
+//   POST /api/decisions/:id/answer    { choice } → appends one `decision_answered` line
+//
+// The server answers; it never waits and never spawns. scripts/decisions.ts, run by the founder
+// inside the mission runner, is what polls the file and resumes the Builder.
+//
+// THE POST'S GUARDS, and where each one lives. The app-level crossSiteGuard (server/app.ts) already
+// runs before this router, refusing Sec-Fetch-Site: cross-site and a foreign Origin — the same
+// protection the dispatch POST relies on. Two more are local to this route, because an answer is
+// the one request here that makes a program continue on this machine:
+//   · Content-Type must be application/json. A cross-origin <form> can only send the three "simple"
+//     types, so this closes that vector even for a browser too old to send Sec-Fetch-Site, and a
+//     plain-text body is never parsed as JSON by accident.
+//   · The body is read as text and capped before it is parsed, so an oversized one costs a length
+//     comparison rather than a JSON.parse.
+
+import { Hono } from 'hono';
+import { appendMissionLine } from '../index-cache.ts';
+import {
+  DECISION_ID,
+  MAX_OPTION_CHARS,
+  decisionsPath,
+  foldDecisions,
+  readDecisionLines,
+  type Decision,
+  type DecisionAnswered,
+} from '../decisions.ts';
+import { boardPath, foldBoard, missionsDir, readBoardLines } from '../missions.ts';
+
+export const RECENT_ANSWERED = 20;
+/** An answer is `{"choice": "<≤120 chars>"}`; 2 KiB is generous and still a hard ceiling. */
+export const MAX_BODY_BYTES = 2048;
+
+export interface DecisionRow extends Decision {
+  /** The mission's title, joined from the board so the card can say what it is about. */
+  missionTitle?: string;
+}
+export interface DecisionsPayload {
+  pending: DecisionRow[];
+  answered: DecisionRow[];
+}
+export interface DecisionError {
+  error: string;
+}
+export type { Decision };
+
+/** `file` is resolved per request so MC_DECISIONS_FILE set by a test after import still binds. */
+export function createDecisionsApi(fileOverride?: string): Hono {
+  const api = new Hono();
+  const file = () => fileOverride ?? decisionsPath();
+
+  const withTitles = (rows: Decision[]): DecisionRow[] => {
+    let titles: Map<string, string>;
+    try {
+      titles = new Map(foldBoard(readBoardLines(boardPath(missionsDir()))).map((m) => [m.id, m.title]));
+    } catch {
+      titles = new Map(); // The board is decoration here; a read failure must not hide a question.
+    }
+    return rows.map((d) => ({ ...d, missionTitle: titles.get(d.missionId) }));
+  };
+
+  api.get('/', (c) => {
+    try {
+      const all = foldDecisions(readDecisionLines(file()));
+      const pending = all.filter((d) => d.status === 'pending');
+      const settled = all
+        .filter((d) => d.status !== 'pending')
+        .sort((a, b) => (b.answeredAt ?? 0) - (a.answeredAt ?? 0))
+        .slice(0, RECENT_ANSWERED);
+      return c.json({ pending: withTitles(pending), answered: withTitles(settled) } satisfies DecisionsPayload);
+    } catch (err) {
+      return c.json({ error: `could not read decisions: ${String(err)}` } satisfies DecisionError, 500);
+    }
+  });
+
+  api.post('/:id/answer', async (c) => {
+    const id = c.req.param('id');
+    if (!DECISION_ID.test(id)) return c.json({ error: 'invalid decision id' } satisfies DecisionError, 400);
+
+    const type = (c.req.header('content-type') ?? '').split(';')[0]!.trim().toLowerCase();
+    if (type !== 'application/json') {
+      return c.json({ error: 'Content-Type must be application/json' } satisfies DecisionError, 415);
+    }
+    const text = await c.req.text();
+    if (text.length > MAX_BODY_BYTES) return c.json({ error: 'request body too large' } satisfies DecisionError, 413);
+    let body: unknown;
+    try {
+      body = JSON.parse(text);
+    } catch {
+      return c.json({ error: 'request body must be JSON' } satisfies DecisionError, 400);
+    }
+    if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+      return c.json({ error: 'request body must be a JSON object' } satisfies DecisionError, 400);
+    }
+    const choice = (body as Record<string, unknown>).choice;
+    if (typeof choice !== 'string' || !choice || choice.length > MAX_OPTION_CHARS) {
+      return c.json({ error: `choice must be a string of 1–${MAX_OPTION_CHARS} characters` } satisfies DecisionError, 400);
+    }
+
+    // Read, check and append with no await between them: the handler is synchronous from here, so
+    // two answers to one id cannot interleave inside this process, and the fold ignores a second
+    // one in the file regardless (server/decisions.ts), which covers a writer in another process.
+    const path = file();
+    let decision: Decision | undefined;
+    try {
+      decision = foldDecisions(readDecisionLines(path)).find((d) => d.id === id);
+    } catch (err) {
+      return c.json({ error: `could not read decisions: ${String(err)}` } satisfies DecisionError, 500);
+    }
+    if (!decision) return c.json({ error: 'unknown decision' } satisfies DecisionError, 404);
+    if (decision.status === 'answered') return c.json({ error: 'decision already answered' } satisfies DecisionError, 409);
+    if (decision.status === 'expired') {
+      return c.json({ error: 'decision expired — the runner stopped waiting for it, so the mission is not listening' } satisfies DecisionError, 409);
+    }
+    if (!decision.options.includes(choice)) {
+      return c.json({ error: 'choice must be one of the decision options' } satisfies DecisionError, 400);
+    }
+
+    const line: DecisionAnswered = { type: 'decision_answered', id, choice, by: 'founder', at: Date.now() };
+    try {
+      appendMissionLine(line, path);
+    } catch (err) {
+      return c.json({ error: `could not write decisions: ${String(err)}` } satisfies DecisionError, 500);
+    }
+    return c.json({ ok: true, id, choice });
+  });
+
+  return api;
+}

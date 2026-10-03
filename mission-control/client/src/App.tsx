@@ -22,6 +22,7 @@ import {
   type BeliefSummary,
   type ConflictsPayload,
   type ConnectionState,
+  type DecisionsPayload,
   type InboxPayload,
   type ProjectDetail,
   type StreamState,
@@ -34,7 +35,8 @@ import { ConflictsView } from './views/ConflictsView.tsx';
 import { InboxView } from './views/InboxView.tsx';
 import { ProjectView } from './views/ProjectView.tsx';
 import { DispatchView } from './views/DispatchView.tsx';
-import { MissionsView } from './views/MissionsView.tsx';
+import { MissionsView, usePoll } from './views/MissionsView.tsx';
+import { DecisionsView } from './views/DecisionsView.tsx';
 
 /**
  * What a fetched (non-stream) view knows about its own data's age.
@@ -174,6 +176,8 @@ export const VIEWS = [
   { id: 'dispatch', label: 'Dispatch', stream: false, nav: true, render: ({ now, onFreshness }) => <DispatchView now={now} onFreshness={onFreshness} /> },
   // v3 SLICE — the Missions board: create a card, launch a two-family team, watch it live.
   { id: 'missions', label: 'Missions', stream: false, nav: true, render: ({ now, onFreshness }) => <MissionsView now={now} onFreshness={onFreshness} /> },
+  // v3 SLICE — Decisions: a waiting mission's question, one button per option. Fetched like Missions.
+  { id: 'decisions', label: 'Decisions', stream: false, nav: true, render: ({ now, onFreshness }) => <DecisionsView now={now} onFreshness={onFreshness} /> },
   {
     id: 'project',
     label: 'Project',
@@ -326,6 +330,7 @@ export function AppBar({
   freshness,
   now,
   onSelect,
+  badges = {},
 }: {
   active: ViewDef;
   tab: string;
@@ -334,6 +339,8 @@ export function AppBar({
   freshness: Freshness | null;
   now: number;
   onSelect: (id: Tab) => void;
+  /** A count shown beside a tab's label when it is above zero — Decisions uses it for what is waiting on you. */
+  badges?: Partial<Record<Tab, number>>;
 }) {
   return (
     <div className="flex h-full items-center gap-6 px-6">
@@ -350,6 +357,11 @@ export function AppBar({
             }`}
           >
             {t.label}
+            {(badges[t.id] ?? 0) > 0 && (
+              <span className="fig ml-1.5 rounded-[3px] bg-warn/20 px-1 text-[11px] text-warn" title={`${badges[t.id]} waiting on you`}>
+                {badges[t.id]}
+              </span>
+            )}
             {tab === t.id && <span className="absolute inset-x-2.5 bottom-0 h-px bg-live" />}
           </button>
         ))}
@@ -408,6 +420,9 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('fleet');
   const stream = useMissionControlStream();
   const now = useNow();
+  // The one poll the shell owns: a count for the Decisions tab, so a question is visible from any tab.
+  const decisions = usePoll<DecisionsPayload>('/api/decisions', 3000);
+  const badges = { decisions: decisions.data?.pending.length ?? 0 };
 
   const active = VIEWS.find((v) => v.id === tab) ?? VIEWS[0];
 
@@ -444,6 +459,7 @@ export default function App() {
           freshness={freshness}
           now={now}
           onSelect={setTab}
+          badges={badges}
         />
       </header>
 
