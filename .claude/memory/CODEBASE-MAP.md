@@ -47,6 +47,7 @@ it, so a hook that changes posture changes this map with it.
 | `npm run check:dispatch-prompt` | `npm run test:dispatch-prompt && npm run check:dispatch-prompt-size` |
 | `npm run check:dispatch-prompt-size` | `node scripts/check-dispatch-prompt-size.mjs` |
 | `npm run check:figures` | `node scripts/check-figures.mjs` |
+| `npm run check:kernel` | `GOCACHE=${TMPDIR:-/tmp}/go-build go -C kernel test -count=1 ./...` |
 | `npm run check:ledger` | `npm run test:claims && npm run test:classifier && npm run test:ledger && npm run check:ledger-lint && npm run ` |
 | `npm run check:ledger-build` | `node scripts/ledger.mjs build --check` |
 | `npm run check:ledger-lint` | `node scripts/ledger.mjs lint` |

@@ -2496,7 +2496,7 @@ test('every STEP of the suite has a counterpart step in ci.yml', () => {
   assert.deepEqual(missing(byBody), ['check:registration'], 'deleting the Registration step did not bite');
 });
 
-test('every `run:` step in ci.yml carries the `!cancelled()` guard, and the three setup steps do not', () => {
+test('every `run:` step in ci.yml carries the `!cancelled()` guard, and the four setup steps do not', () => {
   // THIS GUARD IS THE ENTIRE 2026-08-25 CHANGE. Without it the first failing step aborts the job:
   // on `main` before that change the build failed at step 18 of 30 and the twelve after it never
   // ran — the ledger's enforcement, both gates, and the check that makes "the sandbox is armed" a
@@ -2509,13 +2509,15 @@ test('every `run:` step in ci.yml carries the `!cancelled()` guard, and the thre
       'after the first failure is SKIPPED and the build reports one failure while hiding the rest.'
   );
 
-  // The three `uses:` setup steps carry NO `if:`, deliberately. Guarding them was considered and
+  // The four `uses:` setup steps carry NO `if:`, deliberately. Guarding them was considered and
   // rejected: if checkout fails, `!cancelled()` is still true, so all 45 checks would run against an
   // empty workspace and produce ~46 red steps instead of one. That is a diagnosability cost, not a
   // fail-open one — the job still fails and nothing ships. Pinned so it reads as a decision.
+  // Re-decided 2026-10-01 when actions/setup-go (the Kernel, B0-16) made it four: same reasoning,
+  // no guard.
   const setup = parseCiSteps(CI).filter((s) => s.uses !== null);
-  assert.equal(setup.length, 3, 'the setup steps changed — re-decide whether they should carry the guard');
-  assert.deepEqual(setup.map((s) => s.if), [null, null, null], 'a setup step grew an `if:`; see the note above');
+  assert.equal(setup.length, 4, 'the setup steps changed — re-decide whether they should carry the guard');
+  assert.deepEqual(setup.map((s) => s.if), [null, null, null, null], 'a setup step grew an `if:`; see the note above');
 
   // Mutation 1: the guard deleted from one step, which is how a careless tidy-up arrives.
   const dropped = CI.replace(

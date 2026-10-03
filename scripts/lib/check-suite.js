@@ -129,6 +129,10 @@ const STEPS = [
   'test:probe-stop-reason',
   'test:launcher-permissions',
   'test:sandbox',
+  // The Kernel boundary (B0-16, docs/vision-v3/09a-ENGINEERING.md §2): allowed modules, the
+  // 8,000-line budget, and no path outside kernel/ naming the Journal. Its negative fixtures run
+  // in the same command, so the checker and its mutation gate cannot drift apart.
+  'check:kernel',
 ];
 
 /**
