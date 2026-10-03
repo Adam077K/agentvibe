@@ -245,3 +245,13 @@ Wrap every network call in a retry. CI does NOT need session-file `qa_verdict` f
 - the B1-04 remainder;
 - the lease renew/max_wait owner row;
 - cross-family reviews.
+
+**Speed rules for the next session** (`docs/vision-v3/_process/DR-BUILD-SPEED-2026-10-03.md`; the founder delegated these):
+- red-team the frozen tests before any code;
+- measure real CLIs first and ask all founder questions in one batch;
+- ship when there is no HIGH and no MED-security finding; everything else goes to follow-ups;
+- run up to 6 independent jobs in parallel;
+- batch merges;
+- run Codex as a parallel second reviewer when it works.
+
+Raising `maxTurns` is a separate founder PR (irreversible tier).
