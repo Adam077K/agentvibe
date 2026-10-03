@@ -11,5 +11,6 @@ B1-12b done-tests frozen: `kernel/internal/effector/effector_donetest_test.go`, 
 24 mutants applied in $TMPDIR copies, all killed; the register lists each one and its killer.
 OPEN O1–O7 (venture source, no-lease, Target shape, TokenSet form, request id, mid-dispatch lease loss, effector sandbox rules) are recorded in the register for founder ruling.
 Not covered: the gateway epoch (§15), and raw syscall sockets.
+RE-FREEZE 2026-10-03, "2026-10-03 rulings B1-12b" (`docs/vision-v3/_process/DR-B1-12B-RULINGS-2026-10-03.md`). Q6 is changed: a lease lost mid-dispatch is uncertain. There are now 15 tests, 14 of them red on the stub, and 28 of 28 mutants are killed.
 `git fetch` was denied by the network sandbox, so the branch is from the local origin/main at 5f33c75.
 A worktree-isolation guard refused two compound shell commands. Following its own instruction, I split them into plain commands and script files.

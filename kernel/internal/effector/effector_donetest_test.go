@@ -13,6 +13,12 @@
 // A-C: docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md. The 2-minute and 15-minute
 // figures are literals here, never the outbox's constants, so moving a constant cannot move a test.
 //
+// RE-FROZEN 2026-10-03, "2026-10-03 rulings B1-12b" (docs/vision-v3/_process/DR-B1-12B-RULINGS-2026-10-03.md):
+// the venture comes from the job's lease, never the request (Q1); no lease is refused (Q2); the
+// target is a string id (Q3); tokens are {resource: decimal string} (Q4); no request id (Q5); a
+// lease lost mid-dispatch is uncertain, never definite, and the new holder sends only after a
+// reconcile reads Absent (Q6); effectors are limited tightly until widened (Q7).
+//
 // Death is simulated as the outbox's own done-tests and Deps.Crash do: a hook or a provider panics
 // on the goroutine of the Gateway call, and the next life opens a fresh Gateway on the same Dir.
 // So the Gateway must call Deps.Crash and the effector's Do on the caller's goroutine.
@@ -76,11 +82,12 @@ type death struct{ where string }
 // testEff counts every request that reaches it. onDo runs after the request is counted; a nil
 // return means the effect landed.
 type testEff struct {
-	mu     sync.Mutex
-	class  outbox.Class
-	sends  int
-	landed map[string]bool
-	onDo   func(n int) error
+	mu        sync.Mutex
+	class     outbox.Class
+	sends     int
+	landed    map[string]bool
+	landFirst bool // the effect lands before onDo runs, whatever onDo then does
+	onDo      func(n int) error
 }
 
 func newEff(c outbox.Class) *testEff { return &testEff{class: c, landed: map[string]bool{}} }
@@ -90,6 +97,9 @@ func (e *testEff) Do(_ context.Context, idem string, _ []byte) error {
 	e.mu.Lock()
 	e.sends++
 	n, hook := e.sends, e.onDo
+	if e.landFirst {
+		e.landed[idem] = true
+	}
 	e.mu.Unlock()
 	if hook != nil {
 		if err := hook(n); err != nil {
@@ -136,6 +146,18 @@ func (f *claimFence) Check(ctx context.Context, resource string, tok uint64) err
 	return f.c.Check(ctx, id, tok)
 }
 
+// ventures is the job -> venture record admission keeps (Q1). J9 belongs to another venture.
+type ventures map[string]string
+
+func (v ventures) VentureOf(_ context.Context, resource string) (string, error) {
+	if name, ok := v[resource]; ok {
+		return name, nil
+	}
+	return "", fmt.Errorf("no venture recorded for %q", resource)
+}
+
+var jobVentures = ventures{"job://J7": venture, "job://J8": venture, "job://J99": venture, "job://J9": "other-venture"}
+
 type world struct {
 	t       *testing.T
 	dir     string
@@ -172,7 +194,7 @@ func newWorld(t *testing.T, eff effector.Effector, count func() int) *world {
 func (w *world) open(worker string) effector.Gateway {
 	w.t.Helper()
 	gw, err := effector.Open(effector.Config{Dir: filepath.Join(w.dir, "gateway"), Venture: venture,
-		WorkerID: worker, Clock: w.clock, Blobs: w.j, Fence: w.fence,
+		WorkerID: worker, Clock: w.clock, Blobs: w.j, Fence: w.fence, Ventures: jobVentures,
 		Effectors: map[string]effector.Effector{verb: w.eff}, Crash: w.crash})
 	if err != nil {
 		w.t.Fatalf("effector.Open: %v", err)
@@ -378,6 +400,11 @@ func TestB112bProposeOverSocketIsOneOperation(t *testing.T) {
 	if err != nil || !other.OK || result(t, other.Result).OperationID == id {
 		t.Fatalf("another business_ref: %+v, %v; want ok with a new Operation", other, err)
 	}
+	// Q1: the venture is never taken from the request; a line naming one is refused before the Gateway.
+	withVenture := strings.Replace(line("inv-8814"), `{"cmd"`, `{"venture":"other-venture","cmd"`, 1)
+	if r, err := send(conn, rd, withVenture); err != nil || r.OK || r.Reason != socket.ReasonInvalidField {
+		t.Fatalf("Q1: a request naming a venture: %+v, %v; want refused, invalid_field", r, err)
+	}
 	if op, err := gw.Dispatch(ctx, id, tokens(cl)); err != nil || op.State != outbox.Confirmed {
 		t.Fatalf("Dispatch = %+v, %v; want confirmed", op, err)
 	}
@@ -442,6 +469,10 @@ func TestB112bProposeRefusals(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	otherVenture, err := w.claims.ClaimJob(ctx, "J9", "B", time.Hour) // current, but not keel's
+	if err != nil {
+		t.Fatal(err)
+	}
 	mod := func(f func(*socket.ProposeEffect)) socket.ProposeEffect {
 		c := w.cmd("inv-1", cl)
 		f(&c)
@@ -460,9 +491,12 @@ func TestB112bProposeRefusals(t *testing.T) {
 		{"payload of another venture", mod(func(c *socket.ProposeEffect) { c.PayloadRef = string(other) }), effector.ErrUnknownPayload},
 		{"stale lease token", mod(raw(tokensJSON(old))), effector.ErrStaleToken},
 		{"token of a never-claimed job", mod(raw(`{"job://J99":"1"}`)), effector.ErrStaleToken},
-		{"OPEN: no lease at all", mod(raw(`{}`)), effector.ErrUndecided},
-		{"OPEN: target is an object", mod(func(c *socket.ProposeEffect) { c.Target = json.RawMessage(`{"id":"supplier-44"}`) }), effector.ErrUndecided},
-		{"OPEN: target is a number", mod(func(c *socket.ProposeEffect) { c.Target = json.RawMessage(`44`) }), effector.ErrUndecided},
+		{"Q2: no lease at all", mod(raw(`{}`)), effector.ErrNoLease},
+		{"Q3: target is an object", mod(func(c *socket.ProposeEffect) { c.Target = json.RawMessage(`{"id":"supplier-44"}`) }), effector.ErrInvalidTarget},
+		{"Q3: target is a number", mod(func(c *socket.ProposeEffect) { c.Target = json.RawMessage(`44`) }), effector.ErrInvalidTarget},
+		{"Q1: lease of another venture", mod(raw(tokensJSON(otherVenture))), effector.ErrWrongVenture},
+		{"Q1: one lease of another venture among ours", mod(raw(fmt.Sprintf(`{%q:%q,%q:%q}`, cl.Resource,
+			strconv.FormatUint(cl.Token, 10), otherVenture.Resource, strconv.FormatUint(otherVenture.Token, 10)))), effector.ErrWrongVenture},
 		{"tokens are an array", mod(raw(`["job://J7"]`)), nil},
 		{"token is a JSON number", mod(raw(fmt.Sprintf(`{%q:%d}`, cl.Resource, cl.Token))), nil},
 		{"token has a leading zero", mod(raw(fmt.Sprintf(`{%q:"0%d"}`, cl.Resource, cl.Token))), nil},
@@ -562,8 +596,9 @@ func TestB112bFenceSurvivesRestart(t *testing.T) {
 }
 
 // TestB112bLeaseLostAfterDispatchingSendsNothing: the lease is lost after the attempt is journaled
-// and before the provider call. The re-check before Do refuses it, nothing is sent, and the attempt
-// ends definite, so the lease's new holder dispatches it exactly once.
+// and before the provider call. The re-check before Do sends nothing, but the attempt is NOT
+// definite (Q6): it is uncertain, the new holder is refused until a reconcile past the 2-minute
+// lag reads Absent, and then it sends exactly once.
 func TestB112bLeaseLostAfterDispatchingSendsNothing(t *testing.T) {
 	e := newEff(outbox.CheckBefore)
 	w := newWorld(t, e, e.total)
@@ -578,21 +613,89 @@ func TestB112bLeaseLostAfterDispatchingSendsNothing(t *testing.T) {
 	}
 	gw := w.open("A")
 	id := w.propose(gw, w.cmd("inv-1", a))
-	if op, err := gw.Dispatch(ctx, id, tokens(a)); !errors.Is(err, effector.ErrStaleToken) {
-		t.Fatalf("lease lost before the provider call: Dispatch = %+v, %v; want ErrStaleToken", op, err)
+	if op, err := gw.Dispatch(ctx, id, tokens(a)); !errors.Is(err, outbox.ErrUncertain) {
+		t.Fatalf("lease lost before the provider call: Dispatch = %+v, %v; want ErrUncertain (Q6)", op, err)
 	}
 	if !fired {
 		t.Fatal("Crash(AfterDispatchingJournaled) never fired: Config.Crash must reach the outbox")
 	}
 	w.sends(0, "lease lost before the provider call")
+	w.state(gw, id, outbox.Uncertain, "lease lost mid-dispatch (Q6: never definite)")
 	gwB := w.open("B")
 	if err := gwB.Reconcile(ctx); err != nil {
 		t.Fatalf("Reconcile: %v", err)
 	}
-	if op, err := gwB.Dispatch(ctx, id, tokens(b)); err != nil || op.State != outbox.Confirmed {
-		t.Fatalf("new holder: Dispatch = %+v, %v; want confirmed (the refused attempt sent nothing)", op, err)
+	if op, err := gwB.Dispatch(ctx, id, tokens(b)); !errors.Is(err, outbox.ErrUncertain) {
+		t.Fatalf("new holder inside the lag: Dispatch = %+v, %v; want ErrUncertain", op, err)
 	}
-	w.sends(1, "new holder")
+	w.sends(0, "new holder inside the lag")
+	w.clock.add(rulingA + time.Minute)
+	if err := gwB.Reconcile(ctx); err != nil {
+		t.Fatalf("Reconcile: %v", err)
+	}
+	w.sends(0, "Reconcile never dispatches")
+	if op, err := gwB.Dispatch(ctx, id, tokens(b)); err != nil || op.State != outbox.Confirmed {
+		t.Fatalf("new holder after Absent past the lag: Dispatch = %+v, %v; want confirmed", op, err)
+	}
+	w.sends(1, "new holder after Absent past the lag")
+}
+
+// TestB112bLeaseLostInFlightEffectHappensOnce: the old holder's effect LANDS and its lease is lost
+// while the call is in flight (Q6). However the call ends — the worker dies, it times out, or it
+// answers ok — the new holder never sends: its dispatch is refused while the attempt is
+// unresolved, and a reconcile finds the effect Present. The effect happens exactly once.
+func TestB112bLeaseLostInFlightEffectHappensOnce(t *testing.T) {
+	for _, end := range []string{"worker dies", "call times out", "call answers ok"} {
+		t.Run(end, func(t *testing.T) {
+			e := newEff(outbox.CheckBefore)
+			e.landFirst = true
+			w := newWorld(t, e, e.total)
+			a := w.claim("A")
+			var b lease.Claim
+			e.onDo = func(int) error {
+				b = w.lose(a, "B")
+				switch end {
+				case "worker dies":
+					panic(death{"provider in flight"})
+				case "call times out":
+					return errors.New("timeout")
+				}
+				return nil
+			}
+			gwA := w.open("A")
+			id := w.propose(gwA, w.cmd("inv-1", a))
+			switch end {
+			case "worker dies":
+				mustDie(t, "Dispatch", func() { gwA.Dispatch(ctx, id, tokens(a)) })
+			case "call times out":
+				if _, err := gwA.Dispatch(ctx, id, tokens(a)); !errors.Is(err, outbox.ErrUncertain) {
+					t.Fatalf("old holder: err = %v; want ErrUncertain", err)
+				}
+			default:
+				if op, err := gwA.Dispatch(ctx, id, tokens(a)); err != nil || op.State != outbox.Confirmed {
+					t.Fatalf("old holder, provider ok: Dispatch = %+v, %v; want confirmed (a Receipt)", op, err)
+				}
+			}
+			w.sends(1, "the old holder's landed call")
+			gwB := w.open("B")
+			if end != "call answers ok" {
+				if op, err := gwB.Dispatch(ctx, id, tokens(b)); !errors.Is(err, outbox.ErrUncertain) {
+					t.Fatalf("new holder before any reconcile: Dispatch = %+v, %v; want refused, ErrUncertain", op, err)
+				}
+				w.sends(1, "new holder before any reconcile")
+			}
+			for _, step := range []time.Duration{0, rulingA + time.Minute, time.Hour} {
+				w.clock.add(step)
+				if err := gwB.Reconcile(ctx); err != nil {
+					t.Fatalf("Reconcile: %v", err)
+				}
+				if op, err := gwB.Dispatch(ctx, id, tokens(b)); err != nil || op.State != outbox.Confirmed {
+					t.Fatalf("new holder at +%v: Dispatch = %+v, %v; want confirmed with no call", step, op, err)
+				}
+				w.sends(1, fmt.Sprintf("new holder at +%v", step))
+			}
+		})
+	}
 }
 
 // TestB112bCrashBetweenLeaseLossAndDispatchSendsNothing: the worker dies after journaling the
@@ -880,6 +983,8 @@ func TestB112bMailboxEffector(t *testing.T) {
 	}
 	err = e.Do(ctx, "01OPMAIL3", mustJSON(t, effector.MailPayload{To: "someone@example.com", Subject: "s", Body: "b"}))
 	rejected(t, "a recipient other than the founder", err, true)
+	err = e.Do(ctx, "01OPMAIL5", mustJSON(t, effector.MailPayload{To: strings.ToUpper(founderTo), Subject: "s", Body: "b"}))
+	rejected(t, "Q7: the founder's address in another case (exact match only, until widened)", err, true)
 	rejected(t, "a payload that is not a message", e.Do(ctx, "01OPMAIL4", []byte("not json")), false)
 	presence(t, e, "01OPMAIL3", outbox.Absent)
 	if n := len(messages(t, dir)); n != 1 {

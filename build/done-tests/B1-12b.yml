@@ -48,9 +48,29 @@
 # NOT COVERED: the gateway epoch (09a §15 external fencing authority); a raw socket(2) through
 # syscall (the import guard allows syscall, which the outbox's flock needs); a Reconcile that
 # dispatches is caught only through send counts in LagGuard.
+#
+# RE-FREEZE 2026-10-03: 2026-10-03 rulings B1-12b. O1-O7 are ruled, so OPEN above is closed;
+# the rulings are recorded in docs/vision-v3/_process/DR-B1-12B-RULINGS-2026-10-03.md. The round-1
+# file was edited in place, because its ErrUndecided cases and its definite-failure reading of O6
+# contradicted the rulings. Its old hash, 6e0e5b6e…0a88, is superseded.
+#   Q1 the venture is taken from the job's lease, never from the request: Config.Ventures; a lease
+#      of another venture -> ErrWrongVenture; a socket line naming a venture -> invalid_field.
+#   Q2 no lease -> ErrNoLease.  Q3 target non-string -> ErrInvalidTarget.  Q4, Q5 unchanged.
+#   Q6 CHANGED: a lease lost mid-dispatch is uncertain, never definite. LeaseLostAfterDispatching
+#      now requires uncertain, the new holder refused inside the lag, and one send after Absent.
+#      The new LeaseLostInFlightEffectHappensOnce requires that the old holder's effect lands, the
+#      new holder is refused, and the effect happens exactly once (dies / times out / answers ok).
+#   Q7 tight effector limits; the founder recipient must match exactly (case variant refused).
+# Now 15 tests: 14 fail on the stub; the import guard passes on it by design. All 15 pass against
+# the updated $TMPDIR reference, run sandboxed. The new mutants were each killed:
+#   pre-call lease loss made definite (ErrRejected)  -> LeaseLostAfterDispatchingSendsNothing
+#   fence checked after Do, lost lease made definite -> LeaseLostInFlightEffectHappensOnce
+#   venture check removed                            -> ProposeRefusals
+#   founder recipient matched case-insensitively     -> MailboxEffector
+# All 24 earlier mutants were re-run against this file and each is still killed: 28 of 28.
 register: B1-12b
 jobs:
   - id: B1-12b
     files:
       - path: kernel/internal/effector/effector_donetest_test.go
-        sha256: 6e0e5b6e7442dbfd2429b6f152b796470bfb21ffad511895b871b98365d00a88
+        sha256: 9633fe443f52f5b17b79c35c9328b9453202040e2242e109ee1d2d5ad39aa6ec

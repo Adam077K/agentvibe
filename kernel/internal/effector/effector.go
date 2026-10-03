@@ -12,17 +12,23 @@
 // A re-proposal of an open key returns the existing Operation ID; propose_effect carries no
 // request id, so the business key is the only deduplication.
 //
-//   - venture: Config.Venture. propose_effect names none (09a §2), so a Gateway serves one venture.
+//   - venture: Config.Venture, taken from the job's lease and never from the request (founder
+//     ruling Q1, 2026-10-03). A Gateway serves one venture. The socket refuses a `venture` key
+//     before it reaches the Gateway, and every presented lease must belong to Config.Venture as
+//     Config.Ventures reports it; a lease of another venture, or one whose venture cannot be read,
+//     refuses the proposal (ErrWrongVenture for a mismatch).
 //   - verb: selects Config.Effectors[verb]; an unknown verb is ErrUnknownVerb.
-//   - target: a JSON string, used as BusinessKey.Target. 09a names Target but does not define it,
-//     so any other JSON type is ErrUndecided.
+//   - target: a JSON string id, used as BusinessKey.Target (Q3); any other JSON type is
+//     ErrInvalidTarget.
 //   - payload_ref: a journal.BlobRef under Config.Venture, read through Config.Blobs. A ref that
 //     does not resolve is ErrUnknownPayload.
 //   - lease_tokens: a JSON object mapping a resource id to its fencing token as a B1-02 bigint (an
-//     unsigned decimal string), e.g. {"job://J7":"3"}. Every token must pass Config.Fence or the
-//     proposal is ErrStaleToken (09a §7, "proposed --> refused: … stale token"). Another shape is
-//     refused. An empty object is ErrUndecided: canon does not say whether an effect may be
-//     proposed under no lease at all.
+//     unsigned decimal string), e.g. {"job://J7":"3"} (Q4). Every token must pass Config.Fence or
+//     the proposal is ErrStaleToken (09a §7, "proposed --> refused: … stale token"). Another shape
+//     is refused. An empty object is ErrNoLease: an effect with no lease is refused (Q2).
+//   - there is no request id: the business key is the only deduplication (Q5).
+//
+// Rulings Q1-Q7: docs/vision-v3/_process/DR-B1-12B-RULINGS-2026-10-03.md.
 //
 // The result is ProposeResult as JSON. Every refusal writes nothing and calls no provider.
 //
@@ -31,9 +37,12 @@
 // Dispatch must present a token for each of them, and each must pass Config.Fence at the moment of
 // dispatch, or Dispatch returns an error wrapping ErrStaleToken with no provider call and the
 // Operation unchanged. A Fence error of any other kind refuses too: an unchecked token is not a
-// current one. The tokens are checked again immediately before the effector's Do; a lease lost in
-// between ends the attempt as a definite failure (outbox.ErrRejected wrapping ErrStaleToken), so
-// the Operation stays dispatchable by the lease's current holder and nothing was sent.
+// current one. The tokens are checked again immediately before the effector's Do, and a stale one
+// there sends nothing. A lease lost during a dispatch — before the call or while it is in flight —
+// NEVER makes the attempt definite, because the effect may have landed (Q6): the attempt is
+// uncertain (or confirmed, if the provider answered ok), and the lease's new holder cannot send
+// until a reconcile past the visibility lag reads Absent; rulings A-C then apply as for any
+// uncertain attempt.
 //
 // RULINGS A–C (docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md) are the outbox's.
 // The Gateway must not hide them: an effector's declared visibility lag (outbox.VisibilityLagger)
@@ -62,8 +71,12 @@ import (
 var (
 	// ErrNotImplemented is returned by every constructor until B1-12b lands.
 	ErrNotImplemented = errors.New("effector: not implemented")
-	// ErrUndecided: canon is silent on this case, so it is refused until it is decided.
-	ErrUndecided = errors.New("effector: canon is silent on this case; refused until decided")
+	// ErrNoLease: the proposal presents no lease token at all (Q2).
+	ErrNoLease = errors.New("effector: an effect with no lease is refused")
+	// ErrInvalidTarget: target is not a JSON string id (Q3).
+	ErrInvalidTarget = errors.New("effector: target is not a string id")
+	// ErrWrongVenture: a presented lease belongs to another venture than the Gateway's (Q1).
+	ErrWrongVenture = errors.New("effector: lease belongs to another venture")
 	// ErrUnknownVerb: no effector is configured for the verb.
 	ErrUnknownVerb = errors.New("effector: no effector for verb")
 	// ErrUnknownPayload: payload_ref names no blob of this venture.
@@ -83,6 +96,12 @@ type Tokens map[string]uint64
 // lease.Claimer.Check backs it for job:// resources.
 type Fence interface {
 	Check(ctx context.Context, resource string, token uint64) error
+}
+
+// Ventures reports the venture a leased resource belongs to: the job's venture, fixed when the job
+// was admitted. It is the only source of an effect's venture (Q1).
+type Ventures interface {
+	VentureOf(ctx context.Context, resource string) (string, error)
 }
 
 // Blobs reads payload blobs; journal.Journal implements it.
@@ -111,6 +130,7 @@ type Config struct {
 	Clock     outbox.Clock
 	Blobs     Blobs
 	Fence     Fence
+	Ventures  Ventures
 	Effectors map[string]Effector // by verb
 	Crash     func(outbox.Point)  // passed to the outbox as Deps.Crash
 }
