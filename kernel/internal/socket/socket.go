@@ -44,8 +44,8 @@
 //
 // B1-03 narrows four places the table above leaves open, each refused as invalid_field: `stream`,
 // `type`, `verb` and `business_ref` are non-empty; `resources` holds at least one id; and `stream`
-// may not be RefusalStream, which only the Kernel appends to (Userland may not forge the record
-// of what was refused).
+// may not be RefusalStream or launcher.JournalStream, which only the Kernel appends to (Userland may
+// not forge the record of what was refused, or of what was launched).
 //
 // propose_event is the Kernel's own: it appends one event to `stream` with ExpectSeq expect_seq
 // and Type `type`, whose Data is a JSON object holding at least "label" (the command's label) and

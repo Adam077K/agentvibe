@@ -3314,7 +3314,7 @@ test('the codex preamble lists the tool-scoped engines, derived from the agent f
   write('notools-delta', '---\nname: notools-delta\n---\n');
   // YAML block style: `tools:` alone on its line, the items under it. A
   // read-only one is listed like its flow-style twin; a writer is not.
-  write('block-eta', '---\nname: block-eta\ntools:\n  - Read\n  - Grep\nmodel: claude-opus-5\n---\n');
+  write('block-eta', '---\nname: block-eta\ntools:\n  - Read\n  - Grep\nmodel: claude-opus-5-5\n---\n');
   write('block-writer-theta', '---\ntools:\n  - Read\n  - Write\n---\n');
   fs.writeFileSync(path.join(p.home, 'outside-epsilon.md'), '---\ntools: [Read]\n---\n');
   fs.symlinkSync(path.join(p.home, 'outside-epsilon.md'), path.join(agents, 'outside-epsilon.md'));

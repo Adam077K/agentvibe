@@ -1,0 +1,55 @@
+# Done-test register, B1-14a (docs/vision-v3/14-BUILD-PLAN.md §6 row B1-14a, "Policy compiler v0:
+# snapshot, P1→P8 walk, typed rules"; acceptance "100% table tests on the seed rights matrix; a
+# method-typed admission rule is rejected").
+# Canon: 00-CANON §3 (P1..P8, rule typing, DR-05), 09a §5 (snapshot, algorithm), 05 §5 (the matrix).
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest -run B1_14a ./internal/policy/
+# kernel/internal/policy/policy.go (the stub) is NOT registered: it is what the job implements.
+# The matrix is read at test time from docs/vision-v3/05-AUTONOMY-INITIATIVE-FOUNDER.md §5 and is
+# deliberately NOT registered here: it is canon, and an edit to it must move the seed, not the test.
+#
+# Round 1, 2026-10-03: 8 tests, red 8 of 8 against the stub. A scratch reference passes them
+# (-race). Mutants: 40 of 40 killed.
+# Rulings folded in before first freeze, 2026-10-03: founder — P3..P8 most restrictive wins; a row
+# with no D at a level defaults to the founder, never an agent holder. Orchestrator (fail-safe) —
+# never > held > co_sign > ask > notify > auto; ties apply the highest precedence (lowest P). Out of scope, left to B1-14b / B2-13a: classify, dispose,
+# fog (step 4), valid_until (step 6).
+#
+# RE-FREEZE r2 2026-10-03: 2026-10-03 red-team r1 gaps + rulings. The red-team on 7cf986d returned
+# GAPS (23 of 41 mutants survived, 3 fail-open). Added, all in policy_donetest_test.go:
+#   verb * matches all; verbs match exactly, never as a prefix (continuity included); continuity
+#   respects the venture; scope applies at P1 and P3..P8; a non-admission P1 never blocks; one
+#   snapshot address and one rule set give one contract (overlay order, blocker order); blockers
+#   carry owner, remedy, expiry; the base is validated; NewRights uses and copies its input;
+#   Decider is false for an unknown row or level; P8 consequence admission refused; the snapshot
+#   encoding is injective, nil = empty, repeated set members (and repeated ids/inputs in keyed
+#   sets) are ErrSnapshot, sub-second instants are content, whatever parses re-encodes exactly.
+# Orchestrator rulings: R1 the seed is compiled in, never read from docs at runtime; new
+#   TestB1_14a_SeedCompiledIn runs SeedRights from an empty cwd, SeedRightsEveryCell stays the
+#   drift test against 05 §5. R2 a rule equal to the base does not decide (Applied 0). R3 the drift
+#   parser errors on any unparseable condition or empty/reversed range ("A1–A0", "<A0"); checked
+#   by checkParser inside the red test. R4 a canon row or column change re-freezes.
+# Red 9 of 9 against the stub. The scratch reference passes (-race); the red-team reference passes
+# every test except repeated continuity ids / freshness inputs (a fail-safe addition here).
+# Mutants: 54 of 54 killed (16 new: the red-team's classes, plus delimited join, R2 tie).
+#
+# RE-FREEZE r3 2026-10-03: 2026-10-03 review r1 fail-open. The Opus review FAILED f562abc on two
+# MED-security fail-open findings. Added TestB1_14a_ReviewR1FailOpen; nothing earlier changed:
+#   1. Walk refuses (ErrWalk) an action whose venture is "*" or whose verb holds "*" (P1 never and
+#      the keel overlay, against venture *, verb * and verb payments.*).
+#   2. A continuity route counts only when its venture is the snapshot's Charter.Venture: a P2 kill
+#      {*,*} with a route {*,*} holds other/payments.charge and keel/payments.charge at P2.
+#   3. Orchestrator grammar ruling: rule and action verbs and ventures are lowercase [a-z0-9_]+
+#      segments joined by "."; "*" only as a whole segment and only in rules. Case variants, spaces,
+#      zero-width and non-ASCII characters, hyphens, empty segments and partial "*" are refused at
+#      NewPolicy (ErrRule) or Walk (ErrWalk), with positive controls.
+#   4. A snapshot whose Charter.Venture is "*" is ErrSnapshot.
+# The stub gains ErrWalk. Red 10 of 10 on the stub. On f562abc: the 9 earlier tests pass and all 6
+# new subtests fail. No implementation was run in scratch.
+register: B1-14a
+jobs:
+  - id: B1-14a
+    files:
+      - path: kernel/internal/policy/policy_donetest_test.go
+        sha256: d4096800fc2fe28c86762edd65f9446a04b3086c227eb7fe3b53691c7cfc8f7e

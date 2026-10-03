@@ -325,7 +325,9 @@ func TestB108_R6_EnvAllowlistIsB107s(t *testing.T) {
 			t.Errorf("New with EnvAllow + %s: %v, want ErrGrant", extra, err)
 		}
 	}
-	r4Refused(t, "AV_JOB passed", r3Grant(), func(q *Request) { q.Env = map[string]string{"AV_JOB": q.JobID} }, ErrSpec)
+	r4Refused(t, "AV_JOB passed", r3Grant(), func(q *Request) {
+		q.Env = map[string]string{"HOME": "/h", "AV_JOB": q.JobID} // 2026-10-03 re-freeze B1-08h founder ruling: HOME required
+	}, ErrSpec)
 	r4Refused(t, "the four allowed names", r3Grant(), func(q *Request) {
 		q.Env = map[string]string{"HOME": "/h", "CODEX_HOME": "/h/.codex", "PATH": "/usr/bin", "LANG": "C"}
 	}, nil)

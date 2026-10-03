@@ -106,9 +106,10 @@ type row struct {
 
 // state is the job's claim row as its stream head records it.
 type state struct {
-	seq     uint64 // stream head seq: the ExpectSeq of the next transition
-	claimed bool   // the head is a lease.claimed event
-	row     row
+	seq      uint64 // stream head seq: the ExpectSeq of the next transition
+	claimed  bool   // the head is a lease.claimed event, or the lease.consumed that follows one
+	consumed bool   // the head is a lease.consumed event: the claim admitted its launch (launch.go)
+	row      row
 }
 
 func resource(jobID string) string { return "job://" + jobID }
@@ -142,7 +143,9 @@ func validJobID(jobID string) error {
 }
 
 // load reads the head event of the job's lease stream. Only the head matters: a claim is live iff
-// the head is lease.claimed and unexpired, and its token is the head's seq.
+// the head is a lease.claimed, or the lease.consumed that directly follows one (launch.go), and is
+// unexpired. A claimed head's token is its own seq; a consumed head carries the token of the claim
+// it consumes, which is the seq before the head's.
 func (c *claimer) load(ctx context.Context, jobID string) (state, error) {
 	stream := Stream(jobID)
 	seq, _, err := c.j.Head(ctx, stream)
@@ -159,7 +162,10 @@ func (c *claimer) load(ctx context.Context, jobID string) (state, error) {
 	if len(evs) == 0 || evs[0].Seq != seq {
 		return state{}, fmt.Errorf("%w: %s head seq %d not readable", ErrCorrupt, stream, seq)
 	}
-	ev := evs[0]
+	// A transition may commit between the Head and this Read; the Read then returns it too, and the
+	// newest event it returned is the head the decision is made on.
+	ev := evs[len(evs)-1]
+	seq = ev.Seq
 	var r row
 	if err := json.Unmarshal(ev.Data, &r); err != nil {
 		return state{}, fmt.Errorf("%w: %s seq %d: %v", ErrCorrupt, stream, seq, err)
@@ -175,6 +181,11 @@ func (c *claimer) load(ctx context.Context, jobID string) (state, error) {
 		return state{seq: seq, claimed: true, row: r}, nil
 	case TypeReleased:
 		return state{seq: seq, row: r}, nil
+	case TypeConsumed:
+		if err := c.checkConsumed(ctx, stream, ev, r); err != nil {
+			return state{}, err
+		}
+		return state{seq: seq, claimed: true, consumed: true, row: r}, nil
 	default:
 		return state{}, fmt.Errorf("%w: %s seq %d has type %q", ErrCorrupt, stream, seq, ev.Type)
 	}
