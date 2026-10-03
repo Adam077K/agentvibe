@@ -10,9 +10,9 @@
 //
 // Out of scope here. B1-04's plan row ("leases + storage fencing": all-or-nothing, wound-wait,
 // deadlock detector, hot resources, storage verifiers) owns multi-resource all-or-nothing
-// acquisition, wound-wait, the wait-for-graph deadlock detector, hot resources, and the storage
-// verifiers for repo://, db://, effect://, budget:// and brain://. Renew/heartbeat, shared mode and
-// max_wait/lease.starved are named in 09a §6 but owned by NO row of the register in
+// acquisition, wound-wait, the wait-for-graph deadlock detector, hot resources, max_wait and the
+// storage verifiers for repo://, db://, effect://, budget:// and brain://. Renew/heartbeat and shared
+// mode are named in 09a §6 but owned by NO row of the register in
 // docs/vision-v3/14-BUILD-PLAN.md §6, and need one. Until renew exists a claim simply expires at
 // its ttl.
 //

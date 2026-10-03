@@ -39,7 +39,13 @@ package lease
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"sort"
+	"strings"
 	"time"
+
+	"github.com/Adam077K/agentvibe/kernel/internal/journal"
 )
 
 // TypeHotAdded is the FenceStream event that adds one resource to the hot set.
@@ -55,20 +61,186 @@ const DefaultMaxWait = 120 * time.Second
 // HotCycleThreshold is "three cycles a week" (09a §6, a parameter).
 const HotCycleThreshold = 3
 
+// hotWindow is "a week": the rolling 7x24h before now.
+const hotWindow = 7 * 24 * time.Hour
+
+// hotData is TypeHotAdded's data.
+type hotData struct {
+	Resource string `json:"resource"`
+}
+
+// cycleRec is one broken cycle as the fold keeps it: when, and the resources on its edges.
+type cycleRec struct {
+	at        int64 // Unix nanoseconds
+	resources []string
+}
+
+// hotFile splits a hot resource "<file>#<anchor>" at its first '#'. It refuses what is not one: not a
+// ResourceUri, no '#', or an empty file or anchor.
+func hotFile(resource string) (string, error) {
+	if err := validResource(resource); err != nil {
+		return "", err
+	}
+	file, anchor, found := strings.Cut(resource, "#")
+	if !found || anchor == "" {
+		return "", fmt.Errorf("lease: hot resource %q has no anchor (<file>#<anchor>)", resource)
+	}
+	if err := validResource(file); err != nil {
+		return "", fmt.Errorf("lease: hot resource %q has no file before its first '#': %w", resource, err)
+	}
+	return file, nil
+}
+
+// touches reports whether requested resource r touches file: r is the file, a symbol of it, or a glob
+// that covers it.
+func touches(r, file string) bool {
+	return r == file || strings.HasPrefix(r, file+"#") || covers(r, file)
+}
+
+// withHot returns resources plus every hot resource whose file one of them touches and that they do
+// not already name, in hot-set order.
+func (st *fstate) withHot(resources []string) []string {
+	out := append([]string(nil), resources...)
+	named := make(map[string]bool, len(resources))
+	for _, r := range resources {
+		named[r] = true
+	}
+	for _, h := range st.hotSet() {
+		if named[h] {
+			continue
+		}
+		file, err := hotFile(h)
+		if err != nil {
+			continue // unreachable: the fold admits only valid hot resources
+		}
+		for _, r := range resources {
+			if touches(r, file) {
+				out = append(out, h)
+				break
+			}
+		}
+	}
+	return out
+}
+
+func (st *fstate) hotSet() []string {
+	out := make([]string, 0, len(st.hot))
+	for h := range st.hot {
+		out = append(out, h)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// cycleResources lists, sorted, the resources on the edges of cycle: those one job of the cycle waits
+// on while the next job of the cycle holds them.
+func (st *fstate) cycleResources(cycle []string, now int64) []string {
+	set := map[string]bool{}
+	for i, job := range cycle {
+		next := cycle[(i+1)%len(cycle)]
+		for _, r := range st.waits[job].Resources {
+			if l, ok := st.leases[r]; ok && l.Job == next && live(l, now) {
+				set[r] = true
+			}
+		}
+	}
+	out := make([]string, 0, len(set))
+	for r := range set {
+		out = append(out, r)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// starved returns the first job, by id, whose outstanding wait is older than its cap at now. A wait's
+// age is that of the oldest clock among the resources it names; the cap is the latest request's
+// MaxWait, DefaultMaxWait when that is zero.
+func (st *fstate) starved(now int64) (string, bool) {
+	jobs := make([]string, 0, len(st.waits))
+	for job := range st.waits {
+		jobs = append(jobs, job)
+	}
+	sort.Strings(jobs)
+	for _, job := range jobs {
+		w := st.waits[job]
+		limit := w.MaxWait
+		if limit == 0 {
+			limit = int64(DefaultMaxWait)
+		}
+		for _, r := range w.Resources {
+			if since, ok := st.clocks[job][r]; ok && now-since > limit {
+				return job, true
+			}
+		}
+	}
+	return "", false
+}
+
 // AddHot adds resource to the hot set. Adding a resource already in the set is a no-op. A resource
 // that is not a ResourceUri, has no '#', or has an empty path before or an empty anchor after its first '#' is refused and
 // changes nothing.
 func (c *coordinator) AddHot(ctx context.Context, resource string) error {
-	return ErrNotImplemented
+	if _, err := hotFile(resource); err != nil {
+		return err
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if err := c.sync(ctx); err != nil {
+			return err
+		}
+		if c.st.hot[resource] {
+			return nil
+		}
+		_, err := c.append(ctx, TypeHotAdded, hotData{Resource: resource})
+		if errors.Is(err, journal.ErrSeqConflict) {
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("lease: add hot %s: %w", resource, err)
+		}
+		return nil
+	}
+	return fmt.Errorf("lease: add hot %s: gave up after %d contended attempts", resource, maxAttempts)
 }
 
 // HotSet returns the hot set, sorted.
 func (c *coordinator) HotSet(ctx context.Context) ([]string, error) {
-	return nil, ErrNotImplemented
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if err := c.sync(ctx); err != nil {
+		return nil, err
+	}
+	return c.st.hotSet(), nil
 }
 
 // HotCandidates returns, sorted, every resource on at least HotCycleThreshold broken cycles in the
 // week before now that is not already hot.
 func (c *coordinator) HotCandidates(ctx context.Context) ([]string, error) {
-	return nil, ErrNotImplemented
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if err := c.sync(ctx); err != nil {
+		return nil, err
+	}
+	now := c.now().UnixNano()
+	count := map[string]int{}
+	for _, cy := range c.st.cycles {
+		if cy.at > now || now-cy.at >= int64(hotWindow) {
+			continue
+		}
+		for _, r := range cy.resources {
+			count[r]++
+		}
+	}
+	out := []string{}
+	for r, n := range count {
+		if n >= HotCycleThreshold && !c.st.hot[r] {
+			out = append(out, r)
+		}
+	}
+	sort.Strings(out)
+	return out, nil
 }
