@@ -75,6 +75,23 @@ const fileConsumed = (p: string): string => {
     db.close();
   }
 };
+// fileDump is every row of every projection table, in a fixed order, as text.
+const fileDump = (p: string): string => {
+  const db = new DatabaseSync(p, { readOnly: true });
+  try {
+    return ['meta', 'tranches', 'balances', 'idempotency']
+      .map((t) =>
+        db
+          .prepare(`SELECT * FROM ${t} ORDER BY 1, 2, 3`)
+          .all()
+          .map((r) => `${t} ${JSON.stringify(r)}`)
+          .join('\n'),
+      )
+      .join('\n');
+  } finally {
+    db.close();
+  }
+};
 async function spent6400(): Promise<{ port: MemPort; p: string; L: Ledger }> {
   const port = new MemPort();
   const p = path();
@@ -138,6 +155,11 @@ test('B1_18_TamperedKeysAndHeadAreRebuiltAndNothingIsRegranted', async () => {
   assert.equal(port.count(), events, 'nothing appended');
   await R.close();
   assert.equal(fileConsumed(p), '6400', 'the file was rebuilt from the Journal');
+  const fresh = path();
+  const F = await openLedger({ journal: port, projectionPath: fresh });
+  await F.balance('t1', 'execution', 'cash'); // the catch-up that fills a new file
+  await F.close();
+  assert.equal(fileDump(p), fileDump(fresh), 'the rebuilt projection equals a fresh rebuild');
 });
 
 test('B1_18_ForgedRowsAreNotTrusted', async () => {
