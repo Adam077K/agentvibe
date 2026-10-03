@@ -36,8 +36,14 @@ func hostErr(what string, err error) error {
 	return fmt.Errorf("effector: %s, outcome unknown: %w", what, err)
 }
 
-// decode reads a JSON object payload strictly: unknown keys and trailing data are refused.
+// decode reads a JSON object payload strictly: a payload that is not one object, or that carries
+// an unknown key, a duplicate key or trailing data, is refused. encoding/json alone would let a
+// repeated key's last value win, and matches keys case-insensitively, so "environment" followed
+// by "Environment" could smuggle a second target past a check on the first (r2, 2026-10-03).
 func decode(payload []byte, v any) error {
+	if err := uniqueKeys(payload); err != nil {
+		return rejectf("payload: %v", err)
+	}
 	dec := json.NewDecoder(bytes.NewReader(payload))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(v); err != nil {
@@ -45,6 +51,32 @@ func decode(payload []byte, v any) error {
 	}
 	if dec.More() {
 		return rejectf("payload: trailing data")
+	}
+	return nil
+}
+
+// uniqueKeys checks that payload opens with a JSON object whose keys are distinct, compared the
+// way encoding/json matches them (case-insensitively).
+func uniqueKeys(payload []byte) error {
+	dec := json.NewDecoder(bytes.NewReader(payload))
+	if t, err := dec.Token(); err != nil || t != json.Delim('{') {
+		return fmt.Errorf("not a JSON object (%v)", err)
+	}
+	seen := map[string]bool{}
+	for dec.More() {
+		t, err := dec.Token()
+		if err != nil {
+			return err
+		}
+		k, _ := t.(string)
+		if seen[strings.ToLower(k)] {
+			return fmt.Errorf("duplicate key %q", k)
+		}
+		seen[strings.ToLower(k)] = true
+		var skip json.RawMessage
+		if err := dec.Decode(&skip); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -197,16 +229,24 @@ func (g *gitPR) Lookup(ctx context.Context, idem string) (outbox.Presence, error
 
 var digest = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 
+// preview is the only environment a deploy may name, and the one the host is always told.
+const preview = "preview"
+
 type previewDeploy struct {
 	lag
-	host DeployHost
+	host     DeployHost
+	projects map[string]bool
 }
 
 func newPreviewDeploy(cfg DeployConfig) (Effector, error) {
 	if cfg.Host == nil {
 		return nil, errors.New("effector: preview deploy needs a Host")
 	}
-	return &previewDeploy{lag: lag(cfg.VisibilityLag), host: cfg.Host}, nil
+	d := &previewDeploy{lag: lag(cfg.VisibilityLag), host: cfg.Host, projects: map[string]bool{}}
+	for _, p := range cfg.Projects {
+		d.projects[p] = true
+	}
+	return d, nil
 }
 
 // Class is natural (09a §7.2): the payload is the digest, so a repeat deploy is the same deploy.
@@ -217,16 +257,16 @@ func (d *previewDeploy) Do(ctx context.Context, idem string, payload []byte) err
 	if err := decode(payload, &p); err != nil {
 		return err
 	}
-	if p.Environment != "preview" { // Q7: never production, matched exactly
+	if p.Environment != preview { // Q7: never production, matched exactly
 		return outside("environment %q is not preview", p.Environment)
+	}
+	if !d.projects[p.Project] { // with no allow-list every project is refused until widened
+		return outside("project %q is not allow-listed", p.Project)
 	}
 	if !digest.MatchString(p.Digest) {
 		return rejectf("digest %q is not sha256 + 64 lowercase hex", p.Digest)
 	}
-	if p.Project == "" {
-		return rejectf("a deploy needs a project")
-	}
-	if err := d.host.Deploy(ctx, p.Project, p.Digest, idem); err != nil {
+	if err := d.host.Deploy(ctx, p.Project, p.Digest, preview, idem); err != nil {
 		return hostErr("deploy", err)
 	}
 	return nil
