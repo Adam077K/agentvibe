@@ -101,12 +101,18 @@
 #   Every codex assertion renders codexTokens, so each now expects the flag; the -s index rows (3, 4)
 #   are unchanged. Nothing else in B1-08 changed. The launcher is still the stub on this base, so
 #   the file is red as before ("launcher: not implemented"); it compiles and vets.
+# RE-FREEZE r7 2026-10-03 (B1-08): 2026-10-03 founder superseded ruling 4. Line 34 of
+#   launcher_donetest_test.go: codexTokens ends "--ignore-rules" in place of r6's "--ignore-user-config",
+#   because --ignore-user-config stops -p loading the pinned profile (codex-cli 0.154.0, measured;
+#   DR-B1-07 "Round 2"). --ignore-rules keeps the profile and drops user and project execpolicy .rules
+#   files. 09a §8.2 is changed with it. Nothing else in B1-08 changed. The launcher is still the stub on
+#   this base, so the file stays red as before.
 register: B0-17b
 jobs:
   - id: B1-08
     files:
       - path: kernel/internal/launcher/launcher_donetest_test.go
-        sha256: b91a735fee30334087716d42d4020082b4f4be107a8a1f5f47643b14a018c036
+        sha256: d9a00873f8fe4b45381a4fd37c4f29e276f3dbb39e65e952549f02d4c271146a
   - id: B1-12
     files:
       - path: kernel/internal/outbox/outbox_donetest_test.go
