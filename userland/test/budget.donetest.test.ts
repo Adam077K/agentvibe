@@ -54,6 +54,7 @@ import type { Debit, Hold, JournalPort, Ledger, PortEvent, Purpose, Resource, Re
 
 const MAX = '9223372036854775807'; // 2^63-1: the largest quantity a SQLite INTEGER holds
 const CHILD_ENV = 'AVK_B118_CRASH_CHILD';
+const SWEEP_ENV = 'AVK_B118_SWEEP_CHILD';
 
 // ---------------------------------------------------------------------------------------------- ports
 
@@ -281,7 +282,8 @@ function removeProjection(p: string): void {
 async function crashChild(spec: string): Promise<void> {
   const { journal, projection } = JSON.parse(spec);
   const L = await open(new FilePort(journal), projection);
-  for (let i = 0; i < 100000; i++) {
+  // 300 debits: far more than any kill point needs, and bounded so a child that is never killed ends quickly.
+  for (let i = 0; i < 300; i++) {
     const r = await L.debit({
       idempotency_key: `crash-${i}`,
       tranche: 't1',
@@ -296,6 +298,37 @@ async function crashChild(spec: string): Promise<void> {
 
 if (process.env[CHILD_ENV]) {
   await crashChild(process.env[CHILD_ENV]!);
+  process.exit(0);
+}
+
+// sweepChild SIGKILLs itself right after its Nth node:sqlite call of any kind (run, get, all, iterate, exec),
+// counted from before openLedger, so every projection write boundary of open and of the first debits is hit.
+async function sweepChild(spec: string): Promise<void> {
+  const { journal, projection, killAt } = JSON.parse(spec);
+  const sqlite: any = await import('node:sqlite');
+  let calls = 0;
+  const after = () => {
+    if (++calls === killAt) process.kill(process.pid, 'SIGKILL');
+  };
+  for (const [proto, names] of [
+    [sqlite.StatementSync.prototype, ['run', 'get', 'all', 'iterate']],
+    [sqlite.DatabaseSync.prototype, ['exec']],
+  ] as [any, string[]][]) {
+    for (const name of names) {
+      const orig = proto[name];
+      if (typeof orig !== 'function') continue;
+      proto[name] = function (this: unknown, ...a: unknown[]) {
+        const r = orig.apply(this, a);
+        after();
+        return r;
+      };
+    }
+  }
+  await crashChild(JSON.stringify({ journal, projection }));
+}
+
+if (process.env[SWEEP_ENV]) {
+  await sweepChild(process.env[SWEEP_ENV]!);
   process.exit(0);
 }
 
@@ -488,15 +521,24 @@ test('B1_18_RetryAndReplayAreCountedOnce', async () => {
 
 test('B1_18_LostAckRetryIsNotDoubleCounted', async () => {
   // The Journal appended but the answer was lost (09a §6: lost mid-dispatch is Uncertain, never a definite
-  // failure). The first call cannot be reported granted; its retry must find the append, not make a second.
+  // failure). Loosened 2026-10-03 (red-team r1 ruling): the first call may be refused, or, if the ledger reads
+  // back and finds its own append, granted with that seq and replayed:false. Either way the retry finds the
+  // append rather than making a second, and the money is counted exactly once.
   const { port, L } = await fresh();
   const dd = debit({ idempotency_key: 'k-lost', quantity: '900' });
+  const n = port.count();
   port.fault = 'lost_ack';
   const first = await L.debit(dd);
   port.fault = null;
-  assert.equal(first.ok, false, `a lost ack is never reported granted: ${JSON.stringify(first)}`);
+  assert.equal(port.count(), n + 1, 'the Journal holds the append whose ack was lost');
+  if (first.ok) {
+    assert.equal(first.replayed, false, `a read-back of its own append is not a replay: ${JSON.stringify(first)}`);
+    assert.equal(first.seq, n + 1, 'granted at the seq the Journal assigned');
+  } else refused(first, null, 'lost ack');
   const retry = await L.debit({ ...dd });
   assert.equal(retry.ok, true, `the retry resolves the uncertain append: ${JSON.stringify(retry)}`);
+  if (first.ok) assert.deepEqual(retry, { ok: true, seq: first.seq, replayed: true }, 'after a grant, the retry is its replay');
+  assert.equal(port.count(), n + 1, 'the retry appended nothing');
   assert.equal(await consumed(L, 'execution'), '900', 'counted once');
   await L.close();
   assert.equal(await truth(port, 'execution'), '900');
@@ -911,4 +953,208 @@ test('B1_18_OrchestratorRulingsOnUnits', async () => {
   await L.close();
   assert.equal(await truth(port, 'execution'), '1');
   assert.equal(await truth(port, 'execution', 'cash', 'eur'), '1');
+});
+
+// ---------------------------------------------------------------------------------------------- red-team r1
+
+// rows reads every projection row as (table, body without journal_offset, journal_offset).
+function rows(p: string): { body: string; o: number }[] {
+  const db = new DatabaseSync(p, { readOnly: true });
+  try {
+    const out: { body: string; o: number }[] = [];
+    const tables = db
+      .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+      .all()
+      .map((r: any) => r.name as string);
+    for (const t of tables) {
+      for (const r of db.prepare(`SELECT * FROM "${t.replaceAll('"', '""')}"`).all() as any[]) {
+        const { journal_offset, ...rest } = r;
+        out.push({ body: t + JSON.stringify(rest, (_k, v) => (typeof v === 'bigint' ? String(v) : v)), o: Number(journal_offset) });
+      }
+    }
+    return out;
+  } finally {
+    db.close();
+  }
+}
+
+test('B1_18_IdempotencyKeyCoversTrancheResourceAndUnit', async () => {
+  // Red-team r1 gap 1. The key's digest covers the tranche, the resource and the unit: reusing a key for a debit
+  // that differs only there is a conflict, never a replay that silently drops the second debit.
+  const { port, L } = await fresh();
+  granted(await L.openTranche(tranche('t2')), 'open t2');
+  const dd = debit({ idempotency_key: 'k-x', quantity: '40' });
+  const s = granted(await L.debit(dd), 'first');
+  refused(await L.debit({ ...dd, tranche: 't2' }), 'idempotency_conflict', 'same key, other tranche');
+  refused(await L.debit({ ...dd, amount: { resource: 'allowance', unit: ALLOW, quantity: '40' } }), 'idempotency_conflict', 'same key, allowance');
+  const k2 = debit({ idempotency_key: 'k-y', resource: 'allowance', quantity: '5' });
+  granted(await L.debit(k2), 'an allowance debit');
+  const otherUnit = await L.debit({ ...k2, amount: { ...k2.amount, unit: 'chatgpt-1/weekly' } });
+  assert.equal(otherUnit.ok, false, `same key, other unit, is never a replay: ${JSON.stringify(otherUnit)}`);
+  assert.deepEqual(await L.debit({ ...dd }), { ok: true, seq: s, replayed: true }, 'the true retry still replays');
+  assert.equal(await consumed(L, 'execution', 'cash', 't2'), '0');
+  assert.equal(await consumed(L, 'execution', 'allowance'), '5');
+  await L.close();
+  // The same holds for a second ledger that learns the keys only from the Journal.
+  const B = await open(port, join(dir(), 'b.db'));
+  refused(await B.debit({ ...dd, tranche: 't2' }), 'idempotency_conflict', 'other tranche, from another ledger');
+  assert.equal(await consumed(B, 'execution', 'cash', 't2'), '0');
+  await B.close();
+});
+
+test('B1_18_ForeignProjectionIsNotTrusted', async () => {
+  // Red-team r1 gap 2. A projection built on Journal X is opened against Journal Y whose head has the SAME seq
+  // but different events. Catch-up must check the head event itself, not only its seq: the ledger rebuilds
+  // from Y or refuses, and never grants on X's balances.
+  const X = new MemPort();
+  const px = join(dir(), 'p.db');
+  const LX = await open(X, px);
+  granted(await LX.openTranche(tranche()), 'X open');
+  granted(await LX.debit(debit({ quantity: '10' })), 'X spends 10');
+  await LX.close();
+  const Y = new MemPort();
+  const LY = await open(Y, join(dir(), 'y.db'));
+  granted(await LY.openTranche(tranche()), 'Y open');
+  granted(await LY.debit(debit({ quantity: '6000' })), 'Y spends 6000');
+  await LY.close();
+  assert.equal(X.count(), Y.count(), 'the two Journals are the same length');
+  const n = Y.count();
+  const L = await tryOpen(Y, px);
+  if (L) {
+    const r = await L.debit(debit({ quantity: '1000' }));
+    assert.equal(r.ok, false, `a projection built on another Journal never grants past this one: ${JSON.stringify(r)}`);
+    let b: budget.Balance | null = null;
+    try {
+      b = await L.balance('t1', 'execution', 'cash');
+    } catch {
+      // refusing to answer is failing closed
+    }
+    if (b) assert.equal(b.consumed, '6000', 'any balance it reports is Y\'s');
+    await L.close();
+  }
+  assert.equal(Y.count(), n, 'nothing appended to Y');
+  assert.equal(await truth(Y, 'execution'), '6000');
+});
+
+test('B1_18_CrashAtEveryProjectionWrite', { timeout: 180000 }, async () => {
+  // Red-team r1 gap 3. The projection write is atomic: a child SIGKILLs itself right after its Nth node:sqlite
+  // call, N = 1..16. Reopened over that projection, the ledger equals a rebuild from zero, and every appended
+  // key replays (strictly replayed for every debit the child reported).
+  for (let killAt = 1; killAt <= 16; killAt++) {
+    const d = dir();
+    const journal = join(d, 'journal.jsonl');
+    const projection = join(d, 'child.db');
+    const port = new FilePort(journal);
+    const L0 = await open(port, join(d, 'setup.db'));
+    granted(await L0.openTranche(tranche()), 'open');
+    await L0.close();
+    const child = spawn(process.execPath, [fileURLToPath(import.meta.url)], {
+      env: { ...process.env, [SWEEP_ENV]: JSON.stringify({ journal, projection, killAt }) },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let out = '';
+    let err = '';
+    child.stdout.on('data', (b) => (out += b));
+    child.stderr.on('data', (b) => (err += b));
+    await new Promise((r) => (child.exitCode !== null || child.signalCode !== null ? r(null) : child.on('exit', r)));
+    assert.equal(child.signalCode, 'SIGKILL', `killAt ${killAt}: the child killed itself: ${err.slice(-400)}`);
+    assert.ok(!out.includes('refused'), `killAt ${killAt}: no child debit was refused: ${out.slice(-300)}`);
+    const reported = out.split('\n').filter((l) => l.startsWith('ok ')).length;
+    const rebuilt = Number(await truth(port, 'execution'));
+    assert.ok(rebuilt >= reported && rebuilt <= reported + 1, `killAt ${killAt}: rebuild ${rebuilt} for ${reported} reported`);
+    const L = await open(port, projection);
+    assert.equal(await consumed(L, 'execution'), String(rebuilt), `killAt ${killAt}: the crashed projection agrees with a rebuild`);
+    for (let i = 0; i < rebuilt; i++) {
+      const r = await L.debit({
+        idempotency_key: `crash-${i}`,
+        tranche: 't1',
+        attempt: 'a1',
+        purpose: 'execution',
+        charged_pool: 'execution',
+        amount: { resource: 'cash', unit: USD, quantity: '1' },
+      });
+      assert.equal(r.ok, true, `killAt ${killAt}: crash-${i} is found: ${JSON.stringify(r)}`);
+      if (i < reported) assert.equal((r as { replayed: boolean }).replayed, true, `killAt ${killAt}: crash-${i} replays`);
+    }
+    assert.equal(await consumed(L, 'execution'), String(rebuilt), `killAt ${killAt}: replays added nothing`);
+    await L.close();
+  }
+});
+
+test('B1_18_ReadFailureDeniesWithAWarmProjection', async () => {
+  // Red-team r1 gap 4. The projection is warm and the append path is healthy, but the Journal cannot be read:
+  // the debit is `unavailable` and nothing is appended. The ledger never debits on projection state alone.
+  const { port, L } = await fresh();
+  granted(await L.debit(debit({ quantity: '10' })), 'warm');
+  const n = port.count();
+  port.failRead = true;
+  refused(await L.debit(debit({ quantity: '1' })), 'unavailable', 'unreadable Journal, healthy appends');
+  refused(await L.debit(debit({ purpose: 'judging', quantity: '1' })), 'unavailable', 'the same for judging');
+  port.failRead = false;
+  assert.equal(port.count(), n, 'nothing appended');
+  assert.equal(await consumed(L, 'execution'), '10');
+  await L.close();
+  // Same after a restart over the warm projection file.
+  const { port: p2, d, L: L2 } = await fresh();
+  granted(await L2.debit(debit({ quantity: '10' })), 'warm');
+  await L2.close();
+  const m = p2.count();
+  p2.failRead = true;
+  const L3 = await tryOpen(p2, join(d, 'p.db'));
+  if (L3) {
+    refused(await L3.debit(debit({ quantity: '1' })), 'unavailable', 'unreadable Journal after restart');
+    await L3.close();
+  }
+  p2.failRead = false;
+  assert.equal(p2.count(), m, 'nothing appended after restart');
+});
+
+test('B1_18_TrancheOpenRaceRechecks', async () => {
+  // Red-team r1 gap 5. B is opening t1 with bigger holds; after B's first read, A opens t1 and spends 6000.
+  // B's append loses the compare-and-swap and must re-check: t1 now exists with other holds, so B is refused.
+  // Exactly A's two events are appended; B never appends a second open that would top the tranche up.
+  const port = new MemPort();
+  const A = await open(port, join(dir(), 'a.db'));
+  const B = await open(port, join(dir(), 'b.db'));
+  let fired = false;
+  port.cutIn = async () => {
+    fired = true;
+    granted(await A.openTranche(tranche()), 'A opens');
+    granted(await A.debit(debit({ quantity: '6000' })), 'A spends 6000');
+  };
+  const bigger = tranche();
+  bigger.holds[0] = { hold: 'execution', amount: { resource: 'cash', unit: USD, quantity: '99999' } };
+  const n0 = port.count();
+  const r = await B.openTranche(bigger);
+  assert.equal(fired, true, 'the cut-in ran');
+  assert.equal(r.ok, false, `B lost the race with a different spec: ${JSON.stringify(r)}`);
+  assert.equal(port.count(), n0 + 2, 'only A appended');
+  refused(await B.debit(debit({ quantity: '401' })), 'insufficient', 'still 400 left');
+  assert.equal(await truth(port, 'execution'), '6000');
+  await A.close();
+  await B.close();
+});
+
+test('B1_18_ChangedRowsCarryTheirDebitSeq', async () => {
+  // Red-team r1 gap 6 (09a §4.1: every projection row carries its source offset). After each debit, every row
+  // whose content that debit changed carries that debit's seq as journal_offset, across pools and resources.
+  const { port, d, L } = await fresh();
+  const p = join(d, 'p.db');
+  granted(await L.debit(debit({ quantity: '10' })), 'warm');
+  await L.close();
+  const steps: Debit[] = [
+    debit({ purpose: 'judging', quantity: '7' }),
+    debit({ quantity: '3' }),
+    debit({ resource: 'allowance', quantity: '2' }),
+    debit({ purpose: 'judging', resource: 'verifier_window', unit: 'window', quantity: '1' }),
+  ];
+  for (const st of steps) {
+    const before = new Set(rows(p).map((r) => r.body));
+    const X = await open(port, p);
+    const s = granted(await X.debit(st), `debit ${st.idempotency_key}`);
+    await X.close();
+    const changed = rows(p).filter((r) => !before.has(r.body));
+    assert.ok(changed.length > 0, `debit ${st.idempotency_key} changed some row`);
+    for (const r of changed) assert.equal(r.o, s, `changed row ${r.body} carries seq ${s}`);
+  }
 });

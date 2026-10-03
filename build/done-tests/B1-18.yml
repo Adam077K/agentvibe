@@ -45,9 +45,24 @@
 # USD_cents to cash:USD; '0' and fractional strings added to the refused-quantity list. Red against the stub:
 # 18/18. Green against the reference: 18/18, five runs. Mutants, 18 of 18 killed: the 14 above plus allow
 # zero, accept "N.0" as N, loose cash spelling, and a multi-currency tranche.
+#
+# Re-frozen 2026-10-03 red-team r1 gaps (the red-team on 96d31d2 returned GAPS; reachability proven). Six tests
+# added: IdempotencyKeyCoversTrancheResourceAndUnit (another tranche or the allowance resource is
+# idempotency_conflict; another unit is never a replay; also from a second ledger); ForeignProjectionIsNotTrusted
+# (a projection from Journal X opened on a same-length Journal Y: catch-up checks the head event, not only its
+# seq); CrashAtEveryProjectionWrite (child SIGKILLs itself after its Nth node:sqlite call, N = 1..16: reopen
+# equals rebuild, every key replays); ReadFailureDeniesWithAWarmProjection (unavailable, nothing appended);
+# TrancheOpenRaceRechecks (B refused after the cut-in, exactly 2 appends); ChangedRowsCarryTheirDebitSeq.
+# LostAck LOOSENED by orchestrator ruling: a ledger that reads back its own append may report ok:true with
+# that seq and replayed:false; either way the money is counted exactly once and the retry appends nothing.
+# The crash child's loop is bounded at 300 debits. Item 7 skipped (low). Red against the stub: 24/24. Green
+# against a $TMPDIR reference (rewritten: one stream, head-event check, one transaction per event): 24/24,
+# five runs. Mutants, 25 of 25 non-equivalent killed: the 18 above plus key digest without tranche, without
+# resource/unit, no head-event check, non-atomic projection write, skip the read when warm, open without
+# re-check, stale row offset. One equivalent survivor: never loading the projection (always rebuilding).
 register: B1-18
 jobs:
   - id: B1-18
     files:
       - path: userland/test/budget.donetest.test.ts
-        sha256: 4cf42c03b1b6588a13208e5ce0a4f2dae20f90cc92a83f61cc413e4dfcd1a093
+        sha256: 1a5f02cf2df938e413bfe0a2731ce94dcc239ac7aaa9d9a18b29c14203616f19
