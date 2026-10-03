@@ -17,11 +17,16 @@
 # behaviour the base already has. Every earlier B108 done-test passes there, unchanged.
 # Reference proof: NOT RUN. Building a reference implementation in TMPDIR was refused by the
 # permission system on 2026-10-03, and the refusal was not routed around.
+# RE-FREEZE r2 2026-10-03: 2026-10-03 re-freeze B1-08h founder ruling: HOME required. Added
+#   TestB108_H_F3_RequestCarriesPinnedHome: with HOME pinned, no Env, an empty Env, LANG only, every
+#   other pinned name, or codex with CODEX_HOME but no HOME is ErrSpec, as is any other HOME. HOME at
+#   its pin is admitted (claude and codex). On d715c18 it FAILS on the five missing-HOME cases. The
+#   earlier rigs were re-frozen in B0-17b.yml to send HOME. The question above is closed by that ruling.
 register: B1-08h
 jobs:
   - id: B1-08h
     files:
       - path: kernel/internal/launcher/launcher_h_donetest_test.go
-        sha256: 5ba4f50b2b1d78910a05f8ac2952dc4fdd7fdd950994a8d4ff0ef45e7f252b19
+        sha256: 1fc2616d0283993bb92a1624b21ac4619bb54ba962a25ff21e31ef2a0ca232fc
       - path: kernel/internal/socket/socket_b108h_donetest_test.go
         sha256: 2d05c72a42dd198916dc04ef2021c8ffbc65d99ea4137eea349a9782bf8157da

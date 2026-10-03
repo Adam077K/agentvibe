@@ -289,18 +289,29 @@
 #   without "/"; no longest-prefix resolution), item 2 (no check; unpinned allowed; HOME only),
 #   item 3 (no check; non-reporter allowed; empty pin allowed), item 4 (journal optional; no
 #   append; no count check; one-sided count; append error ignored; count after Consume).
+# RE-FREEZE 2026-10-03 (B1-08h): 2026-10-03 re-freeze B1-08h founder ruling: HOME required (F3,
+#   option a). While EnvPinned holds a HOME pin, a request without HOME at its pin is ErrSpec. The
+#   rigs now send HOME at r7's pin ("/h"); no assertion is weakened. Edited, nothing else:
+#   launcher_donetest_test.go: grant() gains EnvAllow ["HOME"]; request() gains Env {HOME: /h}.
+#   launcher_r3_donetest_test.go: r3Rig.req sends HOME; R3_ExecGetsPinnedDigestAndAllowListedEnv
+#     sends and expects HOME in its exact env, and its "no env" case becomes "HOME alone" (exactly
+#     ["HOME=/h"], never nil); its five ErrSpec env cases carry HOME so only the named fault refuses.
+#   launcher_r4_donetest_test.go: r4Rig.req sends HOME.
+#   launcher_r6_donetest_test.go: R6_EnvAllowlistIsB107s "AV_JOB passed" carries HOME.
+#   launcher_r7_donetest_test.go: unchanged. On d715c18 every edited test still passes.
+#   The new rule's test is TestB108_H_F3_RequestCarriesPinnedHome (build/done-tests/B1-08h.yml).
 register: B0-17b
 jobs:
   - id: B1-08
     files:
       - path: kernel/internal/launcher/launcher_donetest_test.go
-        sha256: cfa7eb15c017152d8abcaf58efcbc8d8ab83916e20c13227bc7814b53a414868
+        sha256: 29316394da3dc48097c6a9aee5a2274afb8fe5953a2b3ad8274ff6df2e615109
       - path: kernel/internal/launcher/launcher_r3_donetest_test.go
-        sha256: 75851e7f23ead0fca22a1be23f3dc98f10c8903267a0fedff4133dda1b82fbbc
+        sha256: 9a722361b9e3b4a08522287379ca551d42ca90e3f40c24a4310c93c9ff4aa546
       - path: kernel/internal/launcher/launcher_r4_donetest_test.go
-        sha256: 3957bc7d50fa8ec97f833c98822f0b5fd0e567713c8e6c6c200afb632dd63fe4
+        sha256: 2014f84db5410eac14b641504721c66d6b0bb0126b7e64f52839a26bf340a7ae
       - path: kernel/internal/launcher/launcher_r6_donetest_test.go
-        sha256: 6489e12a6eebd4a67d771b98392c12a0395f0adc2a0ae84aaecb1221d612405e
+        sha256: a04fdd193f7440b2a7ba15b5b803c697a2b507b621e7d7e6e63c365d45ad2087
       - path: kernel/internal/launcher/launcher_r7_donetest_test.go
         sha256: 43f97d80bf5e95f9a9c470b4fe8cfe27e00f0a43f29bc79cfb99640e27541392
   - id: B1-12

@@ -408,3 +408,30 @@ func TestB108_H_F7_DanglingRootRefusedAndStateUntouched(t *testing.T) {
 		empty(t, "an unclean worker root", r.state)
 	})
 }
+
+// TestB108_H_F3_RequestCarriesPinnedHome: F3, the founder ruling of 2026-10-03 ("HOME required",
+// option a). While EnvPinned holds a HOME pin, a request whose Env lacks HOME, or carries any other
+// HOME, is ErrSpec before exec: a worker with no HOME falls back to the real home directory. That
+// holds for codex too, which itself needs only one of HOME and CODEX_HOME (B1-07 r5).
+func TestB108_H_F3_RequestCarriesPinnedHome(t *testing.T) {
+	setEnv := func(env map[string]string) func(q *Request) { return func(q *Request) { q.Env = env } }
+	r4Refused(t, "HOME at its pin", r3Grant(), setEnv(map[string]string{"HOME": "/h"}), nil)
+	r4Refused(t, "HOME at its pin, with LANG", r3Grant(), setEnv(map[string]string{"HOME": "/h", "LANG": "C"}), nil)
+	r4Refused(t, "codex, HOME and CODEX_HOME at their pins", r3Grant(), func(q *Request) {
+		codexReq(q)
+		q.Env = map[string]string{"HOME": "/h", "CODEX_HOME": "/h/.codex", "PATH": "/usr/bin"}
+	}, nil)
+
+	r4Refused(t, "no Env at all", r3Grant(), setEnv(nil), ErrSpec)
+	r4Refused(t, "an empty Env", r3Grant(), setEnv(map[string]string{}), ErrSpec)
+	r4Refused(t, "LANG but no HOME", r3Grant(), setEnv(map[string]string{"LANG": "C.UTF-8"}), ErrSpec)
+	r4Refused(t, "every other pinned name but no HOME", r3Grant(),
+		setEnv(map[string]string{"CODEX_HOME": "/h/.codex", "PATH": "/usr/bin", "LANG": "C"}), ErrSpec)
+	r4Refused(t, "codex with CODEX_HOME but no HOME", r3Grant(), func(q *Request) {
+		codexReq(q)
+		q.Env = map[string]string{"CODEX_HOME": "/h/.codex", "PATH": "/usr/bin"}
+	}, ErrSpec)
+	for _, v := range []string{"", "/other", "/h/", "/h/.codex", "/"} {
+		r4Refused(t, `HOME "`+v+`"`, r3Grant(), setEnv(map[string]string{"HOME": v}), ErrSpec)
+	}
+}
