@@ -29,11 +29,13 @@
 //   - Release and a deadlock break remove every lease row the job has, expired ones included, so a
 //     released or broken job has no current token anywhere.
 //
+// Hot resources, max_wait and lease.starved are B1-04r's, in hot.go: the hot set and the starvation
+// clocks are folded from this same stream, and every event that carries a time carries the injected
+// clock's reading, because the Journal stores none.
+//
 // Open, NOT decided here, and logged as B1-04 follow-ups for the BUILD-LOG rather than settled
-// silently: renew and heartbeat, shared mode, max_wait and lease.starved (09a §6 names them; no
-// register row owns them, see lease.go); hot-resource auto-addition and the three-cycles-a-week
-// proposal (no API exists for it; a hot resource is today an ordinary resource the caller names);
-// whether a glob lease and a file#symbol lease under it conflict (today only an identical
+// silently: renew and heartbeat and shared mode (09a §6 names them; no register row owns them, see
+// lease.go); whether a glob lease and a file#symbol lease under it conflict (today only an identical
 // ResourceUri is busy); whether the verifier also refuses an expired-but-unreclaimed token (it has
 // no clock and does not, 09a §6 "a worker that paused ten minutes and woke cannot push"); and the
 // db://, effect://, budget:// and brain:// verifiers (NewRepoVerifier refuses every non-repo://
@@ -100,6 +102,9 @@ type Request struct {
 	Resources []string
 	Policy    Policy
 	TTL       time.Duration
+	// MaxWait is lease_request.max_wait_s (09a §6): the detector's hard cap on how long this
+	// request may stay an outstanding wait. Contract in hot.go (B1-04 remainder).
+	MaxWait time.Duration
 }
 
 // Grant is a satisfied Request: one fencing token per requested resource, all issued together.
@@ -152,6 +157,11 @@ type Coordinator interface {
 	// victim holds and dropping its wait — journals one TypeDeadlockBroken event per break, and
 	// returns the breaks. A wait that is not on a cycle is never broken.
 	Detect(ctx context.Context) ([]Break, error)
+
+	// AddHot, HotSet and HotCandidates: the hot-resource map. Contract in hot.go.
+	AddHot(ctx context.Context, resource string) error
+	HotSet(ctx context.Context) ([]string, error)
+	HotCandidates(ctx context.Context) ([]string, error)
 }
 
 // NewCoordinator returns the Coordinator whose leases live in j; now is its clock.
@@ -213,6 +223,7 @@ type lrec struct {
 type wrec struct {
 	Born      int64
 	Resources []string
+	MaxWait   int64 // nanoseconds; zero is DefaultMaxWait
 }
 
 // held names one lease row in event data: the audit of what a transition revoked or waited on.
@@ -238,14 +249,19 @@ type waitedData struct {
 	Policy    Policy   `json:"policy"`
 	Resources []string `json:"resources"`
 	BlockedBy []held   `json:"blocked_by"`
+	At        int64    `json:"at_unix_nano"`
+	MaxWait   int64    `json:"max_wait_ns,omitempty"`
 }
 
-// removedData is TypeJobReleased's and TypeDeadlockBroken's data: Victim is the job whose rows
-// Removed lists and whose wait is dropped.
+// removedData is TypeJobReleased's, TypeDeadlockBroken's and TypeStarved's data: Victim is the job
+// whose rows Removed lists and whose wait is dropped. A break also carries when it happened and the
+// resources on the cycle's edges, which is what HotCandidates counts.
 type removedData struct {
 	Victim  string   `json:"victim"`
 	Cycle   []string `json:"cycle,omitempty"`
 	Removed []held   `json:"removed"`
+	At      int64    `json:"at_unix_nano,omitempty"`
+	Edges   []string `json:"edges,omitempty"`
 }
 
 type fstate struct {
@@ -253,10 +269,15 @@ type fstate struct {
 	hash   string
 	leases map[string]lrec
 	waits  map[string]wrec
+	// clocks[job][resource] is when job first waited on resource since its last grant or release; a
+	// replaced wait keeps it. It is what max_wait measures.
+	clocks map[string]map[string]int64
+	hot    map[string]bool
+	cycles []cycleRec
 }
 
 func emptyState() fstate {
-	return fstate{leases: map[string]lrec{}, waits: map[string]wrec{}}
+	return fstate{leases: map[string]lrec{}, waits: map[string]wrec{}, clocks: map[string]map[string]int64{}, hot: map[string]bool{}}
 }
 
 // fold is FenceStream folded into its current state. It is only ever brought up to date from the
@@ -324,16 +345,41 @@ func (st *fstate) apply(ev journal.Event) error {
 			st.leases[r] = lrec{Job: d.Job, Born: d.Born, Token: ev.Seq, Exp: d.ExpiresAt}
 		}
 		delete(st.waits, d.Job)
+		// A grant ends the clock of what it granted and no other: a job that takes a free resource
+		// while it waits on a busy one is still waiting on the busy one.
+		for _, r := range d.Resources {
+			delete(st.clocks[d.Job], r)
+		}
+		if len(st.clocks[d.Job]) == 0 {
+			delete(st.clocks, d.Job)
+		}
 	case TypeWaited:
 		var d waitedData
 		if err := json.Unmarshal(ev.Data, &d); err != nil {
 			return corrupt(ev, "%v", err)
 		}
-		if d.Job == "" || len(d.Resources) == 0 {
-			return corrupt(ev, "job %q, %d resources", d.Job, len(d.Resources))
+		if d.Job == "" || len(d.Resources) == 0 || d.At <= 0 || d.MaxWait < 0 {
+			return corrupt(ev, "job %q, %d resources, at %d, max wait %d", d.Job, len(d.Resources), d.At, d.MaxWait)
 		}
-		st.waits[d.Job] = wrec{Born: d.Born, Resources: append([]string(nil), d.Resources...)}
-	case TypeJobReleased, TypeDeadlockBroken:
+		st.waits[d.Job] = wrec{Born: d.Born, Resources: append([]string(nil), d.Resources...), MaxWait: d.MaxWait}
+		if st.clocks[d.Job] == nil {
+			st.clocks[d.Job] = map[string]int64{}
+		}
+		for _, r := range d.Resources {
+			if _, ok := st.clocks[d.Job][r]; !ok {
+				st.clocks[d.Job][r] = d.At
+			}
+		}
+	case TypeHotAdded:
+		var d hotData
+		if err := json.Unmarshal(ev.Data, &d); err != nil {
+			return corrupt(ev, "%v", err)
+		}
+		if _, err := hotFile(d.Resource); err != nil {
+			return corrupt(ev, "%v", err)
+		}
+		st.hot[d.Resource] = true
+	case TypeJobReleased, TypeDeadlockBroken, TypeStarved:
 		var d removedData
 		if err := json.Unmarshal(ev.Data, &d); err != nil {
 			return corrupt(ev, "%v", err)
@@ -354,6 +400,10 @@ func (st *fstate) apply(ev journal.Event) error {
 			}
 		}
 		delete(st.waits, d.Victim)
+		delete(st.clocks, d.Victim)
+		if ev.Type == TypeDeadlockBroken && len(d.Edges) > 0 {
+			st.cycles = append(st.cycles, cycleRec{at: d.At, resources: append([]string(nil), d.Edges...)})
+		}
 	default:
 		return corrupt(ev, "unknown event type")
 	}
@@ -424,6 +474,9 @@ func validRequest(req Request, now time.Time) error {
 	if req.TTL <= 0 {
 		return fmt.Errorf("lease: ttl %v must be positive", req.TTL)
 	}
+	if req.MaxWait < 0 {
+		return fmt.Errorf("lease: %s request has a negative MaxWait %v", req.Job, req.MaxWait)
+	}
 	// Expiries are stored as int64 Unix nanoseconds; a ttl past that range would wrap negative and
 	// the lease would be born expired.
 	if n := now.UnixNano(); n < 0 || int64(req.TTL) > math.MaxInt64-n {
@@ -458,6 +511,11 @@ func (c *coordinator) Acquire(ctx context.Context, req Request) (Grant, error) {
 		}
 		now := c.now()
 		nowN := now.UnixNano()
+		// A wait is stamped with this reading and the fold refuses a stamp at or before the epoch, so
+		// a clock there would write a row every reader fails closed on.
+		if nowN <= 0 {
+			return Grant{}, fmt.Errorf("lease: clock reads %s, at or before the Unix epoch", now.UTC().Format(time.RFC3339Nano))
+		}
 		if w, ok := c.st.waits[req.Job]; ok && w.Born != born {
 			return Grant{}, fmt.Errorf("lease: %s requested with Born %s but waits with Born %s; a job has one Born",
 				req.Job, req.Born.UTC().Format(time.RFC3339Nano), time.Unix(0, w.Born).UTC().Format(time.RFC3339Nano))
@@ -469,9 +527,12 @@ func (c *coordinator) Acquire(ctx context.Context, req Request) (Grant, error) {
 			}
 		}
 
+		// Every hot resource the request touches is part of it: waited on, granted and fenced like a
+		// resource the caller named.
+		resources := c.st.withHot(req.Resources)
 		var busy []held
 		older := false
-		for _, r := range req.Resources {
+		for _, r := range resources {
 			l, ok := c.st.leases[r]
 			if !ok || l.Job == req.Job || !live(l, nowN) {
 				continue
@@ -484,7 +545,7 @@ func (c *coordinator) Acquire(ctx context.Context, req Request) (Grant, error) {
 
 		if len(busy) > 0 && (req.Policy == AllOrNothing || older) {
 			_, err := c.append(ctx, TypeWaited, waitedData{Job: req.Job, Born: born, Policy: req.Policy,
-				Resources: append([]string(nil), req.Resources...), BlockedBy: busy})
+				Resources: resources, BlockedBy: busy, At: nowN, MaxWait: int64(req.MaxWait)})
 			if errors.Is(err, journal.ErrSeqConflict) {
 				continue
 			}
@@ -503,7 +564,7 @@ func (c *coordinator) Acquire(ctx context.Context, req Request) (Grant, error) {
 		tok := c.st.seq + 1
 		exp := now.Add(req.TTL).UnixNano()
 		ev, err := c.append(ctx, TypeGranted, grantedData{Job: req.Job, Born: born, Policy: req.Policy,
-			Resources: append([]string(nil), req.Resources...), ExpiresAt: exp, Token: tok, Wounded: busy})
+			Resources: resources, ExpiresAt: exp, Token: tok, Wounded: busy})
 		if errors.Is(err, journal.ErrSeqConflict) {
 			continue
 		}
@@ -513,8 +574,8 @@ func (c *coordinator) Acquire(ctx context.Context, req Request) (Grant, error) {
 		if ev.Seq != tok {
 			return Grant{}, fmt.Errorf("%w: grant appended at seq %d, want %d", ErrCorrupt, ev.Seq, tok)
 		}
-		g := Grant{Job: req.Job, Tokens: make(map[string]uint64, len(req.Resources)), ExpiresAt: time.Unix(0, exp)}
-		for _, r := range req.Resources {
+		g := Grant{Job: req.Job, Tokens: make(map[string]uint64, len(resources)), ExpiresAt: time.Unix(0, exp)}
+		for _, r := range resources {
 			g.Tokens[r] = tok
 		}
 		return g, nil
@@ -663,6 +724,9 @@ func (st *fstate) youngest(cycle []string) string {
 	return v
 }
 
+// Detect breaks every cycle first, so a deadlock is journaled as one and counted toward the hot
+// proposal, then starves every wait older than its cap. A starvation is not a break and is not
+// returned: it is journaled as TypeStarved, and requeueing the job is the caller's.
 func (c *coordinator) Detect(ctx context.Context) ([]Break, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -675,12 +739,28 @@ func (c *coordinator) Detect(ctx context.Context) ([]Break, error) {
 		if err := c.sync(ctx); err != nil {
 			return breaks, err
 		}
-		cycle := findCycle(c.st.graph(c.now().UnixNano()))
+		now := c.now().UnixNano()
+		cycle := findCycle(c.st.graph(now))
 		if cycle == nil {
-			return breaks, nil
+			job, over := c.st.starved(now)
+			if !over {
+				return breaks, nil
+			}
+			_, err := c.append(ctx, TypeStarved, removedData{Victim: job, Removed: c.st.rowsOf(job), At: now})
+			if errors.Is(err, journal.ErrSeqConflict) {
+				if conflicts++; conflicts >= maxAttempts {
+					return breaks, fmt.Errorf("lease: detect: gave up after %d contended attempts", maxAttempts)
+				}
+				continue
+			}
+			if err != nil {
+				return breaks, fmt.Errorf("lease: starve %s: %w", job, err)
+			}
+			continue
 		}
 		victim := c.st.youngest(cycle)
-		_, err := c.append(ctx, TypeDeadlockBroken, removedData{Victim: victim, Cycle: cycle, Removed: c.st.rowsOf(victim)})
+		_, err := c.append(ctx, TypeDeadlockBroken, removedData{Victim: victim, Cycle: cycle, Removed: c.st.rowsOf(victim),
+			At: now, Edges: c.st.cycleResources(cycle, now)})
 		if errors.Is(err, journal.ErrSeqConflict) {
 			if conflicts++; conflicts >= maxAttempts {
 				return breaks, fmt.Errorf("lease: detect: gave up after %d contended attempts", maxAttempts)
