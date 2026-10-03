@@ -167,6 +167,7 @@ type r3Rig struct {
 	log    *r3Log
 	leases *r3Leases
 	live   *r3Live
+	state  string // r4: Deps.State
 }
 
 func r3Grant() Grant {
@@ -180,13 +181,13 @@ func r3Grant() Grant {
 
 func (r *r3Rig) deps() Deps {
 	return Deps{Clock: r.clock, Exec: r.exec, Digester: fakeDigester{claudeBin: claudeDigest, codexBin: codexDigest},
-		Receipts: r.log, Leases: r.leases, Grant: r.live}
+		Receipts: r.log, Leases: r.leases, Grant: r.live, State: r.state}
 }
 
 func r3NewWith(t *testing.T, at time.Time, g Grant, log *r3Log) *r3Rig {
 	t.Helper()
 	r := &r3Rig{clock: &fakeClock{t: at}, exec: &r3Exec{}, log: log,
-		leases: &r3Leases{live: map[string]r3Lease{}}, live: &r3Live{}}
+		leases: &r3Leases{live: map[string]r3Lease{}}, live: &r3Live{}, state: t.TempDir()}
 	l, err := New(g, r.deps())
 	if err != nil {
 		t.Fatalf("New: %v", err)
@@ -245,7 +246,7 @@ func r3Launch(t *testing.T, name string, mutate func(r *r3Rig, q *Request), want
 }
 
 func TestB108_R3_DepsRequired(t *testing.T) {
-	r := &r3Rig{clock: &fakeClock{t: at0300()}, exec: &r3Exec{}, log: &r3Log{}, leases: &r3Leases{}, live: &r3Live{}}
+	r := &r3Rig{clock: &fakeClock{t: at0300()}, exec: &r3Exec{}, log: &r3Log{}, leases: &r3Leases{}, live: &r3Live{}, state: t.TempDir()}
 	d := r.deps()
 	d.Leases = nil
 	if _, err := New(r3Grant(), d); !errors.Is(err, ErrDeps) {
@@ -270,9 +271,11 @@ func TestB108_R3_UnattendedIsHeadless(t *testing.T) {
 	r3Launch(t, "I4", func(_ *r3Rig, q *Request) { q.Requires.Isolation = 4 }, nil)
 	r3Launch(t, "I5", func(_ *r3Rig, q *Request) { q.Requires.Isolation = 5 }, ErrPrerequisite) // :258
 	r3Launch(t, "I0", func(_ *r3Rig, q *Request) { q.Requires.Isolation = 0 }, ErrPrerequisite)
+	// r4, 2026-10-03: headless is derived from the argv, and claude's line carries -p, so an
+	// attended non-headless claude launch contradicts itself. This read nil until r4.
 	r3Launch(t, "attended interactive at I1", func(_ *r3Rig, q *Request) {
 		q.Unattended, q.Requires.Headless, q.Requires.Isolation = false, false, 1
-	}, nil)
+	}, ErrSpec)
 }
 
 func TestB108_R3_LeaseVerified(t *testing.T) {
@@ -429,7 +432,7 @@ func TestB108_R3_RateSurvivesRestart(t *testing.T) {
 
 	// A log that cannot be read never admits.
 	bad := &r3Log{sinceErr: errors.New("disk")}
-	rr := &r3Rig{clock: &fakeClock{t: start}, exec: &r3Exec{}, log: bad, leases: &r3Leases{live: map[string]r3Lease{}}, live: &r3Live{}}
+	rr := &r3Rig{clock: &fakeClock{t: start}, exec: &r3Exec{}, log: bad, leases: &r3Leases{live: map[string]r3Lease{}}, live: &r3Live{}, state: t.TempDir()}
 	if l, err := New(r3Grant(), rr.deps()); err == nil {
 		rr.l = l
 		if _, err := l.Launch(context.Background(), rr.req("job-blind")); err == nil || rr.exec.n() != 0 {

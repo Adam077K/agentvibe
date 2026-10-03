@@ -147,14 +147,66 @@
 #   R3_ReviewMutants does. The 3 frozen tests and R3_ReviewMutants pass.
 #   Proof, $TMPDIR only: a reference passes every B108 test (-race -count=3). Mutants: 28 of 28
 #   killed, including the review's 8 survivors and 20 for items 1-8.
+#
+# RE-FREEZE r4 2026-10-03 (B1-08): 2026-10-03 re-freeze r4 after review. The Opus review FAILED
+# build/b1-08 @ 75980d5 (code afed458, on the r3 tests at 92ac55d). Branch build/b1-08-tests-r4 from
+# 75980d5; a builder who did not write r1-r3. Every call is the orchestrator's, fail-safe.
+# Added launcher_r4_donetest_test.go:
+#   R4_LeaseConsumedAtAdmit (HIGH :430): Deps.State is required. Running jobs and consumed leases
+#     persist there under a file lock, keyed by job and lease. A relaunch on the same lease is
+#     ErrLease, ever, including after a restart. So is a second launcher while the job runs, on
+#     the same lease or a new one, and a launcher after a restart while the job still runs. A slot
+#     is freed only by a recorded end: Launch records one when Exec.Run returns, and End records
+#     one for a dead launcher's job, refusing the wrong lease. Two launchers racing one lease
+#     admit exactly one.
+#   R4_EverySlotHasARule (HIGH :291): rules are keyed by the slot's flag. New refuses a slot whose
+#     flag has no rule, a slot with no flag before it, a pinned flag with no pin, and absent or
+#     unclean roots (Grant.WorktreeRoot, Grant.JobRoot). The three admitted examples are refused:
+#     --disallowedTools without Agent and Task, --settings /tmp/x.json, and -C /Users/adamks. Also
+#     refused: --allowedTools holding Agent or Task, job files outside JobRoot or not ".json", a
+#     bad --session-id or --agent. TemplateOf(claude) is the full line with --setting-sources
+#     pinned to project, and New accepts it.
+#   R4_CodexRulesKeyedByFlag (item 5): a renamed -C slot keeps the worktree rule, including one
+#     named <B>. A -c value, slot or literal, must be exactly on Grant.ConfigAllow, so
+#     -c sandbox_mode=danger-full-access is refused.
+#     TODO(B1-07 r4): sync with build/b1-07-tests-r4. Codex is moving to --ignore-user-config,
+#     every setting as -c, and no -p (founder ruling 2026-10-03). Pin codex's profile and -c list
+#     then; TemplateOf(codex) is pinned on Tokens and Digest only until it lands.
+#   R4_ReceiptLogFailsClosed (HIGH :433): CreateReceiptLog is the only creation, and OpenReceiptLog
+#     refuses a log never created. A log that is deleted, emptied, truncated mid-record or at a
+#     record boundary, has a byte flipped, or has garbage appended refuses every launch, at once,
+#     2h and 48h later, and in a restarted launcher. After ReestablishReceiptLog the hour counts as
+#     full: refused at +59m, admitted at +1h1s. The count is never 0.
+#   R4_HeadlessFromArgv (MED :354): claude's bare -p is headless. Non-headless or attended with -p
+#     is ErrSpec.
+#   R4_BudgetGuards (:314): "05", "00", "007" and 2^62+1, whose cents wrap to 100 without the
+#     12-digit guard, are ErrSpec.
+# Contract, launcher.go, declarations and fail-closed stubs only, afed458's behaviour untouched:
+#   Grant.WorktreeRoot/JobRoot/ConfigAllow, Deps.State, Launcher.End, ErrState,
+#   Create/Open/ReestablishReceiptLog.
+# Earlier rounds, edited only where the rulings contradict them (their hashes move):
+#   launcher_donetest_test.go: grant() pins <profile> and carries the two roots; the rig carries a
+#     State dir; the rate test launches a new job each time, since a lease now admits one launch.
+#   launcher_r3_donetest_test.go: the rigs carry a State dir. "attended interactive at I1" is now
+#     ErrSpec, where it read nil, per item 4.
+# ON 75980d5 plus the contract stubs: 6 FAIL. They are R3_UnattendedIsHeadless and R4_
+# LeaseConsumedAtAdmit, EverySlotHasARule, CodexRulesKeyedByFlag, ReceiptLogFailsClosed and
+# HeadlessFromArgv. R4_BudgetGuards passes there, because afed458 has both guards and this only
+# pins them; every r1 and other r3 test passes too.
+# Proof, $TMPDIR only: a reference passes every B108 test. Mutants: 26 of 26 killed, one or more
+# per item, among them the review's two :314 survivors.
+# GAP: a state.json deleted by hand reads as no history. The persisted state has no anchor of its
+# own; the receipt log does.
 register: B0-17b
 jobs:
   - id: B1-08
     files:
       - path: kernel/internal/launcher/launcher_donetest_test.go
-        sha256: 6f2cebf7fc8fda9f63f0d445f01487c92bdfdfcaad03d065e9a10592670fd822
+        sha256: 476c03b60e87328697d36f209dbaa0329c6dd6c82c2d7097f524a9f650214458
       - path: kernel/internal/launcher/launcher_r3_donetest_test.go
-        sha256: 00410072475c33ef899190fe8c7f0ec85b7bd084918eb77ec5a502a0f4d87f59
+        sha256: a25d34c9f06afe58156d4fb0642885fd2cfda46b70d1a5f76df6a8bfbdddb560
+      - path: kernel/internal/launcher/launcher_r4_donetest_test.go
+        sha256: 8e9aa05cd66df4538e3f8b9c411f39a037963e57b157b9f7b05eabb384d59daa
   - id: B1-12
     files:
       - path: kernel/internal/outbox/outbox_donetest_test.go

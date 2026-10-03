@@ -57,9 +57,39 @@ var (
 	// its adapter's rule (B1-08 r3: -C clean, absolute, not /; a pinned slot equal to its pin;
 	// --max-budget-usd a decimal within the budget cap; Env only allow-listed names).
 	ErrSpec = errors.New("launcher: request breaks a slot rule or contradicts itself")
-	// ErrLease: the fenced lease is not this job's live claim, or the job is already running.
+	// ErrLease: the fenced lease is not this job's live claim, the job is already running, or the
+	// lease was already consumed by an earlier admit (B1-08 r4: a lease admits one launch, ever).
 	ErrLease = errors.New("launcher: lease is not live for this job")
+	// ErrState (B1-08 r4): the launcher's persisted state or its receipt log is missing, emptied,
+	// truncated or corrupt. Every launch is refused until it is explicitly re-established.
+	ErrState = errors.New("launcher: persisted state missing or corrupt")
 )
+
+// B1-08 r4 surface, 2026-10-03 re-freeze r4 after review (build/done-tests/B0-17b.yml). Declared
+// here, not implemented: each stub below refuses, so nothing fails open before B1-08 lands it.
+//
+// RECEIPT LOG. A file-backed ReceiptSink. It is created only explicitly (CreateReceiptLog), never
+// implicitly by opening. Since and Append fail closed with ErrState on a log that is missing,
+// emptied, truncated (mid-record or at a record boundary) or corrupt (a changed byte, an appended
+// line). ReestablishReceiptLog is the only way back, and it never resets the count to 0: for an
+// hour after re-establishment the unknown history counts as full, so Since over a window that
+// reaches before the re-establishment fails closed.
+
+// CreateReceiptLog creates an empty receipt log at path; it refuses one that exists.
+func CreateReceiptLog(path string) error {
+	return fmt.Errorf("%w: CreateReceiptLog not implemented", ErrState)
+}
+
+// OpenReceiptLog opens the receipt log at path; it refuses one that was never created.
+func OpenReceiptLog(path string) (ReceiptSink, error) {
+	return nil, fmt.Errorf("%w: OpenReceiptLog not implemented", ErrState)
+}
+
+// ReestablishReceiptLog explicitly replaces a broken (or absent) log at path with one whose
+// history before at is unknown and counts as full for the trailing hour.
+func ReestablishReceiptLog(path string, at time.Time) error {
+	return fmt.Errorf("%w: ReestablishReceiptLog not implemented", ErrState)
+}
 
 // Holder is the only principal that may hold the grant (09a §8.5).
 const Holder = "kernel.launcher"
@@ -137,6 +167,22 @@ type Grant struct {
 	ForbiddenFlags []string       // e.g. "--dangerously-skip-permissions", "--bare", "-s danger-full-access"
 	Caps           Caps
 	EnvAllow       []string // B1-08 r3: the only environment names a worker may receive
+	// B1-08 r4: every slot has a rule, keyed by the flag the slot is the value of (never by the
+	// slot's display name); New refuses a slot whose flag has no rule. The rules:
+	//   --setting-sources, -p        the template's Pinned value (a pin is required)
+	//   --settings, --agents,        a clean absolute path strictly inside JobRoot, ending ".json"
+	//   --json-schema, --output-schema, -o
+	//   -C                           a clean absolute path strictly inside WorktreeRoot
+	//   --agent                      ^[a-z][a-z0-9-]{0,63}$
+	//   --allowedTools               comma-joined tool names, neither Agent nor Task
+	//   --disallowedTools            comma-joined tool names including both Agent and Task
+	//   --max-budget-usd             cents: no leading zero, at most 12 whole digits, within the cap
+	//   --session-id                 a lowercase canonical UUID
+	//   -c                           exactly one of ConfigAllow; a literal -c value must be on it too
+	// TODO(B1-07 r4): codex moves to --ignore-user-config with every setting as -c and no -p.
+	WorktreeRoot string
+	JobRoot      string
+	ConfigAllow  []string
 }
 
 // Prerequisites is per_launch_requires (§8.5).
@@ -179,17 +225,34 @@ type Deps struct {
 	Receipts ReceiptSink
 	Leases   LeaseVerifier // B1-08 r3: required
 	Grant    GrantStatus   // B1-08 r3: required
+	// State (B1-08 r4, required) is the launcher's persisted state directory: the running jobs and
+	// the consumed leases, keyed by job and fenced lease, read and written under a file lock, so
+	// a second launcher on the same State, or one after a restart, sees them.
+	State string
 }
 
 // Launcher spawns workers under a Grant.
 type Launcher interface {
 	// Launch checks req against the grant, then calls Exec.Run exactly once and appends
 	// exactly one Receipt; or it refuses before exec with one of the refusal errors above.
+	//
+	// B1-08 r4: headless is derived from the argv. A template whose "-p" is a bare flag (claude's)
+	// is headless, so a request claiming non-headless, or an attended one, is ErrSpec. The lease
+	// is consumed at admit; when Exec.Run returns, Launch records the job's end.
 	Launch(ctx context.Context, req Request) (Receipt, error)
+	// End (B1-08 r4) records the end of jobID's launch on lease, for a launch whose launcher died
+	// before recording it; only a recorded end frees the job's concurrent slot. It refuses a job
+	// that is not running on that lease. The lease stays consumed.
+	End(ctx context.Context, jobID, lease string) error
+}
+
+func (l *launcher) End(context.Context, string, string) error {
+	return fmt.Errorf("%w: End not implemented", ErrLease)
 }
 
 // TemplateOf pins a WorkerAdapter's launch line for the binary at path: the grant's templates
-// are built from the adapters' Template(), never typed twice.
+// are built from the adapters' Template(), never typed twice. B1-08 r4: the result is the full
+// template — every slot's pin included (claude's --setting-sources is pinned to "project").
 func TemplateOf(path string, a adapter.WorkerAdapter) ArgvTemplate {
 	t := a.Template()
 	return ArgvTemplate{Binary: path, Tokens: t, Digest: digestOf(t)}

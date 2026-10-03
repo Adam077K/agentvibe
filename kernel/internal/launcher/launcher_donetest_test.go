@@ -11,6 +11,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -127,12 +128,14 @@ func grant() Grant {
 	return Grant{
 		Holder:   "kernel.launcher",
 		Binaries: []Binary{{Path: claudeBin, Digest: claudeDigest}, {Path: codexBin, Digest: codexDigest}},
-		Templates: []ArgvTemplate{
-			{Binary: claudeBin, Tokens: claudeTokens, Digest: argvDigest(claudeTokens)},
-			{Binary: codexBin, Tokens: codexTokens, Digest: argvDigest(codexTokens)},
+		Templates: []ArgvTemplate{ // r4: every slot has a rule, so the profile slots carry their pin
+			{Binary: claudeBin, Tokens: claudeTokens, Digest: argvDigest(claudeTokens), Pinned: map[string]string{"<profile>": "project"}},
+			{Binary: codexBin, Tokens: codexTokens, Digest: argvDigest(codexTokens), Pinned: map[string]string{"<profile>": "project"}},
 		},
 		ForbiddenFlags: []string{"--dangerously-skip-permissions", "--bare", "-s danger-full-access"},
 		Caps:           Caps{Concurrent: 12, PerHour: 120},
+		WorktreeRoot:   "/w",      // r4: -C lives strictly inside it
+		JobRoot:        "/run/av", // r4: the job files live strictly inside it
 	}
 }
 
@@ -144,6 +147,7 @@ func deps(r *rig) Deps {
 		Receipts: r.rcpt,
 		Leases:   anyLease{},
 		Grant:    liveGrant{},
+		State:    r.state, // r4: required
 	}
 }
 
@@ -172,11 +176,12 @@ type rig struct {
 	clock *fakeClock
 	exec  *fakeExec
 	rcpt  *receipts
+	state string
 }
 
 func newRig(t *testing.T, at time.Time) rig {
 	t.Helper()
-	r := rig{clock: &fakeClock{t: at}, exec: &fakeExec{}, rcpt: &receipts{}}
+	r := rig{clock: &fakeClock{t: at}, exec: &fakeExec{}, rcpt: &receipts{}, state: t.TempDir()}
 	l, err := New(grant(), deps(&r))
 	if err != nil {
 		t.Fatalf("New: %v", err)
@@ -246,7 +251,7 @@ func TestB108ForbiddenFlagRefusedBeforeExec(t *testing.T) {
 	})
 
 	t.Run("grant integrity", func(t *testing.T) {
-		r := rig{clock: &fakeClock{t: at0300()}, exec: &fakeExec{}, rcpt: &receipts{}}
+		r := rig{clock: &fakeClock{t: at0300()}, exec: &fakeExec{}, rcpt: &receipts{}, state: t.TempDir()}
 		g := grant()
 		g.Templates[0].Digest = argvDigest(append(append([]string{}, claudeTokens...), "--add-dir", "/"))
 		if _, err := New(g, deps(&r)); !errors.Is(err, ErrGrant) {
@@ -292,7 +297,8 @@ func TestB108UnattendedLaunchAt0300Succeeds(t *testing.T) {
 // mid-hour and crosses an hour boundary.
 func TestB108HundredTwentyFirstLaunchInAnHourRefused(t *testing.T) {
 	ctx := context.Background()
-	launch := func(r rig) error { _, err := r.l.Launch(ctx, request("job-rate")); return err }
+	n := 0 // r4: a lease admits one launch, so each launch is its own job
+	launch := func(r rig) error { n++; _, err := r.l.Launch(ctx, request(fmt.Sprintf("job-rate-%d", n))); return err }
 	refused := func(t *testing.T, r rig, when string) {
 		t.Helper()
 		execs, rcpts := len(r.exec.calls), len(r.rcpt.got)
