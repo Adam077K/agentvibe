@@ -40,11 +40,20 @@
 #   Accepted survivors, LOW, no test: unbounded journal-append retry; context.Background in place of
 #   WithoutCancel; reserving a kernel.* prefix or an EqualFold match in place of the exact stream name;
 #   no timeout on the detached append.
+# RE-FREEZE r5 2026-10-03: 2026-10-03 review r1: pin HOME rulings. The review SHIPped, but two
+#   behaviours were correct in code and pinned by no frozen test. Added, adapted from the reviewer's
+#   probes (no ctxExec, which clashes with F2's):
+#     F3_NoHomePinWhateverAllowlist: no HOME pin is ErrGrant at New for EnvAllow [LANG], [LANG PATH]
+#       and nil, and leaves State untouched.
+#     F3_MissingHomeKeepsLease: Env {LANG: C} is ErrSpec with no exec, no receipt and the lease
+#       unconsumed: the HOME check runs before Consume.
+#   Both FAIL on d715c18. Not run against f76d2a5 by this builder (orchestrator: skip; the reviewer
+#   ran the same probes there and they pass).
 register: B1-08h
 jobs:
   - id: B1-08h
     files:
       - path: kernel/internal/launcher/launcher_h_donetest_test.go
-        sha256: 13ffc876439b0daa944e976ff3ab75028d6245cd4ce514afff7dc8472e872222
+        sha256: 5cb387b3d7d24caa3500bde407e795c99c6ac87ee3d67a73fc39cff3a91b2566
       - path: kernel/internal/socket/socket_b108h_donetest_test.go
         sha256: 2d05c72a42dd198916dc04ef2021c8ffbc65d99ea4137eea349a9782bf8157da
