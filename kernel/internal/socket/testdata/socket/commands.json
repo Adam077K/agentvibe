@@ -1,0 +1,306 @@
+{
+  "comment": "B1-03 done-test fixtures. valid: one well-formed command per verb of 09a section 2 KernelCommand. invalid: one defect each; line is the exact bytes sent (without the newline), reason is the Response.reason and the refusal event's data.reason.",
+  "valid": [
+    {
+      "name": "propose_event.well-formed",
+      "command": {
+        "cmd": "propose_event",
+        "stream": "venture:v_keel",
+        "expect_seq": 0,
+        "type": "note.recorded",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "v_keel",
+          "retention": {
+            "class": "operational",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": {"sources":[],"derived_from":[],"author":{"title":"Kernel","family":"system"}},
+          "revocation_epoch": 0
+        },
+        "data": {
+          "text": "first"
+        },
+        "rationale": {
+          "why": "done-test"
+        }
+      }
+    },
+    {
+      "name": "request_leases.well-formed",
+      "command": {
+        "cmd": "request_leases",
+        "job": "job_17",
+        "resources": [
+          "file://v_keel/README.md",
+          "job://job_17"
+        ],
+        "mode": "excl",
+        "policy": "all_or_nothing"
+      }
+    },
+    {
+      "name": "propose_effect.well-formed",
+      "command": {
+        "cmd": "propose_effect",
+        "verb": "email.send",
+        "target": {
+          "to": "a@example.com"
+        },
+        "business_ref": "invoice-42",
+        "payload_ref": "sha256:abababababababababababababababababababababababababababababababab",
+        "lease_tokens": {
+          "job://job_17": "7"
+        }
+      }
+    },
+    {
+      "name": "admit_job.well-formed",
+      "command": {
+        "cmd": "admit_job",
+        "spec": {
+          "venture": "v_keel",
+          "model_id": "claude-opus-5"
+        }
+      }
+    },
+    {
+      "name": "compile.well-formed",
+      "command": {
+        "cmd": "compile",
+        "action": {
+          "verb": "email.send",
+          "operation_id": "op_9"
+        }
+      }
+    },
+    {
+      "name": "renew.well-formed",
+      "command": {
+        "cmd": "renew",
+        "lease_id": "lease_5",
+        "token": "18446744073709551615"
+      }
+    },
+    {
+      "name": "release.well-formed",
+      "command": {
+        "cmd": "release",
+        "lease_id": "lease_6",
+        "token": "7"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "bad-json.truncated",
+      "reason": "bad_json",
+      "why": "not parseable",
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}"
+    },
+    {
+      "name": "bad-json.not-json",
+      "reason": "bad_json",
+      "why": "not JSON at all",
+      "line": "append stream=venture:v_keel"
+    },
+    {
+      "name": "bad-json.array",
+      "reason": "bad_json",
+      "why": "a JSON array, not an object",
+      "line": "[{\"cmd\":\"renew\",\"lease_id\":\"lease_5\",\"token\":\"18446744073709551615\"}]"
+    },
+    {
+      "name": "bad-json.two-values",
+      "reason": "bad_json",
+      "why": "two JSON values on one line",
+      "line": "{\"cmd\":\"release\",\"lease_id\":\"lease_6\",\"token\":\"7\"}{\"cmd\":\"release\",\"lease_id\":\"lease_6\",\"token\":\"7\"}"
+    },
+    {
+      "name": "missing.cmd",
+      "reason": "missing_field",
+      "why": "no cmd key",
+      "line": "{\"lease_id\":\"lease_5\",\"token\":\"18446744073709551615\"}"
+    },
+    {
+      "name": "missing.cmd-null",
+      "reason": "missing_field",
+      "why": "cmd present as null",
+      "line": "{\"cmd\":null,\"lease_id\":\"lease_5\",\"token\":\"18446744073709551615\"}"
+    },
+    {
+      "name": "unknown-cmd.append",
+      "reason": "unknown_cmd",
+      "why": "no such verb: Userland may only propose",
+      "line": "{\"cmd\":\"append_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+    },
+    {
+      "name": "unknown-cmd.case",
+      "reason": "unknown_cmd",
+      "why": "cmd is matched exactly, case included",
+      "line": "{\"cmd\":\"Propose_Event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+    },
+    {
+      "name": "invalid.cmd-number",
+      "reason": "invalid_field",
+      "why": "cmd is not a string",
+      "line": "{\"cmd\":3,\"lease_id\":\"lease_5\",\"token\":\"18446744073709551615\"}"
+    },
+    {
+      "name": "missing.propose_event.label",
+      "reason": "missing_field",
+      "why": "label is required",
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+    },
+    {
+      "name": "missing.propose_event.data",
+      "reason": "missing_field",
+      "why": "data is required (unknown, not optional)",
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"rationale\":{\"why\":\"done-test\"}}"
+    },
+    {
+      "name": "missing.propose_event.expect_seq",
+      "reason": "missing_field",
+      "why": "expect_seq is required",
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+    },
+    {
+      "name": "missing.request_leases.mode",
+      "reason": "missing_field",
+      "why": "mode is required",
+      "line": "{\"cmd\":\"request_leases\",\"job\":\"job_17\",\"resources\":[\"file://v_keel/README.md\",\"job://job_17\"],\"policy\":\"all_or_nothing\"}"
+    },
+    {
+      "name": "missing.propose_effect.payload_ref",
+      "reason": "missing_field",
+      "why": "payload_ref is required",
+      "line": "{\"cmd\":\"propose_effect\",\"verb\":\"email.send\",\"target\":{\"to\":\"a@example.com\"},\"business_ref\":\"invoice-42\",\"lease_tokens\":{\"job://job_17\":\"7\"}}"
+    },
+    {
+      "name": "missing.admit_job.spec",
+      "reason": "missing_field",
+      "why": "spec is required",
+      "line": "{\"cmd\":\"admit_job\"}"
+    },
+    {
+      "name": "missing.compile.action",
+      "reason": "missing_field",
+      "why": "action is required",
+      "line": "{\"cmd\":\"compile\"}"
+    },
+    {
+      "name": "missing.renew.token",
+      "reason": "missing_field",
+      "why": "token is required",
+      "line": "{\"cmd\":\"renew\",\"lease_id\":\"lease_5\"}"
+    },
+    {
+      "name": "missing.release.lease_id",
+      "reason": "missing_field",
+      "why": "lease_id is required",
+      "line": "{\"cmd\":\"release\",\"token\":\"7\"}"
+    },
+    {
+      "name": "missing.release.lease_id-null",
+      "reason": "missing_field",
+      "why": "a required key present as null",
+      "line": "{\"cmd\":\"release\",\"lease_id\":null,\"token\":\"7\"}"
+    },
+    {
+      "name": "invalid.unknown-key",
+      "reason": "invalid_field",
+      "why": "keys are exactly the command's; an extra key is refused",
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"},\"force\":true}"
+    },
+    {
+      "name": "invalid.propose_event.label-unknown-schema",
+      "reason": "invalid_field",
+      "why": "B1-02 refuses label/2 (ErrUnknownSchema)",
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/2\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+    },
+    {
+      "name": "invalid.propose_event.label-missing-dclass",
+      "reason": "invalid_field",
+      "why": "B1-02 refuses a label without dclass",
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+    },
+    {
+      "name": "invalid.propose_event.label-bad-enum",
+      "reason": "invalid_field",
+      "why": "B1-02 refuses dclass D9",
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D9\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+    },
+    {
+      "name": "invalid.propose_event.expect_seq-negative",
+      "reason": "invalid_field",
+      "why": "expect_seq is an integer >= 0",
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":-1,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+    },
+    {
+      "name": "invalid.propose_event.expect_seq-fraction",
+      "reason": "invalid_field",
+      "why": "expect_seq is an integer",
+      "line": "{\"cmd\":\"propose_event\",\"stream\":\"venture:v_keel\",\"expect_seq\":1.5,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+    },
+    {
+      "name": "invalid.propose_event.stream-number",
+      "reason": "invalid_field",
+      "why": "stream is a string",
+      "line": "{\"cmd\":\"propose_event\",\"stream\":7,\"expect_seq\":0,\"type\":\"note.recorded\",\"label\":{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D0\",\"boundary\":\"open\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"none\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[],\"derived_from\":[],\"author\":{\"title\":\"Kernel\",\"family\":\"system\"}},\"revocation_epoch\":0},\"data\":{\"text\":\"first\"},\"rationale\":{\"why\":\"done-test\"}}"
+    },
+    {
+      "name": "invalid.request_leases.mode",
+      "reason": "invalid_field",
+      "why": "mode is excl|shared",
+      "line": "{\"cmd\":\"request_leases\",\"job\":\"job_17\",\"resources\":[\"file://v_keel/README.md\",\"job://job_17\"],\"mode\":\"exclusive\",\"policy\":\"all_or_nothing\"}"
+    },
+    {
+      "name": "invalid.request_leases.policy",
+      "reason": "invalid_field",
+      "why": "policy is all_or_nothing|wound_wait",
+      "line": "{\"cmd\":\"request_leases\",\"job\":\"job_17\",\"resources\":[\"file://v_keel/README.md\",\"job://job_17\"],\"mode\":\"excl\",\"policy\":\"first_come\"}"
+    },
+    {
+      "name": "invalid.request_leases.empty-job",
+      "reason": "invalid_field",
+      "why": "job is an id: non-empty",
+      "line": "{\"cmd\":\"request_leases\",\"job\":\"\",\"resources\":[\"file://v_keel/README.md\",\"job://job_17\"],\"mode\":\"excl\",\"policy\":\"all_or_nothing\"}"
+    },
+    {
+      "name": "invalid.request_leases.resources-string",
+      "reason": "invalid_field",
+      "why": "resources is an array",
+      "line": "{\"cmd\":\"request_leases\",\"job\":\"job_17\",\"resources\":\"job://job_17\",\"mode\":\"excl\",\"policy\":\"all_or_nothing\"}"
+    },
+    {
+      "name": "invalid.renew.token-number",
+      "reason": "invalid_field",
+      "why": "a bigint is a decimal string under B1-02; a JSON number is refused",
+      "line": "{\"cmd\":\"renew\",\"lease_id\":\"lease_5\",\"token\":7}"
+    },
+    {
+      "name": "invalid.release.token-overflow",
+      "reason": "invalid_field",
+      "why": "a bigint fits 64 bits",
+      "line": "{\"cmd\":\"release\",\"lease_id\":\"lease_6\",\"token\":\"18446744073709551616\"}"
+    },
+    {
+      "name": "invalid.release.token-leading-zero",
+      "reason": "invalid_field",
+      "why": "no leading zeros",
+      "line": "{\"cmd\":\"release\",\"lease_id\":\"lease_6\",\"token\":\"07\"}"
+    },
+    {
+      "name": "invalid.propose_effect.verb-number",
+      "reason": "invalid_field",
+      "why": "verb is a string",
+      "line": "{\"cmd\":\"propose_effect\",\"verb\":1,\"target\":{\"to\":\"a@example.com\"},\"business_ref\":\"invoice-42\",\"payload_ref\":\"sha256:abababababababababababababababababababababababababababababababab\",\"lease_tokens\":{\"job://job_17\":\"7\"}}"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 name: framer
 description: |
   Engine. Turns something fuzzy into structure: the problem, the options, the criteria, the decision. Loads a domain lens for the field it is framing. Produces specs, positions, pricing cases and decision records — never code, never the final approval.
-model: claude-sonnet-5
+model: claude-sonnet-5-5
 effort: high
 tools: [Read, Write, Edit, Glob, Grep]
 maxTurns: 25

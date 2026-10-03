@@ -1,0 +1,164 @@
+# Done-test register, B1-26 (docs/vision-v3/14-BUILD-PLAN.md:315: "Classification, boundary, retention
+# class, retention deadline, permission, taint and origin round-trip as distinct fields; human
+# provenance is a provenance field; every 06 label name maps to one wire name (DR-68)").
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run (Go):       go -C kernel test -count=1 -tags donetest ./internal/label/
+# Run (Userland): pnpm --dir userland install --frozen-lockfile --ignore-scripts && node --test userland/test/label.donetest.test.ts
+#
+# Canon: 09a-ENGINEERING.md §12 (LabelV1, Provenance, SourceRef, PrincipalRef, both mapping tables,
+# Join); 06-MEMORY.md §4 (L1, L3, L8); _process/DR-LABEL-RECONCILE-2026-10-01.md (founder decisions
+# 1-8, A-C, E-I, J-L, M-P, Q-T). Every fixture case carries a `cite` naming the canon line it enforces.
+#
+# First frozen 2026-10-02 at 0268a8b (Go 7 tests, Userland 380 subtests). kernel/internal/label/label.go and
+# userland/src/label.ts are NOT registered: they are the interface the job implements (the B1-02
+# pattern).
+#
+# Location: a new package, kernel/internal/label, and userland/src/label.ts, and ONE reader:
+# TestB126SingleLabelReader requires nouns.Label to BE label.V1 (DR-LABEL-RECONCILE:61), which
+# re-froze B1-02 the same day (see B1-02.yml).
+#
+# Re-frozen 2026-10-02 after an Opus review FAIL at 0268a8b (findings 1-5) and founder decisions J-L
+# (DR-LABEL-RECONCILE round 5): joins run over every order of their inputs; varied identity cases;
+# strictest-wins for dclass, retention, exportable, consent_scope; nulls, empties, case-variant keys,
+# an unsafe integer (both languages) and duplicate keys (Go) refused; one sentinel per refusal;
+# ancestors not merged into derived_from; TS encode refuses; participant/external -> counterparty;
+# a customer's non-panel HumanTask -> customer. Red against stubs: Go 9/9 tests; Userland 407/407.
+# Green against a $TMPDIR reference (Go 509 subtests; Userland 747). Mutants: Go 26 killed of 29,
+# the 3 survivors equivalent (a second redundant check in the reference; their non-redundant forms
+# are among the 26); Userland 13 of 13.
+#
+# Re-frozen 2026-10-02 founder rulings M-P (DR-LABEL-RECONCILE round 6): a join across ventures is
+# refused (ErrCrossVenture / LabelJoinError); least trusted wins (taint quarantined > untrusted > clean,
+# guarded over open, origin, subjects union, newer epoch); journal_metadata and a legal hold are the
+# longest retention; a HumanTask on a customer's behalf is customer. (The origin order was then the
+# orchestrator's proposal; ruling Q confirmed it, below.) Red against
+# stubs: Go 9/9, Userland 408/408. Green against a $TMPDIR reference with B1-02 (919 Userland subtests).
+# Mutants: Go 34 killed of 37 (the same 3 equivalent survivors as before); Userland 19 of 19.
+#
+# Re-frozen 2026-10-02 founder rulings Q-T (DR-LABEL-RECONCILE round 7): the origin trust order founder >
+# system_of_record > internal > customer > counterparty is confirmed, and every adjacent pair is pinned;
+# retention-class strictness personal > client > operational > synthetic replaces the journal_metadata
+# cases derived from O (where journal_metadata sits is OPEN); two different consent refs refuse
+# (ErrConsentConflict / LabelJoinError 'consent_conflict'); founder and portfolio inputs join a venture's
+# and the result is that venture's. The approval's wire form stays OPEN: the canon names no record for it.
+# Red against stubs: Go 9/9, Userland 408/408. Green with B1-02 against a $TMPDIR reference (965 Userland
+# subtests). Mutants: Go 39 killed of 42 (the same 3 equivalent survivors); Userland 24 of 24.
+#
+# Re-frozen 2026-10-02 final review nits (review PASS at 80223e5, one MED and two LOW): invalid.json adds
+# null for SourceRef quote/accessed/system_of_record/ref, venture, author.title and PrincipalRef.id
+# (104 cases), so null is refused in both languages as label.go's wire rules state; join.json's
+# taint-untrusted-control pins `untrusted` exactly; a stale "rounds 1-5" comment reads "rounds 1-7".
+# Red against stubs: Go 9/9, Userland all; green with B1-02 against the $TMPDIR reference (993 Userland
+# subtests); a Go mutant whose string check accepts null is killed.
+#
+# RE-FREEZE 2026-10-02 re-freeze r2 after impl review (Opus FAIL at build/b1-26 @ 4a5094e). Rounds 1-5
+# unchanged (hashes identical). Added, one shared vector set for both languages:
+#   label_r2_donetest_test.go + label.r2.donetest.test.ts over testdata/label/r2_deadlines.json (31),
+#   r2_wire_text.json (17) and r2_order.json (3).
+#   - HIGH deadlines: one grammar orders a join's retention.deadline (RFC 3339 with 'T', 'Z' or +-hh:mm,
+#     uppercase, valid calendar date, hour and offset hour < 24; orchestrator ruling 2026-10-02);
+#     anything else, and a deadline against an absent one, is ErrUndecided / 'undecided'.
+#   - MED revocation_epoch -0, 1.0, 3e0, 0.0, 03 and duplicate or case-variant keys at any depth are
+#     refused on Userland's text path (nouns.decodeText, for nouns.Label and label.LabelV1) as in Go.
+#   - Mutants: the encoded join is byte-identical over every input order, and p is some input's p.
+# Fails on 4a5094e: Go TestB126R2DeadlineGrammar (single-digit hour, comma fraction, offset hour 24,
+# offset minute 60); Userland the deadline test (feb-30, feb-29 non-leap, hour 24, lowercase t/z, ...)
+# and the wire-text test (every duplicate and non-canonical integer case). JoinIsOrderFree passes there.
+# Proved in $TMPDIR: green against a strict reference with every round-1 and B1-02 done-test (1095
+# Userland subtests); 10 of 10 mutants killed, each green on the round-1 tests: partial-deadline refusal
+# deleted, p from the first input, derived_from unsorted, the loose deadline grammar (each in Go and
+# TS), and in TS duplicate keys or non-canonical integers allowed.
+# Run (r2): go -C kernel test -tags donetest -count=1 -run R2 ./internal/label/ && node --test userland/test/label.r2.donetest.test.ts
+#
+# RE-FREEZE 2026-10-02 re-freeze r3 after re-review (Opus FAIL at build/b1-26 @ 9096164). Earlier rounds
+# unchanged (hashes identical). Added, one shared vector set for both languages:
+#   label_r3_donetest_test.go + label.r3.donetest.test.ts over testdata/label/r3_deadlines.json (10),
+#   r3_wire_text.json (37) and r3_order.json (1).
+#   - HIGH/MED lone surrogates: refused escaped or raw ("raw" = WTF-8 bytes in Go, the code unit in a
+#     JS string), in values and keys, in label.Decode/nouns.Decode[Label] and nouns.decodeText; a valid
+#     pair and U+FFFD are accepted.
+#   - MED p: -0, -0.0, 0.50, 5e-1, .5, 1e400 and 9007199254740993.5 refused on read in both; the join over
+#     p of zero is byte-identical in every order and never writes -0.
+#   - MED symmetry: every valid text in r2/r3 wire text and valid.json re-encodes with the same values and
+#     number spellings (Go label.Encode and nouns.Encode; Userland LabelV1.encode).
+#   - Deadline vectors: tie-break, fraction trailing zeros, leap second, 1900 vs 2000, year-0 era floor,
+#     month 00, year 9999.
+# Fails on 9096164: Go TestB126R3WireText (escaped lone surrogates; p -0, -0.0, 0.50, 5e-1, unsafe
+# fraction); Userland the wire-text test (lone surrogates escaped and raw; p -0, -0.0, 0.50, 5e-1). The
+# deadline, symmetry and order tests pass there; their mutants prove them.
+# Proved in $TMPDIR against a strict reference (all label and B1-02 done-tests green, 1265 Userland
+# subtests); 18 of 18 mutants killed, each green on rounds 1-r2: Go and TS tie-break, leap second,
+# 1900-leap, no-400-rule, fraction trim, era floor, month 00, lone surrogates allowed, any p spelling.
+# Run (r3): go -C kernel test -tags donetest -count=1 -run R3 ./internal/label/ && node --test userland/test/label.r3.donetest.test.ts
+#
+# RE-FREEZE 2026-10-02 re-freeze r4 after re-review (Opus PASS at build/b1-26 @ 8daed9d, one MED and
+# surviving mutants). Earlier rounds unchanged (hashes identical). Added:
+#   label_r4_donetest_test.go + label.r4.donetest.test.ts over testdata/label/r4_line_separators.json (7)
+#   and r4_wire_text.json (8).
+#   - MED U+2028/U+2029: written as the raw UTF-8 character in both languages (JSON.stringify's spelling);
+#     a canonical text re-encodes byte for byte through label and nouns, and an escaped one re-encodes raw.
+#   - Mutants: a high surrogate pairs only with DC00-DFFF (wire.go upper bound); Userland's object path
+#     refuses p -0 (label.ts refine) and lone surrogates in strings and keys (wire.ts plainCopy; the key
+#     case through Event.data, the only place an unknown key reaches the check). The abs-bound mutant is
+#     equivalent and skipped (orchestrator).
+# Fails on 8daed9d: Go TestB126R4LineSeparatorsByteIdentical (6 of 7: Go writes \u2028 / \u2029). The
+# rest passes there; its mutants prove it. Proved in $TMPDIR against a reference that writes the raw
+# characters (label, nouns, socket and all Userland done-tests green, 1315 subtests); 5 of 5 mutants
+# killed, each green on rounds 1-r3.
+# FOLLOW-UP, out of scope (orchestrator, r4; no tests): only Go refuses overlong or invalid UTF-8, because
+# Userland has no byte reader; and the raw-field rules predate this branch.
+# Run (r4): go -C kernel test -tags donetest -count=1 -run R4 ./internal/label/ && node --test userland/test/label.r4.donetest.test.ts
+#
+# Userland's test:donetest glob (test/*.donetest.test.ts) now also runs this file, so it is red until
+# B1-26 lands. B1-02's Go run line (./internal/nouns/) is red too until then: its re-frozen fixtures
+# carry the LabelV1 shape that the nouns on main does not read yet.
+#
+# The five fixture files are registered because they are the wire contract: the Go and Userland tests
+# read the same bytes, so a fixture edit changes both languages' acceptance at once.
+register: B1-26
+jobs:
+  - id: B1-26
+    files:
+      - path: kernel/internal/label/label_donetest_test.go
+        sha256: e7bd0fd32e9c1743ca0dc6829208d53ab5ad092ab05fc58cad07fcdfaaa6ba79
+      - path: kernel/internal/label/testdata/label/valid.json
+        sha256: dccc7ef0dc57b3d43c0187dc1be25aa91f2086901cd15c8e1e1934b5f90ab2c8
+      - path: kernel/internal/label/testdata/label/invalid.json
+        sha256: bcff355e22e5867f530142a7982b111acd1958f35dcf37f0d699370ca0fed3d2
+      - path: kernel/internal/label/testdata/label/mapping.json
+        sha256: 415d50e2bcb6910cc04e4621fd4319e4d194e5313ffe200199416d03bc46ec0d
+      - path: kernel/internal/label/testdata/label/origin.json
+        sha256: d6c278f9e98bb875c827924d509e9ae6a70a2d2c4c977eea29f6ed2e61c23637
+      - path: kernel/internal/label/testdata/label/join.json
+        sha256: 7dd6ae31694d4b23298d706cb5e25a274a009ea92762c844350d984ce821f4c8
+      - path: userland/test/label.donetest.test.ts
+        sha256: f1fa969129248e56eca727e1659ef4123c08ebe62bbe4760171f767f6ef650cb
+      - path: kernel/internal/label/label_r2_donetest_test.go
+        sha256: 9c82627d9fa20d8e2210161c47678f76a09dc89dff4e7f8b69cb351ccc8fbf2e
+      - path: kernel/internal/label/testdata/label/r2_deadlines.json
+        sha256: b657c0e7b2a684516b5d6a4806faa285e16df9ef259c65546adc7457c04ece89
+      - path: kernel/internal/label/testdata/label/r2_wire_text.json
+        sha256: 41172f8e9e6f98b19988f6861100608b780ec56424c0b683adc1bd731437f09d
+      - path: kernel/internal/label/testdata/label/r2_order.json
+        sha256: a2af28398b82a36bba8bba943ab09b076f35ca0222dcd036f0df7ad83e62ffc8
+      - path: userland/test/label.r2.donetest.test.ts
+        sha256: c56ebab4d497b02b10ab556d67d10496479336fd081ee416682fc433b27571a4
+      - path: kernel/internal/label/label_r3_donetest_test.go
+        sha256: 8b8832ea7303cae89221968955b0720a2846edc77a8e0f33fd556df778ad51f2
+      - path: kernel/internal/label/testdata/label/r3_deadlines.json
+        sha256: 0f545e56b07a4a7b5fd674763d47bb2ef15953f26dfa3e01e69bc272ed2fed3c
+      - path: kernel/internal/label/testdata/label/r3_wire_text.json
+        sha256: 3c7295c01a43892af8713b34278e7105df06d50ac7ed341e18f6b275f802294a
+      - path: kernel/internal/label/testdata/label/r3_order.json
+        sha256: 38d662b91aff94c78f222361e470d0eaaeccfa0e5b0af8d99c3eeca941582833
+      - path: userland/test/label.r3.donetest.test.ts
+        sha256: 74cecd708a98f3e521d715e9fc66fb4fdd38857440d8ac4989305d8b09ba39d9
+      - path: kernel/internal/label/label_r4_donetest_test.go
+        sha256: 9fb2091901d97d9d65b23d95970436ad9bf05f491db719fd8e44a7be5f1ad9a9
+      - path: kernel/internal/label/testdata/label/r4_line_separators.json
+        sha256: 66e813c03287eb43a006ce5f3294f6d76a26feb0112f77c2e131a67ef83c53fb
+      - path: kernel/internal/label/testdata/label/r4_wire_text.json
+        sha256: 3750a662ac191fd772a0ee1c222219eee3707331f3c00e2db98b8e3e1bffa04f
+      - path: userland/test/label.r4.donetest.test.ts
+        sha256: ffb4544df5741509117b8488df5633bca677def0dfb60c47cfe1c04f5e6d572d

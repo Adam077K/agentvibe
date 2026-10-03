@@ -1,0 +1,11 @@
+{
+  "subject": "c388b0dc69da8ee17f3c26e1aaac9b71006a0c701afd2e45c5dc7d5b153fce3f",
+  "base": "76ca095cbab7e92fe5a39bfdcdca208cd876ff30",
+  "tier": "lite",
+  "tier_driver": "build/jobs.yml",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "kernel budget Opus reviewer PASS at 006b0bd; founder ruling 2026-10-03 (count everything, 11,000); founder ordered the merge",
+  "recorded_at": "2026-10-03T09:00:39.927Z"
+}
