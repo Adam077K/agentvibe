@@ -17,7 +17,7 @@
 //     /tmp/x.json, and -C /Users/adamks. Job files live under Grant.JobRoot, worktrees under
 //     Grant.WorktreeRoot. TemplateOf pins the full template.
 //  3. HIGH :433, a receipt log that is missing, emptied, truncated or corrupt fails CLOSED: every
-//     launch is refused until ReestablishReceiptLog, and the count is never reset to 0 — the hour
+//     launch is refused until a founder reset (r6: FounderResetReceiptLog; r4 named ReestablishReceiptLog), and the count is never reset to 0 — the hour
 //     after a re-establishment admits nothing.
 //  4. MED :354, headless is derived from the argv: claude -p is headless, so a request claiming
 //     non-headless with -p is ErrSpec, and an attended launch never uses -p.
@@ -69,7 +69,7 @@ func (r *r4Rig) deps() Deps {
 // open is one launcher process on the rig's persisted state.
 func (r *r4Rig) open(t *testing.T, g Grant) Launcher {
 	t.Helper()
-	l, err := New(g, r.deps())
+	l, err := New(pinned(g, r.deps()))
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -89,7 +89,7 @@ func (r *r4Rig) lease(job string, fence int) string {
 func (r *r4Rig) req(job, lease string) Request {
 	q := request(job)
 	q.Requires.FencedLease = lease
-	q.Env = map[string]string{"AV_JOB": job}
+	q.Env = map[string]string{"LANG": "C.UTF-8"} // B1-07 r5: AV_JOB is no longer passed
 	return q
 }
 
@@ -134,7 +134,7 @@ func TestB108_R4_LeaseConsumedAtAdmit(t *testing.T) {
 	t.Run("State is required", func(t *testing.T) {
 		r := newR4(t, at0300())
 		r.state = ""
-		if _, err := New(r3Grant(), r.deps()); !errors.Is(err, ErrDeps) {
+		if _, err := New(pinned(r3Grant(), r.deps())); !errors.Is(err, ErrDeps) {
 			t.Errorf("New with no State: %v, want ErrDeps (no persisted state, no launches)", err)
 		}
 	})
@@ -277,7 +277,7 @@ func slot(tokens []string, tok string, v string) func(q *Request) {
 	return func(q *Request) { q.Argv[index(tokens, tok)] = v }
 }
 
-func codexReq(q *Request) { q.Binary, q.Argv = codexBin, render(codexTokens) }
+func codexReq(q *Request) { q.Binary, q.Argv = codexBin, renderJob(q.JobID, codexTokens) }
 
 // TestB108_R4_EverySlotHasARule: item 2.
 func TestB108_R4_EverySlotHasARule(t *testing.T) {
@@ -325,7 +325,7 @@ func TestB108_R4_EverySlotHasARule(t *testing.T) {
 		t.Helper()
 		g := r3Grant()
 		mod(&g)
-		if _, err := New(g, r.deps()); !errors.Is(err, ErrGrant) {
+		if _, err := New(pinned(g, r.deps())); !errors.Is(err, ErrGrant) {
 			t.Errorf("New with %s: %v, want ErrGrant", name, err)
 		}
 	}
@@ -352,7 +352,7 @@ func TestB108_R4_EverySlotHasARule(t *testing.T) {
 	}
 	gt := r3Grant()
 	gt.Templates = []ArgvTemplate{tc}
-	if l, err := New(gt, r.deps()); err != nil {
+	if l, err := New(pinned(gt, r.deps())); err != nil {
 		t.Errorf("New with TemplateOf(claude): %v; every slot of the adapter's line must have a rule", err)
 	} else if err := launchErr(l, r.req("job-tmpl", r.lease("job-tmpl", 1))); err != nil {
 		t.Errorf("a launch on TemplateOf(claude): %v", err)
@@ -365,13 +365,13 @@ func TestB108_R4_EverySlotHasARule(t *testing.T) {
 	}
 	gx := r3Grant()
 	gx.Templates = []ArgvTemplate{tx}
-	if l, err := New(gx, r.deps()); err != nil {
+	if l, err := New(pinned(gx, r.deps())); err != nil {
 		t.Errorf("New with TemplateOf(codex): %v; every slot of the adapter's line must have a rule", err)
 	} else if err := launchErr(l, func() Request { q := r.req("job-tmplx", r.lease("job-tmplx", 1)); codexReq(&q); return q }()); err != nil {
 		t.Errorf("a launch on TemplateOf(codex): %v", err)
 	}
 	gx.ConfigAllow = gx.ConfigAllow[1:]
-	if _, err := New(gx, r.deps()); !errors.Is(err, ErrGrant) {
+	if _, err := New(pinned(gx, r.deps())); !errors.Is(err, ErrGrant) {
 		t.Errorf("New with a locked -c value missing from ConfigAllow: %v, want ErrGrant", err)
 	}
 }
@@ -394,24 +394,24 @@ func TestB108_R4_CodexRulesKeyedByFlag(t *testing.T) {
 	}
 	g := codexWith(renamed, nil)
 	argv := func(c string) []string {
-		out := render(codexTokens)
+		out := renderJob("job-r4", codexTokens)
 		out[index(codexTokens, "<worktree>")] = c
 		return out
 	}
 	r4Refused(t, "renamed -C slot, /Users/adamks", g, func(q *Request) { q.Binary, q.Argv = codexBin, argv("/Users/adamks") }, ErrSpec)
-	r4Refused(t, "renamed -C slot, inside the root", g, func(q *Request) { q.Binary, q.Argv = codexBin, argv("/w/job-1") }, nil)
+	r4Refused(t, "renamed -C slot, inside the root", g, func(q *Request) { q.Binary, q.Argv = codexBin, argv("/w/job-r4") }, nil)
 	// A -C slot that borrows the budget slot's display name still takes the worktree rule.
 	asBudget := slices.Clone(renamed)
 	asBudget[2] = "<B>"
 	g = codexWith(asBudget, nil)
 	r4Refused(t, "-C <B> given 5", g, func(q *Request) { q.Binary, q.Argv = codexBin, argv("5") }, ErrSpec)
-	r4Refused(t, "-C <B> given a worktree", g, func(q *Request) { q.Binary, q.Argv = codexBin, argv("/w/job-1") }, nil)
+	r4Refused(t, "-C <B> given a worktree", g, func(q *Request) { q.Binary, q.Argv = codexBin, argv("/w/job-r4") }, nil)
 
 	// -c: only an exact value on Grant.ConfigAllow.
 	withC := append(slices.Clone(codexTokens), "-c", "<cfg>")
 	g = codexWith(withC, nil, "approval_policy=\"never\"")
 	cArg := func(v string) func(q *Request) {
-		return func(q *Request) { q.Binary, q.Argv = codexBin, append(render(codexTokens), "-c", v) }
+		return func(q *Request) { q.Binary, q.Argv = codexBin, append(renderJob("job-r4", codexTokens), "-c", v) }
 	}
 	r4Refused(t, "-c on the list", g, cArg("approval_policy=\"never\""), nil)
 	for _, v := range []string{"sandbox_mode=danger-full-access", "approval_policy=\"never\" ", "approval_policy=never",
@@ -421,12 +421,12 @@ func TestB108_R4_CodexRulesKeyedByFlag(t *testing.T) {
 	r := newR4(t, at0300())
 	for _, lit := range []string{"sandbox_mode=danger-full-access", "approval_policy=on-request"} {
 		bad := append(slices.Clone(codexTokens), "-c", lit)
-		if _, err := New(codexWith(bad, nil, "approval_policy=\"never\""), r.deps()); err == nil {
+		if _, err := New(pinned(codexWith(bad, nil, "approval_policy=\"never\""), r.deps())); err == nil {
 			t.Errorf("New with a literal -c %s off the list: nil, want refused", lit)
 		}
 	}
 	good := append(slices.Clone(codexTokens), "-c", "approval_policy=\"never\"")
-	if _, err := New(codexWith(good, nil, "approval_policy=\"never\""), r.deps()); err != nil {
+	if _, err := New(pinned(codexWith(good, nil, "approval_policy=\"never\""), r.deps())); err != nil {
 		t.Errorf("New with a literal -c on the list: %v", err)
 	}
 }
@@ -434,7 +434,7 @@ func TestB108_R4_CodexRulesKeyedByFlag(t *testing.T) {
 // TestB108_R4_ReceiptLogFailsClosed: item 3.
 func TestB108_R4_ReceiptLogFailsClosed(t *testing.T) {
 	missing := filepath.Join(t.TempDir(), "never-created.log")
-	if _, err := OpenReceiptLog(missing); err == nil {
+	if _, err := OpenReceiptLog(missing, "sha256:never-pinned"); err == nil {
 		t.Error("OpenReceiptLog on a log that was never created: nil, want refused (never created implicitly)")
 	}
 	sabotage := map[string]func(t *testing.T, path string, mid int64){
@@ -462,13 +462,14 @@ func TestB108_R4_ReceiptLogFailsClosed(t *testing.T) {
 	for name, sab := range sabotage {
 		t.Run(name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "receipts.log")
-			if err := CreateReceiptLog(path); err != nil {
+			genesis, err := CreateReceiptLog(path, "")
+			if err != nil {
 				t.Fatalf("CreateReceiptLog: %v", err)
 			}
-			if err := CreateReceiptLog(path); err == nil {
+			if _, err := CreateReceiptLog(path, ""); err == nil {
 				t.Error("CreateReceiptLog over an existing log: nil, want refused")
 			}
-			sink, err := OpenReceiptLog(path)
+			sink, err := OpenReceiptLog(path, genesis)
 			if err != nil {
 				t.Fatalf("OpenReceiptLog: %v", err)
 			}
@@ -495,7 +496,7 @@ func TestB108_R4_ReceiptLogFailsClosed(t *testing.T) {
 				if err := launchErr(l, r.req(job, r.lease(job, 1))); err == nil {
 					t.Errorf("a launch %v after the log was %s: nil, want refused (fail closed, never a count of 0)", later, name)
 				}
-				if s2, err := OpenReceiptLog(path); err == nil {
+				if s2, err := OpenReceiptLog(path, genesis); err == nil {
 					r2 := *r
 					r2.sink = s2
 					if err := launchErr(r2.open(t, r3Grant()), r.req(job, r.lease(job, 2))); err == nil {
@@ -507,10 +508,11 @@ func TestB108_R4_ReceiptLogFailsClosed(t *testing.T) {
 				t.Fatalf("%d execs after the log was %s; want none", r.exec.n()-execs, name)
 			}
 			at := r.clock.t
-			if err := ReestablishReceiptLog(path, at); err != nil {
-				t.Fatalf("ReestablishReceiptLog: %v", err)
+			genesis2, err := FounderResetReceiptLog(path, genesis, FounderReset{By: "founder", Reason: "r4 sabotage test", At: at})
+			if err != nil {
+				t.Fatalf("FounderResetReceiptLog: %v", err)
 			}
-			sink, err = OpenReceiptLog(path)
+			sink, err = OpenReceiptLog(path, genesis2)
 			if err != nil {
 				t.Fatalf("OpenReceiptLog after re-establishing: %v", err)
 			}

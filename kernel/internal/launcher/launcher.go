@@ -104,6 +104,47 @@ type ReceiptSink interface {
 // and carrying the current fencing token. The launcher calls it under its admit lock.
 type LeaseVerifier interface {
 	Verify(jobID, lease string, now time.Time) error
+	// Consume (B1-08 r6, 2026-10-03 re-freeze r6 after review) atomically consumes the fenced
+	// lease in the AUTHORITATIVE lease store: compare-and-set, exactly one winner across every
+	// process and machine. lease carries the job's fencing token. The launcher calls it under its
+	// admit lock as the last check before the Receipt is appended, and never admits unless it
+	// succeeds; no launcher-local file is trusted for consumption. A second Consume of the same
+	// (job, lease) fails.
+	Consume(jobID, lease string) error
+}
+
+// FounderReset (B1-08 r6) is the explicit, recorded reset of a machine's receipt log. The new
+// log's genesis records it, with the prior pinned genesis.
+type FounderReset struct {
+	By     string // who reset it; required
+	Reason string // why; required
+	At     time.Time
+}
+
+// B1-08 r6 receipt log. The launch count comes from an append-only, hash-chained log whose
+// genesis is pinned (Grant.ReceiptGenesis). A deleted, truncated (mid-record, at a record
+// boundary, or by its final newline), re-created or broken log fails CLOSED. Declared here, not
+// implemented: each stub refuses. r4's functions survive unexported in receiptlog.go.
+
+// CreateReceiptLog creates a machine's receipt log at path and returns its genesis hash, which
+// the founder pins as Grant.ReceiptGenesis. It is refused while pinned is non-empty (a prior log,
+// and so prior receipts, exist for this machine), and refuses an existing path. Each genesis is
+// unique, so a log re-created after a deletion never matches the pin.
+func CreateReceiptLog(path, pinned string) (string, error) {
+	return "", fmt.Errorf("%w: CreateReceiptLog not implemented (r6)", ErrState)
+}
+
+// OpenReceiptLog opens the log at path; it refuses one whose genesis hash is not genesis (the
+// pin), a missing one, and one that does not verify. Since and Append re-verify every call.
+func OpenReceiptLog(path, genesis string) (ReceiptSink, error) {
+	return nil, fmt.Errorf("%w: OpenReceiptLog not implemented (r6)", ErrState)
+}
+
+// FounderResetReceiptLog replaces the log at path, explicitly: prior is the currently pinned
+// genesis, r names who and why. The new genesis records r and prior and is returned for the
+// founder to pin. The count is never reset to 0: the hour after r.At counts as full.
+func FounderResetReceiptLog(path, prior string, r FounderReset) (string, error) {
+	return "", fmt.Errorf("%w: FounderResetReceiptLog not implemented (r6)", ErrState)
 }
 
 // GrantStatus reports whether the grant is still live (B1-08 r3): nil while signed and
@@ -164,6 +205,16 @@ type Grant struct {
 	WorktreeRoot string
 	JobRoot      string
 	ConfigAllow  []string
+	// B1-08 r6: -C must be WorktreeRoot/<JobID> or inside it, and every job file must be inside
+	// JobRoot/<JobID>/: THIS job's lease-scoped worktree and files, never another job's. A JobID
+	// that is not one clean path segment is ErrSpec.
+	//
+	// State (B1-08 r6) pins the machine's one State location: New refuses a Deps.State that is
+	// not exactly this clean absolute path. The State dir is flocked across processes at admit.
+	State string
+	// ReceiptGenesis (B1-08 r6) pins the receipt log's genesis hash (CreateReceiptLog or
+	// FounderResetReceiptLog returned it).
+	ReceiptGenesis string
 }
 
 // Prerequisites is per_launch_requires (§8.5).

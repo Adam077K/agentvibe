@@ -118,6 +118,32 @@ type r3Leases struct {
 	calls   []r3Verify
 	entered chan string   // when non-nil, every call reports its job
 	block   chan struct{} // when non-nil, the first call waits on it
+	// r6: the authoritative store's consumption, compare-and-set; shared by every launcher that
+	// shares this store, whatever its State dir.
+	consumed map[string]bool
+	consumes []string
+}
+
+// Consume is the authoritative store's atomic compare-and-set (B1-08 r6).
+func (v *r3Leases) Consume(job, lease string) error {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	key := job + "\x00" + lease
+	v.consumes = append(v.consumes, key)
+	if v.consumed == nil {
+		v.consumed = map[string]bool{}
+	}
+	if v.consumed[key] {
+		return errors.New("lease already consumed in the authoritative store")
+	}
+	v.consumed[key] = true
+	return nil
+}
+
+func (v *r3Leases) isConsumed(job, lease string) bool {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	return v.consumed[job+"\x00"+lease]
 }
 
 func (v *r3Leases) Verify(job, lease string, now time.Time) error {
@@ -177,7 +203,7 @@ func r3Grant() Grant {
 			g.Templates[i].Pinned = map[string]string{"<profile>": "project"}
 		}
 	}
-	g.EnvAllow = []string{"AV_JOB", "LANG"}
+	g.EnvAllow = []string{"HOME", "CODEX_HOME", "PATH", "LANG"} // B1-07 r5: the env allowlist; AV_JOB is refused
 	return g
 }
 
@@ -190,7 +216,7 @@ func r3NewWith(t *testing.T, at time.Time, g Grant, log *r3Log) *r3Rig {
 	t.Helper()
 	r := &r3Rig{clock: &fakeClock{t: at}, exec: &r3Exec{}, log: log,
 		leases: &r3Leases{live: map[string]r3Lease{}}, live: &r3Live{}, state: t.TempDir()}
-	l, err := New(g, r.deps())
+	l, err := New(pinned(g, r.deps()))
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -211,13 +237,13 @@ func (r *r3Rig) issue(job string) {
 func (r *r3Rig) req(job string) Request {
 	r.issue(job)
 	q := request(job)
-	q.Env = map[string]string{"AV_JOB": job}
+	q.Env = map[string]string{"LANG": "C.UTF-8"} // B1-07 r5: AV_JOB is no longer passed
 	return q
 }
 
 func (r *r3Rig) codexReq(job string) Request {
 	q := r.req(job)
-	q.Binary, q.Argv = codexBin, render(codexTokens)
+	q.Binary, q.Argv = codexBin, renderJob(job, codexTokens)
 	return q
 }
 
@@ -251,17 +277,17 @@ func TestB108_R3_DepsRequired(t *testing.T) {
 	r := &r3Rig{clock: &fakeClock{t: at0300()}, exec: &r3Exec{}, log: &r3Log{}, leases: &r3Leases{}, live: &r3Live{}, state: t.TempDir()}
 	d := r.deps()
 	d.Leases = nil
-	if _, err := New(r3Grant(), d); !errors.Is(err, ErrDeps) {
+	if _, err := New(pinned(r3Grant(), d)); !errors.Is(err, ErrDeps) {
 		t.Errorf("New with no lease verifier: %v, want ErrDeps", err)
 	}
 	d = r.deps()
 	d.Grant = nil
-	if _, err := New(r3Grant(), d); !errors.Is(err, ErrDeps) {
+	if _, err := New(pinned(r3Grant(), d)); !errors.Is(err, ErrDeps) {
 		t.Errorf("New with no grant status: %v, want ErrDeps", err)
 	}
 	g := r3Grant()
 	g.ForbiddenFlags = append(g.ForbiddenFlags, "bare") // :187, a forbidden flag must start with '-'
-	if _, err := New(g, r.deps()); !errors.Is(err, ErrGrant) {
+	if _, err := New(pinned(g, r.deps())); !errors.Is(err, ErrGrant) {
 		t.Errorf("New with forbidden flag %q: %v, want ErrGrant", "bare", err)
 	}
 }
@@ -381,7 +407,7 @@ func TestB108_R3_SlotRules(t *testing.T) {
 	claudeSlot := func(slot, v string) func(*r3Rig, *Request) {
 		return func(_ *r3Rig, q *Request) { q.Argv[index(claudeTokens, slot)] = v }
 	}
-	r3Launch(t, "codex pinned line", codexSlot("<worktree>", "/w/job-1"), nil)
+	r3Launch(t, "codex pinned line", codexSlot("<worktree>", "/w/job-r3"), nil)
 	for _, v := range []string{"/", "w/job-1", "/w/job-1/..", "/w//job-1", "/w/./job-1", "/w/job-1/"} {
 		r3Launch(t, "codex -C "+v, codexSlot("<worktree>", v), ErrSpec)
 	}
@@ -447,7 +473,7 @@ func TestB108_R3_RateSurvivesRestart(t *testing.T) {
 	// A log that cannot be read never admits.
 	bad := &r3Log{sinceErr: errors.New("disk")}
 	rr := &r3Rig{clock: &fakeClock{t: start}, exec: &r3Exec{}, log: bad, leases: &r3Leases{live: map[string]r3Lease{}}, live: &r3Live{}, state: t.TempDir()}
-	if l, err := New(r3Grant(), rr.deps()); err == nil {
+	if l, err := New(pinned(r3Grant(), rr.deps())); err == nil {
 		rr.l = l
 		if _, err := l.Launch(context.Background(), rr.req("job-blind")); err == nil || rr.exec.n() != 0 {
 			t.Errorf("unreadable history: Launch = %v with %d execs, want a refusal", err, rr.exec.n())
@@ -459,7 +485,7 @@ func TestB108_R3_ExecGetsPinnedDigestAndAllowListedEnv(t *testing.T) {
 	t.Setenv("KERNEL_SECRET", "s3cret")
 	r := r3New(t, at0300())
 	q := r.req("job-env")
-	q.Env = map[string]string{"LANG": "C", "AV_JOB": "job-env"}
+	q.Env = map[string]string{"LANG": "C", "PATH": "/usr/bin"}
 	if _, err := r.l.Launch(context.Background(), q); err != nil {
 		t.Fatalf("Launch: %v", err)
 	}
@@ -467,7 +493,7 @@ func TestB108_R3_ExecGetsPinnedDigestAndAllowListedEnv(t *testing.T) {
 	if c.digest != claudeDigest {
 		t.Errorf("Exec digest = %q, want the pinned %q (Exec must exec the bytes it hashes)", c.digest, claudeDigest)
 	}
-	if want := []string{"AV_JOB=job-env", "LANG=C"}; !slices.Equal(c.env, want) {
+	if want := []string{"LANG=C", "PATH=/usr/bin"}; !slices.Equal(c.env, want) {
 		t.Errorf("Exec env = %q, want exactly %q", c.env, want)
 	}
 
@@ -486,7 +512,7 @@ func TestB108_R3_ExecGetsPinnedDigestAndAllowListedEnv(t *testing.T) {
 		"an inherited secret by name":  {"KERNEL_SECRET": "s3cret"},
 		"a name holding =":             {"AV_JOB=x": "y"},
 		"an empty name":                {"": "y"},
-		"a NUL in a value":             {"AV_JOB": "a\x00b"},
+		"a NUL in a value":             {"LANG": "a\x00b"},
 	} {
 		r3Launch(t, "env: "+name, func(_ *r3Rig, q *Request) { q.Env = env }, ErrSpec)
 	}

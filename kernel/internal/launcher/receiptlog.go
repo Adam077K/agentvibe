@@ -27,8 +27,8 @@ type fileLog struct {
 	path string
 }
 
-// CreateReceiptLog creates an empty receipt log at path; it refuses one that exists.
-func CreateReceiptLog(path string) error {
+// createReceiptLogR4 was r4's CreateReceiptLog (r6 renamed it; see CreateReceiptLog in launcher.go).
+func createReceiptLogR4(path string) error {
 	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
 		return fmt.Errorf("%w: create %s: %v", ErrState, path, err)
@@ -39,15 +39,15 @@ func CreateReceiptLog(path string) error {
 	return writeGenesis(path, logRecord{Created: true})
 }
 
-// ReestablishReceiptLog explicitly replaces a broken (or absent) log at path with one whose
+// reestablishReceiptLogR4 (r4's ReestablishReceiptLog, superseded in r6 by FounderResetReceiptLog) replaces a broken (or absent) log at path with one whose
 // history before at is unknown and counts as full for the trailing hour.
-func ReestablishReceiptLog(path string, at time.Time) error {
+func reestablishReceiptLogR4(path string, at time.Time) error {
 	return writeGenesis(path, logRecord{Reestablished: &at})
 }
 
-// OpenReceiptLog opens the receipt log at path; it refuses one that was never created, or that
+// openReceiptLogR4 (r4's OpenReceiptLog) opens the receipt log at path; it refuses one that was never created, or that
 // does not verify.
-func OpenReceiptLog(path string) (ReceiptSink, error) {
+func openReceiptLogR4(path string) (ReceiptSink, error) {
 	l := &fileLog{path: path}
 	if _, _, err := l.read(); err != nil {
 		return nil, err

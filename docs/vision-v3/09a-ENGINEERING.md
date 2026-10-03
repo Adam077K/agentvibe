@@ -383,9 +383,17 @@ codex exec -C <worktree> -s workspace-write --json --output-schema <f> -o <resul
            -c sandbox_workspace_write.network_access=false -c sandbox_workspace_write.writable_roots=[]
            -c sandbox_workspace_write.exclude_tmpdir_env_var=true -c sandbox_workspace_write.exclude_slash_tmp=true
            -c shell_environment_policy.inherit="core" -c mcp_servers={} -c web_search="disabled"
-           -c model_provider="openai" -c model_providers={} -c notify=[] -c hooks={} -c features={}
+           -c model_provider="openai" -c model_providers={} -c notify=[] -c hooks={}
            -c tools={} -c projects={}
+           -c features.<name>=<bool> ...   (one per feature, 103 pins)
 ```
+
+The `-c features.<name>=<bool>` tail is one pin per feature that `codex features list` reports with a stage other
+than "removed", in listed order. There are 103 pins, measured on codex-cli 0.154.0. Every feature is off except
+`shell_tool` and `unified_exec`, and `multi_agent` is off. `features={}` measured as a no-op. An unknown name is
+refused by `--strict-config`, so the list doubles as a version tripwire. The list is pinned by B1-07 r5
+(`kernel/internal/adapter/codex_r5_donetest_test.go`) and by the launcher's codex line (B1-08 r6). The worker's
+environment is drawn only from `HOME`, `CODEX_HOME`, `PATH` and `LANG`.
 
 Codex takes no profile. Every launch carries `--ignore-user-config` and `--ignore-rules`, and every locked setting is a
 `-c` on the argv. The launch pins the sha256 of the whole argv template (`init_expect`) and of the codex binary; any
