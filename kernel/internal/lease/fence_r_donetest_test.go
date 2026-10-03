@@ -574,3 +574,236 @@ func TestB1_04R_NightlyOneFireUnderRace(t *testing.T) {
 		}
 	})
 }
+
+// ---------------------------------------------------------------------------------------------
+// Re-freeze r2, "2026-10-03 orchestrator rulings": over-cap waiters of any age starve; MaxWait zero
+// is 120 s; a replaced wait keeps its clock per resource; the week is rolling 7×24h and a candidate
+// is listed once; the drill window is 23:00–04:00 local with no catch-up; a crash between the claim
+// and the outcome reads as a failed run and is not retried.
+
+// r04Starve sets up holder (born hBorn) on r2 and waiter (born wBorn) holding r1 and then waiting on
+// r2 with maxWait. It returns the clock at the moment the wait began.
+func r04Starve(t *testing.T, c lease.Coordinator, clk *b104Clock, holderJob string, hBorn time.Time, waiter string, wBorn time.Time, r1, r2 string, maxWait time.Duration) time.Time {
+	t.Helper()
+	h := b104Req(holderJob, hBorn, lease.AllOrNothing, r2)
+	h.TTL = time.Hour
+	r04Grant(t, c, h, []string{r2})
+	g := b104Req(waiter, wBorn, lease.AllOrNothing, r1)
+	g.TTL = time.Hour
+	r04Grant(t, c, g, []string{r1})
+	clk.Advance(30 * time.Second)
+	w := b104Req(waiter, wBorn, lease.AllOrNothing, r2)
+	w.TTL, w.MaxWait = time.Hour, maxWait
+	mustWait(t, c, w)
+	return clk.Now()
+}
+
+func r04Starved(t *testing.T, j journal.Journal, c lease.Coordinator, waiter, holderJob, r1, r2 string, want bool) {
+	t.Helper()
+	h, _ := holder(t, c, r1)
+	if want {
+		if h != "" {
+			t.Fatalf("starved %s still holds %s", waiter, r1)
+		}
+		wantWait(t, c, waiter)
+		if !b104Journaled(t, j, lease.TypeStarved, waiter) {
+			t.Fatalf("no lease.starved naming %s", waiter)
+		}
+	} else {
+		if h != waiter {
+			t.Fatalf("Holder(%s) = %q, want %s not yet starved", r1, h, waiter)
+		}
+		wantWait(t, c, waiter, r2)
+		if b104Journaled(t, j, lease.TypeStarved, waiter) {
+			t.Fatalf("lease.starved journaled for %s before its cap", waiter)
+		}
+	}
+	if h2, _ := holder(t, c, r2); h2 != holderJob {
+		t.Fatalf("Holder(%s) = %q, want %s untouched", r2, h2, holderJob)
+	}
+}
+
+// TestB1_04R_MaxWaitOlderWaiterStarves: ruling, "starve the waiter" whatever its age.
+//
+// Kills: starving only a waiter younger than its holders; breaking at the youngest (revoking the
+// holder) instead of starving the waiter.
+func TestB1_04R_MaxWaitOlderWaiterStarves(t *testing.T) {
+	const p = "repo://x/"
+	r1, r2 := p+"src/one.ts#f", p+"src/two.ts#g"
+	j, _ := b104Open(t)
+	clk := &b104Clock{t: b104Epoch}
+	c := b104Coord(t, j, clk)
+	r04Starve(t, c, clk, "young", b104Epoch.Add(-time.Minute), "old", b104Epoch.Add(-time.Hour), r1, r2, 120*time.Second)
+	clk.Advance(119 * time.Second)
+	detect(t, c)
+	r04Starved(t, j, c, "old", "young", r1, r2, false)
+	clk.Advance(2 * time.Second)
+	detect(t, c)
+	r04Starved(t, j, c, "old", "young", r1, r2, true)
+}
+
+// TestB1_04R_MaxWaitZeroIsDefault: MaxWait zero is DefaultMaxWait, 120 s; never unbounded.
+//
+// Kills: zero as "no cap" (never starves); a default other than 120 s.
+func TestB1_04R_MaxWaitZeroIsDefault(t *testing.T) {
+	if lease.DefaultMaxWait != 120*time.Second {
+		t.Fatalf("DefaultMaxWait = %v, want 09a §6's 120 s", lease.DefaultMaxWait)
+	}
+	const p = "repo://x/"
+	r1, r2 := p+"src/one.ts#f", p+"src/two.ts#g"
+	j, _ := b104Open(t)
+	clk := &b104Clock{t: b104Epoch}
+	c := b104Coord(t, j, clk)
+	r04Starve(t, c, clk, "old", b104Epoch.Add(-time.Hour), "young", b104Epoch.Add(-time.Minute), r1, r2, 0)
+	clk.Advance(119 * time.Second)
+	detect(t, c)
+	r04Starved(t, j, c, "young", "old", r1, r2, false)
+	clk.Advance(2 * time.Second)
+	detect(t, c)
+	r04Starved(t, j, c, "young", "old", r1, r2, true)
+}
+
+// TestB1_04R_MaxWaitClockPerResource: a replaced wait on the same resource keeps the clock of the
+// job's first wait on it; a replaced wait on another resource starts that resource's clock.
+//
+// Kills: restarting the clock on every replacement (a job re-asking every 100 s never starves);
+// one clock per job whatever the resource (the r3 wait starves 21 s after it began).
+func TestB1_04R_MaxWaitClockPerResource(t *testing.T) {
+	const p = "repo://x/"
+	r1, r2, r3 := p+"src/one.ts#f", p+"src/two.ts#g", p+"src/three.ts#h"
+	oldBorn, youngBorn := b104Epoch.Add(-time.Hour), b104Epoch.Add(-time.Minute)
+	again := func(t *testing.T, c lease.Coordinator, r string) {
+		t.Helper()
+		w := b104Req("young", youngBorn, lease.AllOrNothing, r)
+		w.TTL, w.MaxWait = time.Hour, 120*time.Second
+		mustWait(t, c, w)
+	}
+	t.Run("same resource", func(t *testing.T) {
+		j, _ := b104Open(t)
+		clk := &b104Clock{t: b104Epoch}
+		c := b104Coord(t, j, clk)
+		r04Starve(t, c, clk, "old", oldBorn, "young", youngBorn, r1, r2, 120*time.Second)
+		clk.Advance(100 * time.Second)
+		again(t, c, r2)
+		clk.Advance(19 * time.Second)
+		detect(t, c)
+		r04Starved(t, j, c, "young", "old", r1, r2, false)
+		clk.Advance(2 * time.Second)
+		detect(t, b104Coord(t, j, clk))
+		r04Starved(t, j, c, "young", "old", r1, r2, true)
+	})
+	t.Run("other resource", func(t *testing.T) {
+		j, _ := b104Open(t)
+		clk := &b104Clock{t: b104Epoch}
+		c := b104Coord(t, j, clk)
+		r04Starve(t, c, clk, "old", oldBorn, "young", youngBorn, r1, r2, 120*time.Second)
+		h := b104Req("old", oldBorn, lease.AllOrNothing, r2, r3)
+		h.TTL = time.Hour
+		r04Grant(t, c, h, []string{r2, r3})
+		clk.Advance(100 * time.Second)
+		again(t, c, r3)
+		clk.Advance(21 * time.Second) // 121 s since the r2 wait, 21 s since the r3 wait
+		detect(t, c)
+		r04Starved(t, j, c, "young", "old", r1, r3, false)
+		clk.Advance(100 * time.Second) // 121 s since the r3 wait
+		detect(t, c)
+		r04Starved(t, j, c, "young", "old", r1, r3, true)
+	})
+}
+
+// TestB1_04R_HotWeekIsRolling: the week is the rolling 7×24h before now, and a candidate is listed
+// once while pending however many cycles it was on. Cycles at T, T+1h, T+2h, T+3h on ra. At
+// T+1h+7d-1s three are inside; at T+1h+7d+1s two. Both instants fall in the calendar week after T's.
+//
+// Kills: a calendar week (nothing at T+1h+7d-1s); a window anchored at the first cycle; listing a
+// resource once per crossing (ra twice after four cycles).
+func TestB1_04R_HotWeekIsRolling(t *testing.T) {
+	const p = "repo://x/"
+	ra, rb := p+"src/a.ts#<header>", p+"src/b.ts#<header>"
+	j, _ := b104Open(t)
+	clk := &b104Clock{t: b104Epoch}
+	c := b104Coord(t, j, clk)
+	for i := 0; i < 4; i++ {
+		at := b104Epoch.Add(time.Duration(i) * time.Hour)
+		clk.t = at
+		r04Cycle(t, c, at, "a"+string(rune('1'+i)), "b"+string(rune('1'+i)), ra, rb)
+	}
+	clk.t = b104Epoch.Add(4 * time.Hour)
+	if got := r04Candidates(t, c); !r04Same(got, []string{ra, rb}) {
+		t.Fatalf("after four cycles HotCandidates = %v, want [%s %s] once each", got, ra, rb)
+	}
+	in := &b104Clock{t: b104Epoch.Add(time.Hour + 7*24*time.Hour - time.Second)}
+	if got := r04Candidates(t, b104Coord(t, j, in)); !r04Same(got, []string{ra, rb}) {
+		t.Fatalf("at T+1h+7d-1s HotCandidates = %v, want [%s %s] (three cycles in the rolling week)", got, ra, rb)
+	}
+	out := &b104Clock{t: b104Epoch.Add(time.Hour + 7*24*time.Hour + time.Second)}
+	if got := r04Candidates(t, b104Coord(t, j, out)); len(got) != 0 {
+		t.Fatalf("at T+1h+7d+1s HotCandidates = %v, want none (two cycles in the rolling week)", got)
+	}
+}
+
+// TestB1_04R_DrillWindowNoCatchUp: the drill window is 23:00–04:00 local; a night with no Tick in
+// its window is missed — nothing fires the next morning, nothing is recorded for it, and the next
+// window fires.
+//
+// Kills: a different window; catching up a missed night at the next Tick (10:00 fires, or Runs
+// carries 2026-10-01).
+func TestB1_04R_DrillWindowNoCatchUp(t *testing.T) {
+	loc := time.FixedZone("UTC+3", 3*3600)
+	if w := lease.DrillWindow(loc); w.Start != 23*time.Hour || w.Length != 5*time.Hour || w.Loc != loc {
+		t.Fatalf("DrillWindow = %+v, want 23:00 for 5h in %v", w, loc)
+	}
+	j, _ := b104Open(t)
+	clk := &b104Clock{t: time.Date(2026, 10, 1, 12, 0, 0, 0, loc)}
+	var calls atomic.Int32
+	n := r04Nightly(t, j, lease.DrillWindow(loc), clk, &calls, nil)
+	r04Tick(t, n, false, clk.t)
+	clk.t = time.Date(2026, 10, 2, 10, 0, 0, 0, loc) // the 1 October night passed unticked
+	r04Tick(t, n, false, clk.t)
+	clk.t = time.Date(2026, 10, 2, 23, 0, 0, 0, loc)
+	r04Tick(t, n, true, clk.t)
+	if runs := r04Runs(t, n); len(runs) != 1 || runs[0].Night != "2026-10-02" {
+		t.Fatalf("Runs = %+v, want only the 2026-10-02 night", runs)
+	}
+}
+
+// r04Crash passes the first Append on stream through and fails every later one: the process died
+// after the claim.
+type r04Crash struct {
+	journal.Journal
+	stream string
+	n      atomic.Int32
+}
+
+func (c *r04Crash) Append(ctx context.Context, p journal.Proposal) (journal.Event, error) {
+	if p.Stream == c.stream && c.n.Add(1) > 1 {
+		return journal.Event{}, errors.New("crash: process gone")
+	}
+	return c.Journal.Append(ctx, p)
+}
+
+// TestB1_04R_NightlyCrashAfterClaim: a night claimed with no outcome journaled reads as a failed run
+// and is not retried, by a restarted scheduler, in the same night.
+//
+// Kills: a claimed night without an outcome read as passed or left out of Runs; re-running a night
+// whose outcome is missing.
+func TestB1_04R_NightlyCrashAfterClaim(t *testing.T) {
+	j, _ := b104Open(t)
+	clk := &b104Clock{t: time.Date(2026, 10, 1, 23, 10, 0, 0, time.UTC)}
+	var calls atomic.Int32
+	crash := &r04Crash{Journal: j, stream: lease.NightlyStream("sp2-drill")}
+	n1 := r04Nightly(t, crash, r04Window, clk, &calls, nil)
+	n1.Tick(context.Background()) // its outcome append fails: the crash
+	if calls.Load() != 1 {
+		t.Fatalf("run called %d times before the crash, want 1", calls.Load())
+	}
+	clk.t = time.Date(2026, 10, 2, 1, 0, 0, 0, time.UTC)
+	n2 := r04Nightly(t, j, r04Window, clk, &calls, nil)
+	r04Tick(t, n2, false, clk.t)
+	if calls.Load() != 1 {
+		t.Fatalf("run called %d times, want 1: the claimed night was retried", calls.Load())
+	}
+	if runs := r04Runs(t, n2); len(runs) != 1 || runs[0].Night != "2026-10-01" || runs[0].Passed {
+		t.Fatalf("Runs = %+v, want one failed run for 2026-10-01", runs)
+	}
+}

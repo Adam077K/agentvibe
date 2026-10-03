@@ -37,11 +37,25 @@
 # 6. Shared mode: no semantics in 09a; no test frozen. 14 §6 has no owner row for 5, 6 or max_wait.
 # 7. The nightly window (hour, zone); a night missed entirely; a crash between claim and outcome.
 # 8. Hot-resource exemptions ("may be exempted and left to the queue, recorded per resource").
+#
+# RE-FREEZE r2 2026-10-03: 2026-10-03 orchestrator rulings (fail-safe, founder speed delegation).
+#   fence_r_donetest_test.go 028ecc8f... -> 5c0513f1... The r1 tests are unchanged; six are added:
+#   MaxWaitOlderWaiterStarves (an over-cap waiter of any age is starved), MaxWaitZeroIsDefault
+#   (zero = 120 s, never unbounded), MaxWaitClockPerResource (a replaced wait keeps the clock of the
+#   job's first wait on that resource), HotWeekIsRolling (rolling 7x24h; a candidate listed once),
+#   DrillWindowNoCatchUp (DrillWindow 23:00-04:00 local; a missed night is not caught up),
+#   NightlyCrashAfterClaim (claimed with no outcome = failed, not retried). Contract: hot.go gains
+#   DefaultMaxWait, nightly.go gains DrillWindow. No hot-resource exemptions in v0.
+#   The 120 s default breaks no existing test: fence_test.go:259 and fence_adversarial_test.go:423
+#   advance 2 minutes with no outstanding wait, and the frozen B1-04 file advances at most 91 s.
+#   Red 14 of 14 on f2ed126. Each new test fails on its intended assertion (starvation, the stubs).
+#   OUT OF SCOPE (follow-up job): renew, heartbeat, ttl and shared mode. OPEN questions 1-4, 7 and 8
+#   below are answered by these rulings; 5 and 6 move to that follow-up job.
 register: B1-04r
 jobs:
   - id: B1-04
     files:
       - path: kernel/internal/lease/fence_r_donetest_test.go
-        sha256: 028ecc8fc5b9566c178292b1b3269266246eadfb6a3ce5a5c8c5ae49802300a7
+        sha256: 5c0513f1d04952dd0d8f3233b64cc0405f10a3d066598a4bf71c0e5500eb1f66
       - path: kernel/internal/lease/testdata/sp2/b0-greedy.json
         sha256: 4c49c99136af858d19056aa377f75ea6871d0e736ac2319ecee981f8a558380e

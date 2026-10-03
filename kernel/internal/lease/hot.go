@@ -18,25 +18,25 @@
 //     covers rule the verifier uses). A resource the request already names is not added twice.
 //   - Threshold (09a §6): "a resource in three cycles a week (parameter) is proposed to 04 as a hot
 //     resource." Proposed, not added: HotCandidates lists every resource that was on at least three
-//     wait-for cycles Detect broke in the week before now, minus the hot set. It changes nothing.
+//     wait-for cycles Detect broke in the rolling 7×24h before now, minus the hot set. It changes
+//     nothing, and lists a resource once however many cycles it was on.
 //     A resource is on a broken cycle when a job of the cycle waited on it while the next job of
 //     the cycle held it. Only AddHot changes the hot set.
 //
 // max_wait (09a §6): "max_wait_s: 120  # detector's hard cap → release all, requeue, event
 // lease.starved" and "A wait-for graph breaks any cycle or over-cap wait at the youngest mission and
-// journals it." Detect starves a wait outstanding longer than its request's MaxWait when the waiter is
-// the youngest mission among it and the holders it waits on: every lease the waiter holds is
-// released, its wait is dropped, and one TypeStarved event naming it is journaled. The wait's age is
-// read from the Journal, never from a Coordinator's memory.
-//
-// Open, NOT decided here (listed for the founder, see the B1-04r register): an over-cap waiter OLDER
-// than a holder; MaxWait zero (no cap, or the 120 s default); whether a replaced wait restarts the
-// clock; who requeues; "a week" rolling or calendar; hot-resource exemptions; renew, heartbeat and
-// shared mode.
+// journals it." Orchestrator rulings 2026-10-03: Detect starves every wait outstanding longer than
+// its request's MaxWait (DefaultMaxWait when MaxWait is zero; never unbounded), whether the waiter is
+// younger or older than its holders: every lease the waiter holds is released, its wait is dropped,
+// and one TypeStarved event naming it is journaled. A wait's age runs from the job's first wait on
+// that resource: replacing the wait does not restart it. The age is read from the Journal, never
+// from a Coordinator's memory. Requeueing a starved job is the caller's. No hot-resource exemptions
+// in v0. Renew, heartbeat, ttl and shared mode are a follow-up job, not this contract.
 package lease
 
 import (
 	"context"
+	"time"
 )
 
 // TypeHotAdded is the FenceStream event that adds one resource to the hot set.
@@ -45,6 +45,9 @@ const TypeHotAdded = "lease.hot_added"
 // TypeStarved is the FenceStream event Detect journals for each over-cap wait it breaks. Its data
 // names the starved job.
 const TypeStarved = "lease.starved"
+
+// DefaultMaxWait is max_wait_s: 120 (09a §6), applied when Request.MaxWait is zero.
+const DefaultMaxWait = 120 * time.Second
 
 // HotCycleThreshold is "three cycles a week" (09a §6, a parameter).
 const HotCycleThreshold = 3

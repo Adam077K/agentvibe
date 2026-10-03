@@ -3,19 +3,21 @@
 // fixtures"). This file is the CONTRACT the job implements; the done-test that freezes it is
 // fence_r_donetest_test.go.
 //
-//   - The spec names no window, so the window is the caller's: Start is an offset from local midnight
-//     in Loc, Length is how long it stays open. A window may cross midnight. The night a window
-//     belongs to is the date, in Loc, on which it opened, formatted "2006-01-02".
+//   - Start is an offset from local midnight in Loc, Length is how long the window stays open. A
+//     window may cross midnight. The night a window belongs to is the date, in Loc, on which it
+//     opened, formatted "2006-01-02". The drill's window is DrillWindow: 23:00–04:00 local
+//     (orchestrator ruling 2026-10-03). A night with no Tick inside its window is missed: no
+//     catch-up, nothing recorded for it, the next window fires as usual.
 //   - Tick fires run at most once per night: when now is inside [opening, opening+Length) and that
 //     night has not been claimed. The claim is a Journal append with ExpectSeq = the stream head,
 //     made BEFORE run is called, so a restarted scheduler, or a second one over the same Journal,
 //     never fires the same night twice. Nothing sleeps; the caller drives Tick and the clock.
 //   - The outcome is journaled after run returns: Passed is run's nil error, Detail its message. A
-//     failed run is recorded, not retried inside the same night.
+//     failed run is recorded, not retried inside the same night. A night claimed with no outcome
+//     journaled (a crash between the two) reads as a failed run and is not retried.
 //
-// Open, NOT decided here: the window itself; a night missed entirely (fire late or skip); a crash
-// between the claim and the outcome; and which code the production drill runs (the SP2 fixtures
-// live in testdata today).
+// Open, NOT decided here: which code the production drill runs (the SP2 fixtures live in testdata
+// today).
 package lease
 
 import (
@@ -31,6 +33,11 @@ type NightWindow struct {
 	Start  time.Duration // offset from local midnight, in [0, 24h)
 	Length time.Duration // in (0, 24h]
 	Loc    *time.Location
+}
+
+// DrillWindow is the SP2 drill's window, 23:00–04:00 in loc.
+func DrillWindow(loc *time.Location) NightWindow {
+	return NightWindow{}
 }
 
 // NightlyRun is one night's journaled run.
