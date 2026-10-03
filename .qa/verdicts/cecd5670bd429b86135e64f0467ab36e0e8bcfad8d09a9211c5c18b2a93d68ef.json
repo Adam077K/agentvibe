@@ -1,0 +1,11 @@
+{
+  "subject": "cecd5670bd429b86135e64f0467ab36e0e8bcfad8d09a9211c5c18b2a93d68ef",
+  "base": "e4a08112e46792faac444df5446ff742c6f34b4e",
+  "tier": "lite",
+  "tier_driver": "build/done-tests/B0-17b.yml",
+  "verdict": "PASS",
+  "by": "verdict-b1-08h (opus-5.5)",
+  "run_id": null,
+  "evidence": null,
+  "recorded_at": "2026-10-03T18:46:59.329Z"
+}
