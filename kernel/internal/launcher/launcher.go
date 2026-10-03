@@ -16,6 +16,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -201,15 +203,15 @@ func digestOf(tokens []string) string {
 type launcher struct {
 	g        Grant
 	d        Deps
-	mu       sync.Mutex
+	mu       sync.Mutex // the admit lock: grant, lease, history and caps are one step
 	inflight int
-	recent   []time.Time // admission times of launches that may still be inside the trailing hour
+	running  map[string]bool // JobIDs between admit and Exec.Run's return
 }
 
 // New returns a Launcher holding g. It refuses a template whose Digest does not match its
 // Tokens (ErrGrant) or that carries a forbidden flag (ErrForbiddenFlag).
 func New(g Grant, d Deps) (Launcher, error) {
-	if d.Clock == nil || d.Exec == nil || d.Digester == nil || d.Receipts == nil {
+	if d.Clock == nil || d.Exec == nil || d.Digester == nil || d.Receipts == nil || d.Leases == nil || d.Grant == nil {
 		return nil, ErrDeps
 	}
 	if g.Holder != Holder || g.Caps.Concurrent <= 0 || g.Caps.PerHour <= 0 || len(g.Templates) == 0 {
@@ -218,6 +220,11 @@ func New(g Grant, d Deps) (Launcher, error) {
 	for _, f := range g.ForbiddenFlags {
 		if !strings.HasPrefix(f, "-") {
 			return nil, fmt.Errorf("%w: forbidden flag %q", ErrGrant, f)
+		}
+	}
+	for _, n := range g.EnvAllow {
+		if n == "" || strings.ContainsAny(n, "=\x00") {
+			return nil, fmt.Errorf("%w: env name %q", ErrGrant, n)
 		}
 	}
 	bins := map[string]bool{}
@@ -235,10 +242,11 @@ func New(g Grant, d Deps) (Launcher, error) {
 			return nil, fmt.Errorf("%w: template for %q carries %q", ErrForbiddenFlag, t.Binary, f)
 		}
 	}
-	g.Binaries = append([]Binary(nil), g.Binaries...)
-	g.Templates = append([]ArgvTemplate(nil), g.Templates...)
-	g.ForbiddenFlags = append([]string(nil), g.ForbiddenFlags...)
-	return &launcher{g: g, d: d}, nil
+	g.Binaries = slices.Clone(g.Binaries)
+	g.Templates = slices.Clone(g.Templates)
+	g.ForbiddenFlags = slices.Clone(g.ForbiddenFlags)
+	g.EnvAllow = slices.Clone(g.EnvAllow)
+	return &launcher{g: g, d: d, running: map[string]bool{}}, nil
 }
 
 // forbidden returns the first forbidden flag argv carries, in any spelling: "--f", "--f=v",
@@ -260,6 +268,8 @@ func forbidden(flags, argv []string) string {
 	return ""
 }
 
+func isSlot(t string) bool { return len(t) > 2 && t[0] == '<' && t[len(t)-1] == '>' }
+
 // matches reports whether argv is exactly tokens with each "<slot>" filled by one token that is
 // non-empty and does not begin with '-'.
 func matches(tokens, argv []string) bool {
@@ -267,7 +277,7 @@ func matches(tokens, argv []string) bool {
 		return false
 	}
 	for i, t := range tokens {
-		slot := len(t) > 2 && t[0] == '<' && t[len(t)-1] == '>'
+		slot := isSlot(t)
 		if slot && (argv[i] == "" || argv[i][0] == '-') || !slot && argv[i] != t {
 			return false
 		}
@@ -275,12 +285,66 @@ func matches(tokens, argv []string) bool {
 	return true
 }
 
-// prerequisites checks per_launch_requires (09a §8.5).
+// slotRules checks each slot value against its adapter's rule: a Pinned slot equals its pin;
+// <worktree> (codex -C) is clean, absolute and not /; <B> (--max-budget-usd) is a decimal of
+// at most two places, above zero and within the budget cap.
+func slotRules(t ArgvTemplate, argv []string, capCents int64) error {
+	for i, tok := range t.Tokens {
+		v := argv[i]
+		if pin, ok := t.Pinned[tok]; ok && v != pin {
+			return fmt.Errorf("%w: %s = %q, pinned %q", ErrSpec, tok, v, pin)
+		}
+		switch tok {
+		case "<worktree>":
+			if !filepath.IsAbs(v) || filepath.Clean(v) != v || v == "/" {
+				return fmt.Errorf("%w: -C %q", ErrSpec, v)
+			}
+		case "<B>":
+			if c, ok := cents(v); !ok || c <= 0 || c > capCents {
+				return fmt.Errorf("%w: --max-budget-usd %q against a cap of %d cents", ErrSpec, v, capCents)
+			}
+		}
+	}
+	return nil
+}
+
+// cents parses "D", "D.d" or "D.dd" (D decimal digits, no sign, no leading zero but "0").
+func cents(v string) (int64, bool) {
+	whole, frac, dot := strings.Cut(v, ".")
+	if whole == "" || len(whole) > 12 || len(whole) > 1 && whole[0] == '0' || dot && (frac == "" || len(frac) > 2) {
+		return 0, false
+	}
+	var c int64
+	for _, r := range whole + (frac + "00")[:2] {
+		if r < '0' || r > '9' {
+			return 0, false
+		}
+		c = c*10 + int64(r-'0')
+	}
+	return c, true
+}
+
+// environ builds the worker's complete environment from req.Env: allow-listed names only,
+// sorted, never nil, so nothing is inherited from the Kernel.
+func (l *launcher) environ(env map[string]string) ([]string, error) {
+	out := make([]string, 0, len(env))
+	for k, v := range env {
+		if !slices.Contains(l.g.EnvAllow, k) || strings.ContainsRune(v, 0) {
+			return nil, fmt.Errorf("%w: env %q", ErrSpec, k)
+		}
+		out = append(out, k+"="+v)
+	}
+	slices.Sort(out)
+	return out, nil
+}
+
+// prerequisites checks per_launch_requires (09a §8.5). An unattended launch is headless.
 func prerequisites(req Request) error {
 	p := req.Requires
 	miss := func(what string) error { return fmt.Errorf("%w: %s", ErrPrerequisite, what) }
-	lease := "job://" + req.JobID + "#"
 	switch {
+	case req.Unattended && !p.Headless:
+		return fmt.Errorf("%w: unattended but not headless", ErrSpec)
 	case req.JobID == "" || !p.AdmittedJob:
 		return miss("admitted Job")
 	case len(p.ToolLease) == 0:
@@ -291,11 +355,11 @@ func prerequisites(req Request) error {
 		return miss(fmt.Sprintf("isolation I%d (headless %v)", p.Isolation, p.Headless))
 	case p.ProviderMode == "api":
 		return fmt.Errorf("%w: provider mode api", ErrUndecided)
-	case p.ProviderMode != "sub" && p.ProviderMode != "subscription":
+	case p.ProviderMode != "sub":
 		return miss(fmt.Sprintf("provider mode %q", p.ProviderMode))
 	case p.BudgetCapCents <= 0:
 		return miss("budget cap")
-	case !strings.HasPrefix(p.FencedLease, lease) || len(p.FencedLease) == len(lease):
+	case p.FencedLease == "":
 		return miss("fenced lease on job://" + req.JobID)
 	}
 	return nil
@@ -317,74 +381,78 @@ func (l *launcher) Launch(ctx context.Context, req Request) (Receipt, error) {
 	if bin == nil {
 		return Receipt{}, fmt.Errorf("%w: %q", ErrBinary, req.Binary)
 	}
-	tmpl := ""
-	for _, t := range l.g.Templates {
+	var tmpl *ArgvTemplate
+	for i, t := range l.g.Templates {
 		if t.Binary == req.Binary && matches(t.Tokens, req.Argv) {
-			tmpl = t.Digest
+			tmpl = &l.g.Templates[i]
 			break
 		}
 	}
-	if tmpl == "" {
+	if tmpl == nil {
 		return Receipt{}, ErrArgvNotPinned
 	}
 	if err := prerequisites(req); err != nil {
 		return Receipt{}, err
 	}
-	if got, err := l.d.Digester.Digest(bin.Path); err != nil || got != bin.Digest {
-		return Receipt{}, fmt.Errorf("%w: %q measured %q (%v)", ErrBinary, bin.Path, got, err)
+	if err := slotRules(*tmpl, req.Argv, req.Requires.BudgetCapCents); err != nil {
+		return Receipt{}, err
 	}
-	rc, err := l.admit(req, bin.Digest, tmpl)
+	env, err := l.environ(req.Env)
 	if err != nil {
 		return Receipt{}, err
 	}
-	defer l.done()
-	if err := l.d.Receipts.Append(rc); err != nil {
-		l.unadmit(rc.At)
-		return Receipt{}, fmt.Errorf("%w: %v", ErrReceipt, err)
+	if got, err := l.d.Digester.Digest(bin.Path); err != nil || got != bin.Digest {
+		return Receipt{}, fmt.Errorf("%w: %q measured %q (%v)", ErrBinary, bin.Path, got, err)
 	}
-	// B1-08 r3 plumbing only: the implementer passes the pinned digest and the allow-listed env.
-	return rc, l.d.Exec.Run(ctx, bin.Path, "", append([]string(nil), req.Argv...), nil)
+	rc, err := l.admit(req, bin.Digest, tmpl.Digest)
+	if err != nil {
+		return Receipt{}, err
+	}
+	defer l.done(req.JobID)
+	// Exec hashes and execs the same open file against the pinned digest: no swap in between.
+	return rc, l.d.Exec.Run(ctx, bin.Path, bin.Digest, slices.Clone(req.Argv), env)
 }
 
-// admit takes a concurrent slot and a per-hour slot, or neither. The hour is rolling: a launch
-// counts while less than an hour has passed since it was admitted.
+// admit is one step under the admit lock: the grant is live, the job is not already running,
+// its fenced lease verifies at the launcher's clock, the durable receipt log holds fewer than
+// per_hour launches in the trailing hour, a concurrent slot is free, and the Receipt is
+// appended. Any refusal takes nothing.
 func (l *launcher) admit(req Request, digest, tmpl string) (Receipt, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	now := l.d.Clock.Now()
-	kept := l.recent[:0]
-	for _, t := range l.recent {
-		if now.Sub(t) < time.Hour {
-			kept = append(kept, t)
-		}
+	if err := l.d.Grant.Live(); err != nil {
+		return Receipt{}, fmt.Errorf("%w: not live: %v", ErrGrant, err)
 	}
-	l.recent = kept
-	if len(l.recent) >= l.g.Caps.PerHour {
-		return Receipt{}, fmt.Errorf("%w: %d in the trailing hour", ErrRateCap, len(l.recent))
+	if l.running[req.JobID] {
+		return Receipt{}, fmt.Errorf("%w: job %q is already running", ErrLease, req.JobID)
+	}
+	if err := l.d.Leases.Verify(req.JobID, req.Requires.FencedLease, now); err != nil {
+		return Receipt{}, fmt.Errorf("%w: %v", ErrLease, err)
+	}
+	recent, err := l.d.Receipts.Since(now.Add(-time.Hour))
+	if err != nil {
+		return Receipt{}, fmt.Errorf("%w: launch history unreadable: %v", ErrReceipt, err)
+	}
+	if len(recent) >= l.g.Caps.PerHour {
+		return Receipt{}, fmt.Errorf("%w: %d in the trailing hour", ErrRateCap, len(recent))
 	}
 	if l.inflight >= l.g.Caps.Concurrent {
 		return Receipt{}, fmt.Errorf("%w: %d running", ErrConcurrentCap, l.inflight)
 	}
-	l.recent = append(l.recent, now)
-	l.inflight++
-	return Receipt{JobID: req.JobID, Binary: req.Binary, Digest: digest, Template: tmpl,
-		Argv: append([]string(nil), req.Argv...), At: now}, nil
-}
-
-// unadmit returns the per-hour slot of a launch that never reached exec.
-func (l *launcher) unadmit(at time.Time) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	for i := len(l.recent) - 1; i >= 0; i-- {
-		if l.recent[i].Equal(at) {
-			l.recent = append(l.recent[:i], l.recent[i+1:]...)
-			return
-		}
+	rc := Receipt{JobID: req.JobID, Binary: req.Binary, Digest: digest, Template: tmpl,
+		Argv: slices.Clone(req.Argv), At: now}
+	if err := l.d.Receipts.Append(rc); err != nil {
+		return Receipt{}, fmt.Errorf("%w: %v", ErrReceipt, err)
 	}
+	l.inflight++
+	l.running[req.JobID] = true
+	return rc, nil
 }
 
-func (l *launcher) done() {
+func (l *launcher) done(job string) {
 	l.mu.Lock()
 	l.inflight--
+	delete(l.running, job)
 	l.mu.Unlock()
 }

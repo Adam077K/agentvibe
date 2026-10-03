@@ -51,14 +51,6 @@ type sink struct {
 
 func (s *sink) Since(time.Time) ([]Receipt, error) { return nil, nil }
 
-type okLease struct{}
-
-func (okLease) Verify(string, string, time.Time) error { return nil }
-
-type okGrant struct{}
-
-func (okGrant) Live() error { return nil }
-
 func (s *sink) Append(Receipt) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -68,6 +60,14 @@ func (s *sink) Append(Receipt) error {
 	s.n++
 	return nil
 }
+
+type okLease struct{ err error }
+
+func (l okLease) Verify(string, string, time.Time) error { return l.err }
+
+type okGrant struct{}
+
+func (okGrant) Live() error { return nil }
 
 // adapterGrant builds the grant from the adapters' own templates, as production does.
 func adapterGrant(concurrent int) Grant {
@@ -80,11 +80,15 @@ func adapterGrant(concurrent int) Grant {
 	}
 }
 
+// fill fills every slot with "v", except the two slots with value rules.
 func fill(tokens []string) []string {
 	out := slices.Clone(tokens)
 	for i, t := range out {
 		if t[0] == '<' {
 			out[i] = "v"
+			if v, ok := map[string]string{"<worktree>": "/w/j", "<B>": "0.01"}[t]; ok {
+				out[i] = v
+			}
 		}
 	}
 	return out
@@ -96,9 +100,9 @@ func req(job string) Request {
 			Isolation: 2, Headless: true, ProviderMode: "sub", BudgetCapCents: 1, FencedLease: "job://" + job + "#7"}}
 }
 
-func newL(t *testing.T, g Grant, e Exec, d digests, s *sink) Launcher {
+func newL(t *testing.T, g Grant, e Exec, d digests, s *sink, leaseErr error) Launcher {
 	t.Helper()
-	l, err := New(g, Deps{Clock: clk{time.Unix(0, 0)}, Exec: e, Digester: d, Receipts: s, Leases: okLease{}, Grant: okGrant{}})
+	l, err := New(g, Deps{Clock: clk{time.Unix(0, 0)}, Exec: e, Digester: d, Receipts: s, Leases: okLease{leaseErr}, Grant: okGrant{}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +112,7 @@ func newL(t *testing.T, g Grant, e Exec, d digests, s *sink) Launcher {
 func TestAdapterTemplatesLaunchAndConcurrentCap(t *testing.T) {
 	e := &blockExec{started: make(chan struct{}, 4), release: make(chan struct{})}
 	s := &sink{}
-	l := newL(t, adapterGrant(2), e, digests{tBin: tDigest, cBin: cDigest}, s)
+	l := newL(t, adapterGrant(2), e, digests{tBin: tDigest, cBin: cDigest}, s, nil)
 	codex := req("j2")
 	codex.Binary, codex.Argv = cBin, fill(adapter.NewCodex(cDigest).Template())
 	errs := make(chan error, 2)
@@ -137,22 +141,23 @@ func TestAdapterTemplatesLaunchAndConcurrentCap(t *testing.T) {
 func TestRefusalsBeforeExec(t *testing.T) {
 	type mut func(*Request, digests, *sink)
 	cases := map[string]struct {
-		m    mut
-		want error
+		m        mut
+		leaseErr error
+		want     error
 	}{
-		"digest mismatch":      {func(_ *Request, d digests, _ *sink) { d[tBin] = cDigest }, ErrBinary},
-		"binary not granted":   {func(r *Request, _ digests, _ *sink) { r.Binary = "/bin/sh" }, ErrBinary},
-		"api undecided":        {func(r *Request, _ digests, _ *sink) { r.Requires.ProviderMode = "api" }, ErrUndecided},
-		"unknown mode":         {func(r *Request, _ digests, _ *sink) { r.Requires.ProviderMode = "queue" }, ErrPrerequisite},
-		"not admitted":         {func(r *Request, _ digests, _ *sink) { r.Requires.AdmittedJob = false }, ErrPrerequisite},
-		"no tool lease":        {func(r *Request, _ digests, _ *sink) { r.Requires.ToolLease = nil }, ErrPrerequisite},
-		"no context profile":   {func(r *Request, _ digests, _ *sink) { r.Requires.ContextProfile = "" }, ErrPrerequisite},
-		"headless at I1":       {func(r *Request, _ digests, _ *sink) { r.Requires.Isolation = 1 }, ErrPrerequisite},
-		"no budget cap":        {func(r *Request, _ digests, _ *sink) { r.Requires.BudgetCapCents = 0 }, ErrPrerequisite},
-		"lease of another job": {func(r *Request, _ digests, _ *sink) { r.Requires.FencedLease = "job://j10#7" }, ErrPrerequisite},
-		"lease without token":  {func(r *Request, _ digests, _ *sink) { r.Requires.FencedLease = "job://j1#" }, ErrPrerequisite},
-		"receipt fails":        {func(_ *Request, _ digests, s *sink) { s.err = errors.New("disk") }, ErrReceipt},
-		"-sdanger-full-access": {func(r *Request, _ digests, _ *sink) { r.Argv = append(r.Argv, "-sdanger-full-access") }, ErrForbiddenFlag},
+		"digest mismatch":      {func(_ *Request, d digests, _ *sink) { d[tBin] = cDigest }, nil, ErrBinary},
+		"binary not granted":   {func(r *Request, _ digests, _ *sink) { r.Binary = "/bin/sh" }, nil, ErrBinary},
+		"api undecided":        {func(r *Request, _ digests, _ *sink) { r.Requires.ProviderMode = "api" }, nil, ErrUndecided},
+		"subscription":         {func(r *Request, _ digests, _ *sink) { r.Requires.ProviderMode = "subscription" }, nil, ErrPrerequisite},
+		"not admitted":         {func(r *Request, _ digests, _ *sink) { r.Requires.AdmittedJob = false }, nil, ErrPrerequisite},
+		"no tool lease":        {func(r *Request, _ digests, _ *sink) { r.Requires.ToolLease = nil }, nil, ErrPrerequisite},
+		"no context profile":   {func(r *Request, _ digests, _ *sink) { r.Requires.ContextProfile = "" }, nil, ErrPrerequisite},
+		"headless at I1":       {func(r *Request, _ digests, _ *sink) { r.Requires.Isolation = 1 }, nil, ErrPrerequisite},
+		"no budget cap":        {func(r *Request, _ digests, _ *sink) { r.Requires.BudgetCapCents = 0 }, nil, ErrPrerequisite},
+		"no fenced lease":      {func(r *Request, _ digests, _ *sink) { r.Requires.FencedLease = "" }, nil, ErrPrerequisite},
+		"lease not live":       {func(*Request, digests, *sink) {}, errors.New("stale"), ErrLease},
+		"receipt fails":        {func(_ *Request, _ digests, s *sink) { s.err = errors.New("disk") }, nil, ErrReceipt},
+		"-sdanger-full-access": {func(r *Request, _ digests, _ *sink) { r.Argv = append(r.Argv, "-sdanger-full-access") }, nil, ErrForbiddenFlag},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -160,7 +165,7 @@ func TestRefusalsBeforeExec(t *testing.T) {
 			close(e.release)
 			d, s, r := digests{tBin: tDigest, cBin: cDigest}, &sink{}, req("j1")
 			tc.m(&r, d, s)
-			l := newL(t, adapterGrant(1), e, d, s)
+			l := newL(t, adapterGrant(1), e, d, s, tc.leaseErr)
 			if _, err := l.Launch(context.Background(), r); !errors.Is(err, tc.want) {
 				t.Errorf("err = %v, want %v", err, tc.want)
 			}
@@ -178,12 +183,13 @@ func TestRefusalsBeforeExec(t *testing.T) {
 }
 
 func TestNewRefusesMalformed(t *testing.T) {
-	d := Deps{Clock: clk{}, Exec: &blockExec{}, Digester: digests{}, Receipts: &sink{}}
+	d := Deps{Clock: clk{}, Exec: &blockExec{}, Digester: digests{}, Receipts: &sink{}, Leases: okLease{}, Grant: okGrant{}}
 	for name, m := range map[string]func(*Grant){
 		"holder":          func(g *Grant) { g.Holder = "orchestrator" },
 		"zero per_hour":   func(g *Grant) { g.Caps.PerHour = 0 },
 		"orphan template": func(g *Grant) { g.Binaries = g.Binaries[:1] },
 		"no templates":    func(g *Grant) { g.Templates = nil },
+		"env name with =": func(g *Grant) { g.EnvAllow = []string{"A=B"} },
 	} {
 		g := adapterGrant(1)
 		m(&g)
