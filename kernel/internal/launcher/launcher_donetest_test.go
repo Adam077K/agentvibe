@@ -86,7 +86,7 @@ func (c *fakeClock) Advance(d time.Duration) { c.t = c.t.Add(d) }
 // fakeExec records every call and never starts a process.
 type fakeExec struct{ calls [][]string }
 
-func (e *fakeExec) Run(_ context.Context, path string, argv []string) error {
+func (e *fakeExec) Run(_ context.Context, path, _ string, argv, _ []string) error {
 	e.calls = append(e.calls, append([]string{path}, argv...))
 	return nil
 }
@@ -103,6 +103,25 @@ func (d fakeDigester) Digest(path string) (string, error) {
 type receipts struct{ got []Receipt }
 
 func (r *receipts) Append(x Receipt) error { r.got = append(r.got, x); return nil }
+
+func (r *receipts) Since(t time.Time) ([]Receipt, error) {
+	var out []Receipt
+	for _, x := range r.got {
+		if x.At.After(t) {
+			out = append(out, x)
+		}
+	}
+	return out, nil
+}
+
+// anyLease and liveGrant accept everything: the r3 file tests the lease and grant checks.
+type anyLease struct{}
+
+func (anyLease) Verify(string, string, time.Time) error { return nil }
+
+type liveGrant struct{}
+
+func (liveGrant) Live() error { return nil }
 
 func grant() Grant {
 	return Grant{
@@ -123,6 +142,8 @@ func deps(r *rig) Deps {
 		Exec:     r.exec,
 		Digester: fakeDigester{claudeBin: claudeDigest, codexBin: codexDigest},
 		Receipts: r.rcpt,
+		Leases:   anyLease{},
+		Grant:    liveGrant{},
 	}
 }
 
@@ -139,7 +160,7 @@ func request(job string) Request {
 			ContextProfile: "launch-pack",
 			Isolation:      3,
 			Headless:       true,
-			ProviderMode:   "subscription",
+			ProviderMode:   "sub",
 			BudgetCapCents: 500,
 			FencedLease:    "job://" + job + "#fence=1",
 		},

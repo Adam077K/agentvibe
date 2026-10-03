@@ -51,6 +51,12 @@ var (
 	ErrDeps = errors.New("launcher: missing dependency")
 	// ErrReceipt: the Receipt could not be appended, so the launch did not exec.
 	ErrReceipt = errors.New("launcher: receipt append failed")
+	// ErrSpec: the request contradicts itself (unattended but not headless) or a slot value breaks
+	// its adapter's rule (B1-08 r3: -C clean, absolute, not /; a pinned slot equal to its pin;
+	// --max-budget-usd a decimal within the budget cap; Env only allow-listed names).
+	ErrSpec = errors.New("launcher: request breaks a slot rule or contradicts itself")
+	// ErrLease: the fenced lease is not this job's live claim, or the job is already running.
+	ErrLease = errors.New("launcher: lease is not live for this job")
 )
 
 // Holder is the only principal that may hold the grant (09a §8.5).
@@ -61,8 +67,13 @@ type Clock interface{ Now() time.Time }
 
 // Exec runs one worker process and returns when it exits. The launcher calls it at most once
 // per admitted launch and never for a refused one.
+//
+// B1-08 r3: Run execs the binary at path only if the bytes it execs hash to digest (open, hash
+// and exec the same file, so nothing can swap the binary between the check and the exec); env is
+// the complete environment, built from the grant's allow-list, and is never nil: nothing is
+// inherited from the Kernel.
 type Exec interface {
-	Run(ctx context.Context, path string, argv []string) error
+	Run(ctx context.Context, path, digest string, argv, env []string) error
 }
 
 // Digester returns the content digest ("sha256:<hex>") of the binary at path.
@@ -73,6 +84,21 @@ type Digester interface {
 // ReceiptSink receives one Receipt per launch that reached Exec.Run.
 type ReceiptSink interface {
 	Append(Receipt) error
+	// Since returns the receipts whose At is after t, oldest first. B1-08 r3: the per-hour count
+	// is read from here, so it survives a restart.
+	Since(t time.Time) ([]Receipt, error)
+}
+
+// LeaseVerifier checks a fenced lease (B1-08 r3): issued for jobID, unexpired at now, unrevoked,
+// and carrying the current fencing token. The launcher calls it under its admit lock.
+type LeaseVerifier interface {
+	Verify(jobID, lease string, now time.Time) error
+}
+
+// GrantStatus reports whether the grant is still live (B1-08 r3): nil while signed and
+// unrevoked. The launcher asks at every admit, so a revocation binds the next launch.
+type GrantStatus interface {
+	Live() error
 }
 
 // Binary is one granted binary, pinned by digest.
@@ -96,6 +122,8 @@ type ArgvTemplate struct {
 	Binary string // path of the Binary the template belongs to
 	Tokens []string
 	Digest string
+	// Pinned maps a slot to the only value it may take (B1-08 r3), e.g. "<profile>" -> "project".
+	Pinned map[string]string
 }
 
 // Grant is launcher_grant as the launcher consumes it. Verifying the founder signature on the
@@ -106,6 +134,7 @@ type Grant struct {
 	Templates      []ArgvTemplate // the only argv that may run
 	ForbiddenFlags []string       // e.g. "--dangerously-skip-permissions", "--bare", "-s danger-full-access"
 	Caps           Caps
+	EnvAllow       []string // B1-08 r3: the only environment names a worker may receive
 }
 
 // Prerequisites is per_launch_requires (§8.5).
@@ -127,6 +156,7 @@ type Request struct {
 	Argv       []string // argv[1:]; must match one of the grant's templates for Binary
 	Unattended bool     // no human is present; the grant alone authorises the launch
 	Requires   Prerequisites
+	Env        map[string]string // B1-08 r3: the worker's environment; every name on Grant.EnvAllow
 }
 
 // Receipt records one launch.
@@ -145,6 +175,8 @@ type Deps struct {
 	Exec     Exec
 	Digester Digester
 	Receipts ReceiptSink
+	Leases   LeaseVerifier // B1-08 r3: required
+	Grant    GrantStatus   // B1-08 r3: required
 }
 
 // Launcher spawns workers under a Grant.
@@ -310,7 +342,8 @@ func (l *launcher) Launch(ctx context.Context, req Request) (Receipt, error) {
 		l.unadmit(rc.At)
 		return Receipt{}, fmt.Errorf("%w: %v", ErrReceipt, err)
 	}
-	return rc, l.d.Exec.Run(ctx, bin.Path, append([]string(nil), req.Argv...))
+	// B1-08 r3 plumbing only: the implementer passes the pinned digest and the allow-listed env.
+	return rc, l.d.Exec.Run(ctx, bin.Path, "", append([]string(nil), req.Argv...), nil)
 }
 
 // admit takes a concurrent slot and a per-hour slot, or neither. The hour is rolling: a launch

@@ -107,12 +107,54 @@
 #   DR-B1-07 "Round 2"). --ignore-rules keeps the profile and drops user and project execpolicy .rules
 #   files. 09a §8.2 is changed with it. Nothing else in B1-08 changed. The launcher is still the stub on
 #   this base, so the file stays red as before.
+# RE-FREEZE r8 2026-10-03 (B1-08): 2026-10-03 re-freeze r3 after review. The Opus review FAILED
+#   build/b1-08 @ 29abadd because the frozen tests killed 2 of its 23 mutants. These are the
+#   orchestrator's decisions, fail-safe and within canon: 09a §8.5 per_launch_requires, §9 I1-I4,
+#   §10 'sub'|'api'. Branch build/b1-08-tests-r3 is 29abadd plus interface plumbing in
+#   launcher.go, with declarations only and no behaviour:
+#     ErrSpec, ErrLease; LeaseVerifier and GrantStatus (Deps.Leases, Deps.Grant, both required);
+#     ReceiptSink.Since; Exec.Run(ctx, path, digest, argv, env); ArgvTemplate.Pinned;
+#     Grant.EnvAllow; Request.Env.
+#   launcher_test.go (the implementer's) only follows the new signatures.
+#   launcher_donetest_test.go is re-frozen with its fakes on the new interfaces (Run, Since, and an
+#   accept-all lease and grant) and with provider mode "sub", not "subscription" (OPEN 1). No
+#   assertion changed.
+#   Added launcher_r3_donetest_test.go:
+#     R3_DepsRequired: no verifier or grant status is ErrDeps; a forbidden flag with no '-' is
+#       ErrGrant (:187).
+#     R3_UnattendedIsHeadless: unattended without headless is ErrSpec; unattended needs I2+; I4 is
+#       accepted and I5 and I0 are refused (:258).
+#     R3_LeaseVerified: Verify gets (job, lease, the launcher's clock). A forged lease, another
+#       job's lease, an expired lease, one expiring now, a revoked lease, a stale fence, and one
+#       expired by the launcher's clock are each ErrLease.
+#     R3_DoubleLaunchRefused: a running job's second launch is ErrLease.
+#     R3_LeaseVerifiedUnderAdmitLock: no second Verify while the first holds the lock.
+#     R3_SlotRules: -C clean, absolute, not /; Pinned <profile> for codex -p and claude
+#       --setting-sources; --max-budget-usd a decimal of at most 2 places, > 0, within the cap.
+#     R3_RateSurvivesRestart: a new launcher over the same log refuses the 121st. A launch exactly
+#       an hour old is out of the window and one a nanosecond younger is in it (:324). An unreadable
+#       log never admits.
+#     R3_ExecGetsPinnedDigestAndAllowListedEnv: Exec receives the pinned digest, closing the TOCTOU
+#       window because Exec hashes and execs the same file. Its env is exactly the allow-listed
+#       names, sorted, never nil, and never inherits KERNEL_SECRET. Unknown names, names holding =,
+#       an empty name and NUL values are ErrSpec.
+#     R3_GrantLiveAtEveryAdmit: after a revocation the next launch is ErrGrant.
+#     R3_ProviderModeSubOnly: only "sub" is accepted; "api" is ErrUndecided.
+#     R3_ReviewMutants: a failed receipt releases its slots (:310); -s=v and -sv are
+#       ErrForbiddenFlag (:223); a cancelled context (:273); a slot of -, -- or -x (:239); an empty
+#       JobID (:252).
+#   Results on 29abadd plus the plumbing: 10 r3 tests FAIL, and every test except
+#   R3_ReviewMutants does. The 3 frozen tests and R3_ReviewMutants pass.
+#   Proof, $TMPDIR only: a reference passes every B108 test (-race -count=3). Mutants: 28 of 28
+#   killed, including the review's 8 survivors and 20 for items 1-8.
 register: B0-17b
 jobs:
   - id: B1-08
     files:
       - path: kernel/internal/launcher/launcher_donetest_test.go
-        sha256: d9a00873f8fe4b45381a4fd37c4f29e276f3dbb39e65e952549f02d4c271146a
+        sha256: 6f2cebf7fc8fda9f63f0d445f01487c92bdfdfcaad03d065e9a10592670fd822
+      - path: kernel/internal/launcher/launcher_r3_donetest_test.go
+        sha256: 00410072475c33ef899190fe8c7f0ec85b7bd084918eb77ec5a502a0f4d87f59
   - id: B1-12
     files:
       - path: kernel/internal/outbox/outbox_donetest_test.go

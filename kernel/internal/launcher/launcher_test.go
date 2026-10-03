@@ -30,7 +30,7 @@ type blockExec struct {
 	release chan struct{}
 }
 
-func (e *blockExec) Run(context.Context, string, []string) error {
+func (e *blockExec) Run(context.Context, string, string, []string, []string) error {
 	e.mu.Lock()
 	e.n++
 	e.mu.Unlock()
@@ -48,6 +48,16 @@ type sink struct {
 	n   int
 	err error
 }
+
+func (s *sink) Since(time.Time) ([]Receipt, error) { return nil, nil }
+
+type okLease struct{}
+
+func (okLease) Verify(string, string, time.Time) error { return nil }
+
+type okGrant struct{}
+
+func (okGrant) Live() error { return nil }
 
 func (s *sink) Append(Receipt) error {
 	s.mu.Lock()
@@ -88,7 +98,7 @@ func req(job string) Request {
 
 func newL(t *testing.T, g Grant, e Exec, d digests, s *sink) Launcher {
 	t.Helper()
-	l, err := New(g, Deps{Clock: clk{time.Unix(0, 0)}, Exec: e, Digester: d, Receipts: s})
+	l, err := New(g, Deps{Clock: clk{time.Unix(0, 0)}, Exec: e, Digester: d, Receipts: s, Leases: okLease{}, Grant: okGrant{}})
 	if err != nil {
 		t.Fatal(err)
 	}
