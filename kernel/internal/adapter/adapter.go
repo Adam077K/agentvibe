@@ -122,6 +122,9 @@ type LaunchSpec struct {
 	ResultPath       string            // codex -o <result.json> (B1-07)
 	BinaryDigest     string            // codex: the binary's measured sha256; must equal the grant digest (DR-B1-07 1+3)
 	ProfileDigest    string            // codex: the generated profile's measured sha256; must equal InitExpect (DR-B1-07 1+3)
+	CodexProfileTOML string            // codex: the generated profile's exact bytes; sha256 = InitExpect, every required key set (DR-B1-07 r2)
+	Worktree         string            // codex: the job's worktree; -C stays inside it, -o and CODEX_HOME stay outside (DR-B1-07 r2)
+	CodexHome        string            // codex: the pinned CODEX_HOME; Env[CODEX_HOME] is absent or exactly this (DR-B1-07 r2)
 }
 
 // ChildJob is one nested agent, keyed by the tool_use id that spawned it; its events carry that

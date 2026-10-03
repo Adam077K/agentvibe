@@ -42,8 +42,40 @@
 # equality-only binary mutant survived at first; the "a malformed pin is no pin" case was added and
 # kills it. Survivor unchanged and equivalent: trailing-not-counted (order checks refuse each event).
 #
+#
+# RE-FREEZE r3 2026-10-03: 2026-10-03 founder superseded ruling 4. The Opus review FAILED the
+# implementation at 2592de6. Its HIGH finding, measured on codex-cli 0.154.0, was that
+# --ignore-user-config stops -p from loading the profile. New founder ruling: load the profile, drop
+# the flag, and honour the user config. Orchestrator fail-safe: the profile must set every required key
+# (DR-B1-07, "Round 2").
+#   codex_donetest_test.go is re-frozen with these changes: the template is the canon line plus
+#   --ignore-rules (not --ignore-user-config); cxSpec carries Worktree and CodexProfileTOML;
+#   cxProfileDigest is the sha256 of cxProfileTOML; the -C slot-source rows move Worktree with Cwd;
+#   the good -o paths are outside the worktree; and the other accepted pin pair uses its own profile.
+#   Added codex_r2_donetest_test.go:
+#     R2_ProfileLoadsAndRulesIgnored: no --ignore-user-config; -p <profile> and --ignore-rules once.
+#     R2_ProfileRequiredKeys: each of the 17 keys omitted, only in a comment, upper case or a lookalike
+#       is ErrSpec; so are a nested key at top level, a top-level key under another table, a duplicate
+#       key, a duplicate table, an empty profile, and profile bytes that differ from the pin.
+#     R2_WorktreeBounds: -C equal to /, above, a sibling, a shared prefix, containing .. or ., with a //
+#       or a trailing /, or a worktree that is missing, relative or "/".
+#     R2_ResultPathOutsideAndNoSymlink: -o inside the worktree, unclean, a symlink (live, dangling or
+#       pointing into the worktree), or under a symlinked directory.
+#     R2_CodexHomePinned: CODEX_HOME absent or exactly the pin; the pin must be clean, absolute and
+#       outside the worktree.
+#     R2_ReviewMutants: the review's survivors at :280 (answer dupFree), :167 (abort), :215
+#       (turn.failed order and reason), :222 (item id) and :235-236 (Children exact).
+#   On 2592de6 unchanged, 8 tests FAIL: TemplateAndContract and PinnedArgv (the flag), and all six
+#   R2 tests. ReviewMutants fails only on turn.failed before turn.started or thread.started (:215).
+#   Proof, $TMPDIR only: 2592de6 plus the fixes passes the package (-race -count=3). Mutants: 27 of 28
+#   killed. N1-N19 cover the new rules and S1-S5 the review's five survivors. The survivor,
+#   "CODEX_HOME trailing slash trimmed", is equivalent, because the clean-path rule refuses
+#   "/h/codex/" first.
+#   default_permissions is NOT required. Measured: the built-in ":workspace" puts /tmp back, and a
+#   user-config value did not override the profile's sandbox_mode (DR-B1-07, "Round 2").
+#
 # OPEN (not decided here):
-# 1. 09a §8.2's codex line and B1-08's frozen codexTokens lack --ignore-user-config (ruling 4).
+# 1. (r3) 09a §8.2 and B1-08's codexTokens carry --ignore-rules, not --ignore-user-config (build/b1-08-tests-r2).
 # 2. Who measures BinaryDigest and ProfileDigest, and when (launcher/runner, B1-08/B1-09).
 # 3. Whether codex writes -o with a trailing newline is unmeasured; byte equality would then make
 #    every run UNPARSED, and the per-family UNPARSED rate (09a §8.8) shows it.
@@ -54,7 +86,9 @@ jobs:
   - id: B1-07
     files:
       - path: kernel/internal/adapter/codex_donetest_test.go
-        sha256: c9b57cd5016d2c556a4e57a84ca6dd681a46cbf94453006edbbae44dfcf3631d
+        sha256: d1d5a84fad1d5824a6bf6f19a047e0876514d8191cd1a6ff92b03c2146ffb1d2
+      - path: kernel/internal/adapter/codex_r2_donetest_test.go
+        sha256: abc3bb86276426e91962be731821abd357a5c3d23fc12c3c93052f1ed028c8ed
       - path: kernel/internal/adapter/testdata/codex/collab-spawn.jsonl
         sha256: 3ffd0b33825a5f58b07a180e81c3750bb6003e72225f5c2b37cbd6ebb9519878
       - path: kernel/internal/adapter/testdata/codex/empty.jsonl

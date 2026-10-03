@@ -22,8 +22,9 @@
 // Founder rulings B1-07, 2026-10-02 (docs/vision-v3/_process/DR-B1-07-CODEX-RULINGS-2026-10-02.md):
 // (1+3) tool limits live in the generated Codex profile; the launch pins the sha256 of that
 // profile (init_expect) and of the codex binary (the grant digest), and a mismatch is ErrSpec;
-// (2) nested agents are never allowed for codex, funded or not; (4) --ignore-user-config is
-// always passed; (5) the -o file must equal the stream's answer, else UNPARSED; (6) rate limits
+// (2) nested agents are never allowed for codex, funded or not; (4) SUPERSEDED 2026-10-03:
+// --ignore-user-config stops -p loading the profile, so it is never passed, and --ignore-rules
+// is (round 2, codex_r2_donetest_test.go); (5) the -o file must equal the stream's answer, else UNPARSED; (6) rate limits
 // are measured before they are frozen, and until then no such signal is ever a pass.
 // Every file here and every fixture under testdata/codex/ is hashed in build/done-tests/B1-07.yml.
 // Run: go -C kernel test -count=1 -tags donetest -run B1_07 ./internal/adapter/
@@ -54,18 +55,19 @@ var (
 		"--json", "--output-schema", "<f>", "-o", "<result.json>", "--ephemeral"}
 	cxSlotValues = map[string]string{"<worktree>": "/w/job-1", "<profile>": "project",
 		"<f>": "/run/av/job-1/schema.json", "<result.json>": "/run/av/job-1/result.json"}
-	// Ruling 4: the adapter's template is the canon line plus --ignore-user-config. The frozen
-	// B1-08 launcher test still pins cxTokens without it; that test must follow (DR-B1-07).
-	cxTemplate = append(slices.Clone(cxTokens), "--ignore-user-config")
+	// The adapter's template is the canon line plus --ignore-rules (DR-B1-07 round 2; ruling 4,
+	// --ignore-user-config, is superseded). The B1-08 launcher test's codexTokens matches it.
+	cxTemplate = append(slices.Clone(cxTokens), "--ignore-rules")
 	cxHash     = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
+	// cxProfileDigest is the pinned sha256 of the generated profile file (ruling 1+3): the
+	// digest of cxProfileTOML (codex_r2_donetest_test.go).
+	cxProfileDigest = cxSHA(cxProfileTOML)
 )
 
 const (
-	// cxProfileDigest is the pinned sha256 of the generated profile file (ruling 1+3).
-	cxProfileDigest = "sha256:4444444444444444444444444444444444444444444444444444444444444444"
-	cxThreadID      = "0199a3c1-7e2f-7b40-9c1d-2f6e8a4b5c01"
-	cxOutput        = `{"verdict":"PASS","summary":"ok"}`
-	cxForged        = `{"verdict":"FORGED"}`
+	cxThreadID = "0199a3c1-7e2f-7b40-9c1d-2f6e8a4b5c01"
+	cxOutput   = `{"verdict":"PASS","summary":"ok"}`
+	cxForged   = `{"verdict":"FORGED"}`
 )
 
 // The fixtures, every one of them. Only the first two may adjudicate.
@@ -90,19 +92,21 @@ func cxRender() []string {
 // funded team (ruling 2) and none of the claude-only fields.
 func cxSpec() LaunchSpec {
 	return LaunchSpec{
-		BinaryDigest:   cxDigest,
-		ProfileDigest:  cxProfileDigest,
-		InitExpect:     cxProfileDigest,
-		Cwd:            "/w/job-1",
-		ContextProfile: "launch-pack",
-		SchemaPath:     "/run/av/job-1/schema.json",
-		ResultPath:     "/run/av/job-1/result.json",
-		CodexProfile:   "project",
-		BudgetUSD:      5,
-		WallS:          1800,
-		IdleS:          300,
-		Env:            map[string]string{"AV_JOB": "job-1"},
-		ProviderMode:   "sub",
+		BinaryDigest:     cxDigest,
+		ProfileDigest:    cxProfileDigest,
+		InitExpect:       cxProfileDigest,
+		CodexProfileTOML: cxProfileTOML,
+		Worktree:         "/w/job-1",
+		Cwd:              "/w/job-1",
+		ContextProfile:   "launch-pack",
+		SchemaPath:       "/run/av/job-1/schema.json",
+		ResultPath:       "/run/av/job-1/result.json",
+		CodexProfile:     "project",
+		BudgetUSD:        5,
+		WallS:            1800,
+		IdleS:            300,
+		Env:              map[string]string{"AV_JOB": "job-1"},
+		ProviderMode:     "sub",
 	}
 }
 
@@ -283,7 +287,7 @@ func TestB1_07_TemplateAndContract(t *testing.T) {
 		t.Errorf("Family = %q, want codex", c.Family())
 	}
 	if got := c.Template(); !reflect.DeepEqual(got, cxTemplate) {
-		t.Fatalf("Template = %q\nwant the canon codex line plus --ignore-user-config (ruling 4) %q", got, cxTemplate)
+		t.Fatalf("Template = %q\nwant the canon codex line plus --ignore-rules (DR-B1-07 round 2) %q", got, cxTemplate)
 	}
 	tmpl := c.Template()
 	tmpl[0], tmpl[4] = "review", "danger-full-access"
@@ -302,10 +306,10 @@ func TestB1_07_TemplateAndContract(t *testing.T) {
 func TestB1_07_PinnedArgv(t *testing.T) {
 	argv := cxArgv(t, cxSpec())
 	if want := cxRender(); !reflect.DeepEqual(argv, want) {
-		t.Fatalf("Argv(spec) = %q\nwant the B1-08 launcher's rendered codex line plus --ignore-user-config %q", argv, want)
+		t.Fatalf("Argv(spec) = %q\nwant the B1-08 launcher's rendered codex line plus --ignore-rules %q", argv, want)
 	}
-	if n := slices.Index(argv, "--ignore-user-config"); n < 0 || slices.Contains(argv[n+1:], "--ignore-user-config") {
-		t.Errorf("argv must carry --ignore-user-config exactly once (ruling 4): %q", argv)
+	if n := slices.Index(argv, "--ignore-rules"); n < 0 || slices.Contains(argv[n+1:], "--ignore-rules") {
+		t.Errorf("argv must carry --ignore-rules exactly once: %q", argv)
 	}
 	// Each slot comes from its own field.
 	for _, c := range []struct {
@@ -313,7 +317,7 @@ func TestB1_07_PinnedArgv(t *testing.T) {
 		set  func(*LaunchSpec, string)
 		v    string
 	}{
-		{"-C", func(s *LaunchSpec, v string) { s.Cwd = v }, "/w/job-2"},
+		{"-C", func(s *LaunchSpec, v string) { s.Cwd, s.Worktree = v, v }, "/w/job-2"},
 		{"--output-schema", func(s *LaunchSpec, v string) { s.SchemaPath = v }, "/run/av/job-2/schema.json"},
 		{"-o", func(s *LaunchSpec, v string) { s.ResultPath = v }, "/run/av/job-2/result.json"},
 		{"-p", func(s *LaunchSpec, v string) { s.CodexProfile = v }, "job-2"},
@@ -344,7 +348,7 @@ func TestB1_07_PinnedArgv(t *testing.T) {
 		for _, bad := range []string{"--sandbox", "danger-full-access", "read-only", "-c", "--config",
 			"--dangerously-bypass-approvals-and-sandbox", "--approve-for-me", "--dangerously-bypass-hook-trust",
 			"-a", "--ask-for-approval", "--full-auto", "--yolo", "--add-dir", "--enable", "--disable",
-			"--worktree", "--oss", "--local-provider", "-m", "--model", "-i", "--image", "--ignore-rules",
+			"--worktree", "--oss", "--local-provider", "-m", "--model", "-i", "--image", "--ignore-user-config",
 			"--skip-git-repo-check", "--dangerously-skip-permissions", "--bare", "resume", "fork", "review"} {
 			if tok == bad || strings.HasPrefix(tok, bad+"=") {
 				t.Errorf("argv carries %q: %q", tok, argv)
@@ -384,7 +388,7 @@ func TestB1_07_SlotValuesAreASCII(t *testing.T) {
 		cxArgv(t, s)
 	}
 	paths := map[string]func(*LaunchSpec, string){
-		"Cwd":        func(s *LaunchSpec, v string) { s.Cwd = v },
+		"Cwd":        func(s *LaunchSpec, v string) { s.Cwd, s.Worktree = v, v },
 		"SchemaPath": func(s *LaunchSpec, v string) { s.SchemaPath = v },
 		"ResultPath": func(s *LaunchSpec, v string) { s.ResultPath = v },
 	}
@@ -395,7 +399,7 @@ func TestB1_07_SlotValuesAreASCII(t *testing.T) {
 			set(&s, v)
 			cxRefused(t, name+" "+v, s, ErrSpec)
 		}
-		for _, v := range []string{"/w/job-1", "/tmp/av/x.json"} {
+		for _, v := range []string{"/w/job-9", "/run/av/x.json"} { // round 2: -o outside the worktree, no symlink
 			s := cxSpec()
 			set(&s, v)
 			cxArgv(t, s)
@@ -455,7 +459,8 @@ func TestB1_07_PinnedHashes(t *testing.T) {
 	}
 	// Another pinned pair that matches is accepted: the pin is the comparison, not one constant.
 	s := cxSpec()
-	s.ProfileDigest, s.InitExpect = other, other
+	alt := cxProfileTOML + "# another generated profile\n"
+	s.CodexProfileTOML, s.ProfileDigest, s.InitExpect = alt, cxSHA(alt), cxSHA(alt)
 	cxArgv(t, s)
 	if got := NewCodex(other).ContractHash(); got == NewCodex(cxDigest).ContractHash() {
 		t.Error("ContractHash ignores the binary digest")

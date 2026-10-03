@@ -36,6 +36,10 @@ still reports it (09a §8.4: nested agents are visible).
 
 ## 4. Ignore the user config
 
+> **Superseded 2026-10-03.** Ruling 4 is superseded by the founder ruling of 2026-10-03 (see "Round 2"
+> below). Measured on codex-cli 0.154.0, `--ignore-user-config` stops `-p` from loading the profile, so
+> rulings 1+3 and 4 could not both hold. The flag is no longer passed, and `--ignore-rules` is.
+
 `-p` layers `$CODEX_HOME/<name>.config.toml` on top of the user's `~/.codex/config.toml`, so the pinned
 profile alone did not decide what the worker loaded.
 
@@ -71,3 +75,83 @@ do not pin whether a rate limit becomes `blocked(capacity)` or `unresolved`.
   a trailing newline would make every run UNPARSED, and the per-family UNPARSED rate (09a §8.8) would show
   it.
 - The budget has no codex flag. `BudgetUSD` is validated, and the runner enforces it.
+
+## Round 2 (2026-10-03): ruling 4 superseded, and the profile must be complete
+
+**What failed.** An Opus review failed the implementation at `2592de6` (`build/b1-07`), which was built on
+the `cbd3155` tests. Its HIGH finding came from a measurement on codex-cli 0.154.0: `--ignore-user-config`
+stops `-p` from loading the profile. Rulings 1+3 and 4 therefore contradicted each other, because the pinned
+profile never loaded.
+
+This builder reproduced the finding the same day. The run used a throwaway `CODEX_HOME` that held no
+credential, and network access was denied, so no model turn was served. The `exec` banner reported a
+different model in each case:
+
+| Flags | Model in the banner |
+|---|---|
+| `-p prof` | the profile's model (`profile-model-qqq`) |
+| `-p prof --ignore-user-config` | the default model (`gpt-6-astra`) |
+| `-p prof --ignore-rules` | the profile's model |
+
+**Ruling (founder, 2026-10-03, via AskUserQuestion).** This supersedes ruling 4. Load the pinned profile and
+drop `--ignore-user-config`. The user's own Codex config is honoured.
+
+**Fail-safe (orchestrator, 2026-10-03).** Because the user config is honoured, the pinned profile must set
+every safety-relevant key itself. A profile that omits any required key is `ErrSpec`. The required keys are:
+
+- `approval_policy`
+- `approvals_reviewer`
+- `sandbox_mode`
+- `sandbox_workspace_write.network_access`
+- `sandbox_workspace_write.writable_roots`
+- `sandbox_workspace_write.exclude_tmpdir_env_var`
+- `sandbox_workspace_write.exclude_slash_tmp`
+- `shell_environment_policy.inherit`
+- `mcp_servers`
+- `web_search`
+- `model_provider`
+- `model_providers`
+- `notify`
+- `hooks`
+- `features`
+- `tools`
+- `projects`
+
+That is 17 keys. The candidates came from the config field names in the installed binary. Each key was
+accepted in a profile by `codex exec --strict-config` 0.154.0. As a control, an unknown key (`bogus_key_zz`)
+was refused with "unknown configuration field", and `zsh_path` was also refused. The test profile with all 17
+keys loads under `--strict-config --ignore-rules`, and the banner shows `sandbox: workspace-write [workdir]`.
+
+**Not required: `default_permissions`, which was measured.** Setting it needs either a built-in name or a
+`[permissions]` table. The built-in `":workspace"` puts `/tmp` and `$TMPDIR` back into the writable roots,
+undoing `exclude_slash_tmp` and `exclude_tmpdir_env_var`. A custom `[permissions.<name>]` table would not
+start under the armed sandbox. A user-config `default_permissions` (`":danger-full-access"`, or a custom
+table) did not take effect over the profile's `sandbox_mode`; the banner stayed `workspace-write [workdir]`.
+So requiring the key would loosen the sandbox, while omitting it was measured not to leak. The decision is
+open for a ruling if the founder wants the key pinned anyway.
+
+**`--ignore-rules` is required.** `codex exec --help` describes it as: "Do not load user or project
+execpolicy `.rules` files". A project rules file can sit in the worktree that the worker writes, and a user
+rules file is outside the pin, and either can allow commands that the pinned profile would not. The run above
+shows the profile still loads with the flag. The template is now the 09a §8.2 line with `--ignore-rules`
+appended.
+
+**Medium review findings (`codex.go:83-88`), now pinned.**
+
+- `LaunchSpec.Worktree` is the job's worktree. `-C` must be a clean, absolute ASCII path inside it, and
+  neither `/` nor a path containing `..` is accepted.
+- `-o` must be a clean path outside the worktree. Neither the path nor any existing ancestor may be a
+  symlink.
+- `Env["CODEX_HOME"]` must be absent, or exactly equal to the pinned `LaunchSpec.CodexHome`. The pinned
+  value must be clean, absolute, and outside the worktree.
+- `LaunchSpec.CodexProfileTOML` is the profile's exact bytes. Its sha256 must equal the pin (`init_expect`).
+
+**Residual risk, not closed here.** The adapter checks only that each required key is present; it does not
+check the values. Two holes remain:
+
+- An `-o` path outside the worktree is still writable by the worker if it lies under a root that the
+  profile makes writable, such as `/tmp` when `exclude_slash_tmp` is false.
+- A table-valued key such as `mcp_servers = {}` may be deep-merged with the user's table rather than
+  replacing it. This is unmeasured.
+
+Pinning required values, and measuring how tables merge, are the next step.
