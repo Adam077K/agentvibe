@@ -604,7 +604,27 @@ test('the census sums to the 45 it is described as, and re-derives from the corp
     const full = path.join(dir, e.name);
     return e.isDirectory() ? walk(full) : [full];
   });
-  const src = walk(CENSUS_CORPUS).map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+  // EXCLUSION WITH A REASON, ONE LEVEL DOWN — the same rule as the skip above and as `EXCLUDED` in
+  // scripts/lib/check-suite.js: a file leaves the census corpus only BY NAME, with the reason written
+  // beside it. An entry naming a file the corpus no longer holds fails rather than excluding nothing
+  // in silence, and the total below proves every excluded utility is accounted for, not dropped.
+  const CENSUS_EXCLUDED = {
+    'views/MissionsView.tsx':
+      'FOUNDER DECISION 2026-10-01 (B0-01, PR #139): excluded from the design-probe census corpus. ' +
+      'The census was counted over the seven views that predate the v3 slice; MissionsView arrived ' +
+      'with that slice afterwards and is not part of the population the "45 of 94" figure describes.',
+  };
+  const corpusFiles = walk(CENSUS_CORPUS);
+  const rel = (f) => path.relative(CENSUS_CORPUS, f).split(path.sep).join('/');
+  const isExcluded = (f) => Object.hasOwn(CENSUS_EXCLUDED, rel(f));
+  for (const name of Object.keys(CENSUS_EXCLUDED)) {
+    assert.ok(
+      corpusFiles.some((f) => rel(f) === name),
+      `CENSUS_EXCLUDED names ${name}, which is not in the corpus — delete the entry, do not leave it excluding nothing`,
+    );
+  }
+  const sizeUtilities = (f) => fs.readFileSync(f, 'utf8').match(/text-\[[0-9.]+px\]/g) ?? [];
+  const src = corpusFiles.filter((f) => !isExcluded(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n');
   const all = src.match(/text-\[[0-9.]+px\]/g) ?? [];
   assert.ok(all.length > 50, `CONTROL: the corpus must have been read, found ${all.length} size utilities`);
   const usages = {};
@@ -625,6 +645,16 @@ test('the census sums to the 45 it is described as, and re-derives from the corp
   // `font-size:` declarations in styles.css). The numerator is exact; the total is off by one by
   // the only method that reproduces the numerator. Nobody's verdict depends on it.
   assert.equal(all.length, 93, 'if this moves, the "of 94" question is live again and must be re-settled, not re-typed');
+
+  // CONSISTENCY, DERIVED: the whole directory is the census plus what CENSUS_EXCLUDED removed, by
+  // name. So the 93 above is a statement about the declared population, and the exclusion cannot
+  // swallow a file the entry does not name.
+  const excludedUtilities = corpusFiles.filter(isExcluded).flatMap(sizeUtilities).length;
+  assert.equal(
+    corpusFiles.flatMap(sizeUtilities).length,
+    all.length + excludedUtilities,
+    'every size utility in the corpus is either in the census or in a named exclusion',
+  );
 });
 
 test('NEGATIVE CONTROL: the census that used to exit 0 now fails the run', () => {
