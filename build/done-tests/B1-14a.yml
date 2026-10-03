@@ -1,0 +1,23 @@
+# Done-test register, B1-14a (docs/vision-v3/14-BUILD-PLAN.md §6 row B1-14a, "Policy compiler v0:
+# snapshot, P1→P8 walk, typed rules"; acceptance "100% table tests on the seed rights matrix; a
+# method-typed admission rule is rejected").
+# Canon: 00-CANON §3 (P1..P8, rule typing, DR-05), 09a §5 (snapshot, algorithm), 05 §5 (the matrix).
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest -run B1_14a ./internal/policy/
+# kernel/internal/policy/policy.go (the stub) is NOT registered: it is what the job implements.
+# The matrix is read at test time from docs/vision-v3/05-AUTONOMY-INITIATIVE-FOUNDER.md §5 and is
+# deliberately NOT registered here: it is canon, and an edit to it must move the seed, not the test.
+#
+# Round 1, 2026-10-03: 8 tests, red 8 of 8 against the stub. A scratch reference passes them
+# (-race). Mutants: 40 of 40 killed.
+# Rulings folded in before first freeze, 2026-10-03: founder — P3..P8 most restrictive wins; a row
+# with no D at a level defaults to the founder, never an agent holder. Orchestrator (fail-safe) —
+# never > held > co_sign > ask > notify > auto; ties apply the highest precedence (lowest P). Out of scope, left to B1-14b / B2-13a: classify, dispose,
+# fog (step 4), valid_until (step 6).
+register: B1-14a
+jobs:
+  - id: B1-14a
+    files:
+      - path: kernel/internal/policy/policy_donetest_test.go
+        sha256: 0db970cda07411fea0d8fc15b45c51a765b1d0ea003f19a956ec4abb28a436bd
