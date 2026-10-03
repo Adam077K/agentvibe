@@ -4,26 +4,56 @@ A local, read-only, multi-project control plane. It watches multiple agentvibe p
 once from one place, on this machine only — nothing here talks to the network beyond
 loopback, and nothing here writes back into a project it observes.
 
-PR1 shipped the rail, PR2 the data layer. **This PR ships the browser client and the first
-two views: Fleet and Sessions.** Project and Inbox are PR5 and are absent rather than
-stubbed.
+PR1 shipped the rail, PR2 the data layer, PR3 the browser client and the Fleet and Sessions
+views.
 
-## Running it
+## Run it
 
-Two processes.
+One port. The Hono server on 4300 serves the built client as well as `/api` and `/events`.
 
 ```bash
 cd mission-control
 bun install
-bun run server    # 4300 — index, collectors, SSE
-bun run dev       # 4301 — the client, proxying /api and /events to 4300
+bun run trust seed    # once per machine: trust the projects discovered right now (see below)
+bun run build         # builds client/dist
+bun run server        # http://127.0.0.1:4300 — the page, /api and /events, one origin
 ```
 
-Then open <http://127.0.0.1:4301>. `curl http://127.0.0.1:4300/api/health` →
-`{"ok":true,"port":4300,"host":"127.0.0.1"}`.
+`bun run start` is `bun run build && bun run server`. Open <http://127.0.0.1:4300>;
+`curl http://127.0.0.1:4300/api/health` → `{"ok":true,"port":4300,"host":"127.0.0.1"}`.
+`MC_PORT` moves it. If `client/dist` does not exist, `/` answers `503` with a message naming
+`bun run build`, and `/api` still works. The build is read per request, so rebuilding does
+not need a server restart.
 
-`bun run build` produces `client/dist/`. Nothing serves it yet — a single-port production
-mode lands with PR5; the build is here because it is what proves the client compiles.
+The static handler is `server/routes/static.ts`, mounted after every API route and behind the
+cross-site guard. A path under `/api` that no route claims is a JSON 404, never the page. The
+client root is confined: a NUL, backslash or `..` segment is a `400`, and a file whose real path
+leaves `client/dist` (a symlink) is a `404`. `test/static.test.ts` pins each of these.
+
+**Developing the client** still uses two processes: `bun run server` on 4300 plus `bun run dev`
+on 4301, which proxies `/api` and `/events` to 4300.
+
+### Launching missions
+
+The server never spawns anything. Missions queue on the board, and a runner you start yourself
+picks them up:
+
+```bash
+bun run missions                                  # scripts/run-missions.ts: poll the board and run queued missions
+bun run scripts/run-missions.ts --once            # claim and run one queued mission, then exit
+bun mission-control/scripts/consume-dispatch.ts   # from the repo root: run the pending Dispatch queue
+```
+
+`run-missions.ts` takes `[--once] [--workdir DIR] [--launch-log FILE]`; `consume-dispatch.ts`
+takes `--dry-run`, `--list`, `--force-reconcile` and `--no-verdict`. Read the header of each
+before using it.
+
+### Attended use only
+
+**The agents these runners start run unisolated, as your user, with only Claude Code's own
+sandbox between them and your machine.** There is no container and no separate account. Start a
+runner when you are at the machine and watching it, and stop it when you leave. Do not leave one
+running unattended, overnight, or against a project you have not read.
 
 ## Trusted projects — which directories may have programs run for them
 
@@ -117,8 +147,8 @@ the same URL in the same browser against the same server.
 
 | Port | What |
 |---|---|
-| 4300 | Server (`MC_PORT` overrides) |
-| 4301 | Client (Vite dev server, `strictPort`) |
+| 4300 | Server: `/api`, `/events` and the built client (`MC_PORT` overrides) |
+| 4301 | Client dev server only (`bun run dev`, `strictPort`) |
 
 4200/4201 belong to the old dashboard at `war-room/dashboard/` — Mission Control does not
 import from or run alongside it, but the ports are kept distinct so both could run at once
