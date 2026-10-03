@@ -645,7 +645,8 @@ func dieOnce(e *testEff) {
 }
 
 // lagCase dispatches through the Gateway, the worker dies in flight, and a reconciler reads
-// Absent at early (inside the lag: no re-send) and at late (past it: exactly one re-send).
+// Absent at early (inside the lag: no re-send) and at late (past the lag measured from the later
+// of the send and the early uncertain record, ruling A as implemented: exactly one re-send).
 func lagCase(t *testing.T, eff effector.Effector, e *testEff, early, late time.Duration) {
 	t.Helper()
 	dieOnce(e)
@@ -679,19 +680,19 @@ func lagCase(t *testing.T, eff effector.Effector, e *testEff, early, late time.D
 func TestB112bLagGuardThroughGateway(t *testing.T) {
 	t.Run("declared 10m", func(t *testing.T) {
 		e := newEff(outbox.CheckBefore)
-		lagCase(t, lagEff{e, 10 * time.Minute}, e, 5*time.Minute, 11*time.Minute)
+		lagCase(t, lagEff{e, 10 * time.Minute}, e, 3*time.Minute, 14*time.Minute)
 	})
 	t.Run("declared 0 is the default", func(t *testing.T) {
 		e := newEff(outbox.CheckBefore)
-		lagCase(t, lagEff{e, 0}, e, rulingA-time.Second, rulingA+time.Minute)
+		lagCase(t, lagEff{e, 0}, e, rulingA-time.Second, 2*rulingA)
 	})
 	t.Run("declared negative is the default", func(t *testing.T) {
 		e := newEff(outbox.CheckBefore)
-		lagCase(t, lagEff{e, -time.Hour}, e, rulingA-time.Second, rulingA+time.Minute)
+		lagCase(t, lagEff{e, -time.Hour}, e, rulingA-time.Second, 2*rulingA)
 	})
 	t.Run("undeclared is the default", func(t *testing.T) {
 		e := newEff(outbox.CheckBefore)
-		lagCase(t, e, e, rulingA-time.Second, rulingA+time.Minute)
+		lagCase(t, e, e, rulingA-time.Second, 2*rulingA)
 	})
 }
 
