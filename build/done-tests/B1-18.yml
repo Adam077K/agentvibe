@@ -37,9 +37,17 @@
 # expect_seq compare-and-swap. Red against the stub: 17/17. Green against the reference: 17/17, five runs.
 # Mutants, 14 of 14 killed: the 12 above plus granting on a failed write and granting after conflict
 # retries are exhausted.
+#
+# Re-frozen 2026-10-03 orchestrator rulings (all fail-safe), before any implementation: (1) quantities are
+# integer minor units only, so a fraction or decimal point is refused and nothing is rounded; (2) cash is
+# spelled `cash:<ISO4217>` in minor units (cash:USD = cents), and a tranche holds exactly ONE currency;
+# (3) a zero-quantity debit or hold is refused. New test B1_18_OrchestratorRulingsOnUnits; fixtures moved from
+# USD_cents to cash:USD; '0' and fractional strings added to the refused-quantity list. Red against the stub:
+# 18/18. Green against the reference: 18/18, five runs. Mutants, 18 of 18 killed: the 14 above plus allow
+# zero, accept "N.0" as N, loose cash spelling, and a multi-currency tranche.
 register: B1-18
 jobs:
   - id: B1-18
     files:
       - path: userland/test/budget.donetest.test.ts
-        sha256: 6ad1b02bdaed168dcef29694b3add2b4423b4712c774f7b313da553b39b541e9
+        sha256: 4cf42c03b1b6588a13208e5ce0a4f2dae20f90cc92a83f61cc413e4dfcd1a093

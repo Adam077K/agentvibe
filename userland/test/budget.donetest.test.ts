@@ -20,8 +20,13 @@
 // propose_event; journal.ErrSeqConflict); FilePort keeps it in a file so a second OS process can share it.
 // Both store event data as JSON text, so the ledger can never mutate what it appended.
 //
-// Not tested here: B1-27's bucket holds and invariant_violation event; decimal fractions (founder question:
-// currency units and rounding); the label the socket requires on propose_event (the port adapter's concern).
+// Orchestrator rulings 2026-10-03 (fail-safe), pinned in B1_18_OrchestratorRulingsOnUnits: (1) quantities are
+// integer minor units only, so a fraction or decimal point is refused and nothing is rounded; (2) cash is spelled
+// `cash:<ISO4217>` in minor units (cash:USD = cents), and a tranche holds exactly one currency; (3) a zero
+// quantity, debit or hold, is refused.
+//
+// Not tested here: B1-27's bucket holds and invariant_violation event; the label the socket requires on
+// propose_event (the port adapter's concern).
 //
 // Run: node --test userland/test/budget.donetest.test.ts   (Node 24 strips the types; node:sqlite is built in)
 import { test } from 'node:test';
@@ -162,7 +167,7 @@ class FilePort implements JournalPort {
 
 // ---------------------------------------------------------------------------------------------- fixtures
 
-const USD = 'USD_cents';
+const USD = 'cash:USD';
 const ALLOW = 'claude-max-1/weekly';
 
 // 09b §4's illustration tranche in cents: execution 64, integration_rework 8, acceptance 20, recovery 20 USD.
@@ -366,7 +371,7 @@ test('B1_18_ResourcesAreNeverInterchangeable', async () => {
   // No hold of that resource in that pool: throughput was never reserved for execution.
   refused(await L.debit(debit({ resource: 'throughput', unit: 'rpm', quantity: '1' })), null, 'an unreserved resource');
   // Same resource, another unit: no conversion.
-  refused(await L.debit(debit({ resource: 'cash', unit: 'EUR_cents', quantity: '1' })), null, 'cash in another unit');
+  refused(await L.debit(debit({ resource: 'cash', unit: 'cash:EUR', quantity: '1' })), null, 'cash in another currency');
   refused(await L.debit(debit({ resource: 'allowance', unit: 'chatgpt-1/weekly', quantity: '1' })), null, 'another allowance bucket');
   assert.equal(await consumed(L, 'execution', 'cash'), '0');
   granted(await L.debit(debit({ resource: 'founder_minutes', quantity: '8' })), 'founder minutes from their own hold');
@@ -560,6 +565,7 @@ test('B1_18_RefusesNegativeMalformedAndOverflowAmounts', async () => {
   const bad: unknown[] = [
     '-1', '-0', '+1', '1e3', '1E3', ' 1', '1 ', '', '0x10', '0b1', '1_000', '1,000', 'NaN', 'Infinity', '١٢', '１２',
     '9223372036854775808', '18446744073709551616', '99999999999999999999999999',
+    '0', '00', '01', '0.0', '1.0', '1.5', '0.5', '.5', '5.', '1,5',
     -1, 1, 1.5, 0, null, undefined, 10n, ['1'], { q: '1' },
   ];
   const { port, L } = await fresh();
@@ -858,4 +864,51 @@ test('B1_18_NoSpendOnProjectionAlone', { timeout: 60000 }, async () => {
   await L.close();
   assert.equal(await truth(port, 'execution'), '100');
   assert.equal(await truth(port, 'recovery'), '0');
+});
+
+test('B1_18_OrchestratorRulingsOnUnits', async () => {
+  // Orchestrator rulings 2026-10-03, all fail-safe. Each refusal is `invalid` and consumes nothing.
+  const { port, L } = await fresh();
+  // (1) Integer minor units only: no fraction, no decimal point, so no rounding.
+  for (const q of ['1.0', '100.00', '0.01', '99.5', '6400.0']) {
+    refused(await L.debit(debit({ quantity: q })), 'invalid', `fractional debit ${q}`);
+    const t = tranche(`frac-${keyN++}`);
+    t.holds[0].amount.quantity = q;
+    refused(await L.openTranche(t), 'invalid', `fractional hold ${q}`);
+  }
+  // (3) Zero is refused, for a debit and for a hold of any pool or resource.
+  refused(await L.debit(debit({ quantity: '0' })), 'invalid', 'zero cash debit');
+  refused(await L.debit(debit({ purpose: 'judging', resource: 'verifier_window', unit: 'window', quantity: '0' })), 'invalid', 'zero window debit');
+  for (let i = 0; i < tranche().holds.length; i++) {
+    const t = tranche(`zero-${i}`);
+    t.holds[i].amount.quantity = '0';
+    refused(await L.openTranche(t), 'invalid', `zero hold ${t.holds[i].hold}/${t.holds[i].amount.resource}`);
+  }
+  // (2) Cash is spelled cash:<ISO4217>; any other spelling, on a hold or a debit, is refused.
+  for (const unit of ['USD', 'usd', 'USD_cents', 'cash:usd', 'cash:US', 'cash:USDX', 'cash: USD', 'cash:USD ', 'Cash:USD', 'cash:', 'cash:U$D', 'money:USD']) {
+    const t = tranche(`unit-${keyN++}`);
+    for (const h of t.holds) if (h.amount.resource === 'cash') h.amount.unit = unit;
+    refused(await L.openTranche(t), 'invalid', `cash hold spelled ${JSON.stringify(unit)}`);
+    refused(await L.debit(debit({ unit, quantity: '1' })), 'invalid', `cash debit spelled ${JSON.stringify(unit)}`);
+  }
+  // (2) A tranche holds exactly one currency: a second currency in any hold is refused.
+  for (let i = 1; i < 4; i++) {
+    const t = tranche(`fx-${i}`);
+    t.holds[i].amount.unit = 'cash:EUR';
+    refused(await L.openTranche(t), 'invalid', `${t.holds[i].hold} in cash:EUR beside cash:USD`);
+  }
+  const extra = tranche('fx-extra');
+  extra.holds.push({ hold: 'acceptance', amount: { resource: 'cash', unit: 'cash:EUR', quantity: '1' } });
+  assert.equal((await L.openTranche(extra)).ok, false, 'a second cash hold in another currency is refused');
+  // Positive control: a whole tranche in one other currency is fine, and its cash is spent in that currency only.
+  const eur = tranche('eur');
+  for (const h of eur.holds) if (h.amount.resource === 'cash') h.amount.unit = 'cash:EUR';
+  granted(await L.openTranche(eur), 'an all-EUR tranche');
+  granted(await L.debit(debit({ tranche: 'eur', unit: 'cash:EUR', quantity: '1' })), 'EUR from an EUR tranche');
+  refused(await L.debit(debit({ tranche: 'eur', unit: 'cash:USD', quantity: '1' })), null, 'USD from an EUR tranche');
+  granted(await L.debit(debit({ quantity: '1' })), 'the minimum legal debit: 1 minor unit');
+  assert.equal(await consumed(L, 'execution'), '1');
+  await L.close();
+  assert.equal(await truth(port, 'execution'), '1');
+  assert.equal(await truth(port, 'execution', 'cash', 'eur'), '1');
 });
