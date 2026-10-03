@@ -551,3 +551,31 @@ func TestB108_H_F7_RefusedNewLeavesUsedStateIntact(t *testing.T) {
 		}
 	}
 }
+
+// TestB108_H_F3_NoHomePinWhateverAllowlist: 2026-10-03 review r1, pinning the HOME-pin ruling. A grant
+// with no HOME pin is ErrGrant at New whatever its EnvAllow, including one that omits HOME and nil.
+func TestB108_H_F3_NoHomePinWhateverAllowlist(t *testing.T) {
+	for _, allow := range [][]string{{"LANG"}, {"LANG", "PATH"}, nil} {
+		g := hGrant()
+		g.EnvAllow = allow
+		delete(g.EnvPinned, "HOME")
+		hRefused(t, "no HOME pin, EnvAllow "+filepath.Join(allow...), g, "", ErrGrant)
+	}
+}
+
+// TestB108_H_F3_MissingHomeKeepsLease: 2026-10-03 review r1, pinning the HOME-required ruling. A
+// request refused for its missing HOME is ErrSpec before admit: no exec, no receipt, and its lease is
+// not consumed.
+func TestB108_H_F3_MissingHomeKeepsLease(t *testing.T) {
+	r := newR4(t, at0300())
+	l, err := New(pinned(r3Grant(), r.deps()))
+	must(t, err)
+	la := r.lease("job-a", 1)
+	q := r.req("job-a", la)
+	q.Env = map[string]string{"LANG": "C"}
+	err = launchErr(l, q)
+	if !errors.Is(err, ErrSpec) || r.exec.n() != 0 || r.leases.isConsumed("job-a", la) || nReceipts(t, r) != 0 {
+		t.Errorf("missing HOME: %v, %d execs, lease consumed %v, %d receipts; want ErrSpec, none, unconsumed, none",
+			err, r.exec.n(), r.leases.isConsumed("job-a", la), nReceipts(t, r))
+	}
+}
