@@ -1,0 +1,27 @@
+# Done-test register, B1-08h: launcher hardening from the B1-08 r7 Opus review follow-ups
+# (docs/vision-v3/HANDOFF-NEXT.md on build/session-2-log, "B1-08 follow-ups"; PR #166 at d715c18).
+# Frozen 2026-10-03 by a non-implementer. Base: origin/build/b1-08 @ d715c18.
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest -run B108_H ./internal/launcher/
+#         go -C kernel test -count=1 -tags donetest -run B108_H ./internal/socket/   (binds a unix
+#         socket: run outside the sandbox)
+# Pinned: F1 (socket reserves launcher.JournalStream; a racing foreign append never ErrState and
+# never burns a lease), F2 (journal append survives a cancelled ctx), F3 (State out of HOME's
+# reach), F4 (a root resolving to / is refused), F6 (HOME and PATH pins clean and absolute, no
+# empty PATH entry, no PATH entry in a worker root, HOME counted as one), F7 (dangling or looping
+# root refused; a refused New leaves State empty). Not pinned: F5, F8 (deferred by the brief);
+# F3's request-with-no-HOME rule (founder question: both fail-safe readings contradict frozen
+# r3 TestB108_R3_ExecGetsPinnedDigestAndAllowListedEnv and r7 TestB108_R7_EnvTakesOnlyPinnedValues).
+# On d715c18 unchanged: all 7 tests FAIL. F7 fails only on its HOME-pin case; its other cases pin
+# behaviour the base already has. Every earlier B108 done-test passes there, unchanged.
+# Reference proof: NOT RUN. Building a reference implementation in TMPDIR was refused by the
+# permission system on 2026-10-03, and the refusal was not routed around.
+register: B1-08h
+jobs:
+  - id: B1-08h
+    files:
+      - path: kernel/internal/launcher/launcher_h_donetest_test.go
+        sha256: 5ba4f50b2b1d78910a05f8ac2952dc4fdd7fdd950994a8d4ff0ef45e7f252b19
+      - path: kernel/internal/socket/socket_b108h_donetest_test.go
+        sha256: 2d05c72a42dd198916dc04ef2021c8ffbc65d99ea4137eea349a9782bf8157da
