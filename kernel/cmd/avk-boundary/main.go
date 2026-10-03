@@ -4,7 +4,7 @@
 //
 // Run it from kernel/:
 //
-//	go run ./cmd/avk-boundary [-kernel .] [-repo ..] [-allowed ALLOWED_MODULES] [-max-lines 11000]
+//	go run ./cmd/avk-boundary [-kernel .] [-repo ..] [-allowed ALLOWED_MODULES] [-max-lines 15000]
 //
 // Exit 0: all three checks ran and found nothing. Exit 1: a finding. Exit 2: a check could not run,
 // which is never a pass.
