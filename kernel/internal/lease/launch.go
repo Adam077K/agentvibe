@@ -7,6 +7,8 @@
 // by FencedLease. Verify and Consume read the job's claim rows in the Journal at every call; nothing
 // is cached. Consume is a compare-and-set in the Journal: of every Consume of one (job, token), on
 // every LaunchVerifier over that Journal, exactly one succeeds, and that survives a restart.
+// Ruling Q3 (2026-10-03): only the job:// claim admits a launch; a Coordinator lease (fence.go) on
+// job://<id>, wound-wait or not, is refused.
 package lease
 
 import (

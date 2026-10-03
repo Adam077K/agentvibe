@@ -10,6 +10,12 @@
 //	(e2e) A launcher built on the real lease store (lease.NewLaunchVerifier) and the real grant
 //	     status refuses a replayed lease end to end, and a revocation binds its next launch.
 //
+// Re-frozen "2026-10-03 orchestrator rulings Q1-Q3": Q1 every grant expires (a zero or past until
+// is refused; Live fails at and after until); Q2 a revoke is final (re-releasing a revoked digest is
+// refused, before and after a restart, and a replayed release record does not resurrect it; only a
+// new digest is live); Q3 only the B1-05 claim admits a launch (a Coordinator wound-wait lease on
+// job://<id> is ErrLease).
+//
 // Run: go -C kernel test -count=1 -tags donetest -run B1_08d ./internal/launcher/
 package launcher
 
@@ -164,6 +170,87 @@ func TestB1_08d_GrantStatusIsReal(t *testing.T) {
 			if err := g.Live(); err == nil {
 				t.Errorf("Live at %s (until %s): nil; want an error", at.Format(time.RFC3339Nano), until.Format(time.RFC3339Nano))
 			}
+		}
+	})
+
+	// Ruling Q1 (2026-10-03): every grant expires; a release with no expiry, or one already past, is
+	// refused and leaves nothing live.
+	t.Run("Q1: a release with no expiry or a past expiry is refused", func(t *testing.T) {
+		j, _ := d8Journal(t)
+		if err := ReleaseGrant(ctx, j, d8GrantA, time.Time{}); err == nil {
+			t.Error("ReleaseGrant with a zero until: nil; want refused")
+		}
+		if err := ReleaseGrant(ctx, j, d8GrantA, time.Now().Add(-time.Second)); err == nil {
+			t.Error("ReleaseGrant with an until in the past: nil; want refused")
+		}
+		if err := d8Status(t, j, d8GrantA, time.Now).Live(); err == nil {
+			t.Error("Live after two refused releases: nil; want an error")
+		}
+	})
+
+	// Ruling Q2 (2026-10-03): a revoke is final. Re-releasing the revoked digest is refused, also
+	// after a later grant and after a restart; only a new digest is live.
+	t.Run("Q2: a revoked digest is never released again", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "journal.db")
+		j, err := journal.Open(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		d8Release(t, j, d8GrantA, day())
+		if err := RevokeGrant(ctx, j, d8GrantA); err != nil {
+			t.Fatal(err)
+		}
+		if err := ReleaseGrant(ctx, j, d8GrantA, day()); err == nil {
+			t.Error("re-release of the revoked digest: nil; want refused")
+		}
+		if err := d8Status(t, j, d8GrantA, time.Now).Live(); err == nil {
+			t.Error("Live for the revoked digest after a re-release attempt: nil; want an error")
+		}
+		d8Release(t, j, d8GrantB, day()) // a new grant record is live
+		if err := d8Status(t, j, d8GrantB, time.Now).Live(); err != nil {
+			t.Fatalf("Live for the new digest: %v; want nil", err)
+		}
+		if err := ReleaseGrant(ctx, j, d8GrantA, day()); err == nil {
+			t.Error("re-release of the revoked digest once it is no longer the head: nil; want refused")
+		}
+		must(t, j.Close())
+		j2, err := journal.Open(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = j2.Close() })
+		if err := ReleaseGrant(ctx, j2, d8GrantA, day()); err == nil {
+			t.Error("re-release of the revoked digest after a restart: nil; want refused")
+		}
+		if err := d8Status(t, j2, d8GrantA, time.Now).Live(); err == nil {
+			t.Error("Live for the revoked digest after a restart: nil; want an error")
+		}
+		if err := d8Status(t, j2, d8GrantB, time.Now).Live(); err != nil {
+			t.Errorf("Live for the new digest after a restart: %v; want nil", err)
+		}
+	})
+
+	t.Run("Q2: a revoked digest appended past ReleaseGrant is not live", func(t *testing.T) {
+		// A writer that skips ReleaseGrant's refusal must not resurrect the grant: Live reads the
+		// whole stream, not only its head.
+		j, _ := d8Journal(t)
+		d8Release(t, j, d8GrantA, day())
+		if err := RevokeGrant(ctx, j, d8GrantA); err != nil {
+			t.Fatal(err)
+		}
+		evs, err := j.Read(ctx, GrantStream, 1)
+		if err != nil || len(evs) == 0 {
+			t.Fatalf("GrantStream after release and revoke: %d events, %v", len(evs), err)
+		}
+		head, _, err := j.Head(ctx, GrantStream)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := j.Append(ctx, journal.Proposal{Stream: GrantStream, ExpectSeq: head, Type: evs[0].Type, Data: evs[0].Data}); err != nil {
+			t.Fatal(err)
+		}
+		if err := d8Status(t, j, d8GrantA, time.Now).Live(); err == nil {
+			t.Error("Live for a revoked digest whose release record was replayed after the revoke: nil; want an error")
 		}
 	})
 
@@ -335,6 +422,42 @@ func TestB1_08d_ReplayRefusedEndToEnd(t *testing.T) {
 	if r.exec.n() != 1 {
 		t.Errorf("%d execs; a replayed lease reached exec", r.exec.n())
 	}
+
+	// Ruling Q3 (2026-10-03): only the B1-05 claim on job://<id> admits a launch. A Coordinator
+	// lease on the same resource, granted by wound-wait, is ErrLease.
+	t.Run("Q3: a Coordinator wound-wait lease on job://<id> is refused", func(t *testing.T) {
+		co, err := lease.NewCoordinator(r.j, time.Now)
+		if err != nil {
+			t.Fatalf("NewCoordinator: %v", err)
+		}
+		res := "job://job-ww"
+		born := time.Now()
+		if _, err := co.Acquire(context.Background(), lease.Request{Job: "young", Born: born, Resources: []string{res},
+			Policy: lease.WoundWait, TTL: time.Hour}); err != nil {
+			t.Fatalf("Acquire young: %v", err)
+		}
+		g, err := co.Acquire(context.Background(), lease.Request{Job: "job-ww", Born: born.Add(-time.Hour), Resources: []string{res},
+			Policy: lease.WoundWait, TTL: time.Hour})
+		if err != nil {
+			t.Fatalf("Acquire old (wounds young): %v", err)
+		}
+		l, err := r.launcher(t, t.TempDir())
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, tok := range []uint64{g.Tokens[res], 1} {
+			fl := lease.FencedLease(lease.Claim{JobID: "job-ww", Resource: res, Runner: "job-ww", Token: tok, ExpiresAt: g.ExpiresAt})
+			if err := launchErr(l, r.req("job-ww", fl)); !errors.Is(err, ErrLease) {
+				t.Errorf("launch on a Coordinator lease (token %d): %v; want ErrLease", tok, err)
+			}
+			if err := r.store.Verify("job-ww", fl, time.Now()); err == nil {
+				t.Errorf("Verify of a Coordinator lease (token %d): nil; want refused", tok)
+			}
+		}
+		if r.exec.n() != 1 {
+			t.Errorf("%d execs; a Coordinator lease launched", r.exec.n())
+		}
+	})
 
 	t.Run("a revocation binds the next launch", func(t *testing.T) {
 		l, err := r.launcher(t, t.TempDir())

@@ -22,16 +22,20 @@
 # Reachability NOT yet shown: the reference-implementation run was refused by the permission layer
 # and was not retried. The red-team pass (DR-BUILD-SPEED rule 1) must run one before implementation.
 #
-# OPEN (founder questions, not decided here; a ruling re-freezes):
-# 1. Grant expiry: 09a §8.5's launcher_grant has no expiry field. ReleaseGrant takes `until`; the
-#    tests pin "expired fails" and never pass a zero until.
-# 2. Grant storage: tests take GrantStream in the main Journal as the status's home, with the
-#    founder-signature check upstream (Grant's doc comment). The signed file and passkey are unbuilt.
-# 3. Does a later release supersede the grant a running launcher holds (pinned: yes, fail-safe)?
-#    Is re-release after a revocation live (not pinned)?
-# 4. Wound-wait: the job:// claim (lease.go) has no wound-wait; only the Coordinator (fence.go) does.
-#    Whether a Coordinator lease on job://<id> may also admit a launch is not pinned.
-# 5. Cross-process: journal.Open is single-writer (ErrLocked), so "two store instances on the same
+# RE-FREEZE 2026-10-03: "2026-10-03 orchestrator rulings Q1-Q3" (fail-safe, under the founder's
+# speed delegation). grantstatus_donetest_test.go 02591c66... -> adc28e11...; launch_donetest_test.go
+# unchanged. Stub doc comments (launch.go, grantstatus.go) updated to match.
+#   Q1 Grants expire, and the expiry is pinned: ReleaseGrant with a zero or past until is refused;
+#      Live fails at and after until (already pinned in r1).
+#   Q2 Status lives in GrantStream, signature checked upstream. A revoke is final: re-releasing a
+#      revoked digest is refused, at the head, after a newer grant and after a restart; a replayed
+#      release record after the revoke does not resurrect it; only a new digest is live.
+#   Q3 Only the B1-05 claim on job://<id> admits a launch: a Coordinator wound-wait lease on that
+#      resource, at its own token or token 1, is ErrLease and fails Verify (e2e subtest).
+#   Still red: 6 of 6 against the stubs.
+#
+# OPEN (not decided here):
+# 1. Cross-process: journal.Open is single-writer (ErrLocked), so "two store instances on the same
 #    dir" is pinned as two LaunchVerifiers over one Journal handle.
 register: B1-08d
 jobs:
@@ -40,4 +44,4 @@ jobs:
       - path: kernel/internal/lease/launch_donetest_test.go
         sha256: 8c2db9df9ad39d8298c7a7509c151f1f3bd8a033be9f24734d57fa624ddd96e1
       - path: kernel/internal/launcher/grantstatus_donetest_test.go
-        sha256: 02591c668676e96132c0e1f0a6aa5d74eaaa8b2db9d886d04ba7ad096f252fd5
+        sha256: adc28e1133e8900102708066d5c2fffa3bab822937e68b25cf64f37ba5d8ca12
