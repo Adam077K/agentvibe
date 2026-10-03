@@ -106,9 +106,10 @@ type row struct {
 
 // state is the job's claim row as its stream head records it.
 type state struct {
-	seq     uint64 // stream head seq: the ExpectSeq of the next transition
-	claimed bool   // the head is a lease.claimed event
-	row     row
+	seq      uint64 // stream head seq: the ExpectSeq of the next transition
+	claimed  bool   // the head is a lease.claimed event, or the lease.consumed that follows one
+	consumed bool   // the head is a lease.consumed event: the claim admitted its launch (launch.go)
+	row      row
 }
 
 func resource(jobID string) string { return "job://" + jobID }
@@ -175,6 +176,11 @@ func (c *claimer) load(ctx context.Context, jobID string) (state, error) {
 		return state{seq: seq, claimed: true, row: r}, nil
 	case TypeReleased:
 		return state{seq: seq, row: r}, nil
+	case TypeConsumed:
+		if err := c.checkConsumed(ctx, stream, ev, r); err != nil {
+			return state{}, err
+		}
+		return state{seq: seq, claimed: true, consumed: true, row: r}, nil
 	default:
 		return state{}, fmt.Errorf("%w: %s seq %d has type %q", ErrCorrupt, stream, seq, ev.Type)
 	}
