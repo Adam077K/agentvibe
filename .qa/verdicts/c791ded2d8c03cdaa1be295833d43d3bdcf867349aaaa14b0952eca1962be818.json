@@ -1,5 +1,5 @@
 {
-  "subject": "6467d99ff70149647c665d463a1eb2864b37cc58bb5377184cea5f36a34c5713",
+  "subject": "c791ded2d8c03cdaa1be295833d43d3bdcf867349aaaa14b0952eca1962be818",
   "base": "e4a08112e46792faac444df5446ff742c6f34b4e",
   "tier": "lite",
   "tier_driver": "build/done-tests/B1-08d.yml",
@@ -7,5 +7,5 @@
   "by": "opus-5.5 reviewers (review-b1-08d, rereview-b1-08d)",
   "run_id": null,
   "evidence": null,
-  "recorded_at": "2026-10-03T18:39:42.762Z"
+  "recorded_at": "2026-10-03T18:40:05.320Z"
 }
