@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Adam077K/agentvibe/kernel/internal/adapter"
+	"github.com/Adam077K/agentvibe/kernel/internal/journal"
 )
 
 const (
@@ -113,12 +114,25 @@ func req(job string) Request {
 
 func newL(t *testing.T, concurrent int, e Exec, d digests, s ReceiptSink, lease okLease, state string) Launcher {
 	t.Helper()
-	l, err := New(adapterGrant(concurrent, state), Deps{Clock: clk{time.Unix(0, 0)}, Exec: e, Digester: d, Receipts: s,
-		Leases: lease, Grant: okGrant{}, State: state})
+	g := adapterGrant(concurrent, state)
+	g.ReceiptGenesis = s.(GenesisReporter).Genesis()
+	l, err := New(g, Deps{Clock: clk{time.Unix(0, 0)}, Exec: e, Digester: d, Receipts: s,
+		Leases: lease, Grant: okGrant{}, State: state, Journal: newJournal(t)})
 	if err != nil {
 		t.Fatal(err)
 	}
 	return l
+}
+
+// newJournal is a fresh journal on disk, closed when the test ends.
+func newJournal(t *testing.T) journal.Journal {
+	t.Helper()
+	j, err := journal.Open(filepath.Join(t.TempDir(), "journal.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { j.Close() })
+	return j
 }
 
 // newLog is a fresh file-backed receipt log, opened against its pin.
@@ -169,6 +183,7 @@ type failSink struct{}
 
 func (failSink) Append(Receipt) error               { return errors.New("disk") }
 func (failSink) Since(time.Time) ([]Receipt, error) { return nil, nil }
+func (failSink) Genesis() string                    { return "sha256:fail" }
 
 func TestRefusalsBeforeExec(t *testing.T) {
 	cases := map[string]struct {
@@ -228,22 +243,26 @@ func TestStateFailsClosed(t *testing.T) {
 		t.Fatal(err)
 	}
 	g := adapterGrant(1, state)
+	g.ReceiptGenesis = failSink{}.Genesis()
 	if _, err := New(g, Deps{Clock: clk{}, Exec: e, Digester: digests{}, Receipts: failSink{}, Leases: newLease(nil),
-		Grant: okGrant{}, State: state}); !errors.Is(err, ErrState) {
+		Grant: okGrant{}, State: state, Journal: newJournal(t)}); !errors.Is(err, ErrState) {
 		t.Errorf("New on a used State dir whose state.json is gone: %v, want ErrState", err)
 	}
 }
 
 func TestNewRefusesMalformed(t *testing.T) {
 	state := t.TempDir()
-	d := Deps{Clock: clk{}, Exec: &blockExec{}, Digester: digests{}, Receipts: failSink{}, Leases: newLease(nil), Grant: okGrant{}, State: state}
+	d := Deps{Clock: clk{}, Exec: &blockExec{}, Digester: digests{}, Receipts: failSink{}, Leases: newLease(nil), Grant: okGrant{},
+		State: state, Journal: newJournal(t)}
 	for name, m := range map[string]func(*Grant){
-		"holder":          func(g *Grant) { g.Holder = "orchestrator" },
-		"zero per_hour":   func(g *Grant) { g.Caps.PerHour = 0 },
-		"orphan template": func(g *Grant) { g.Binaries = g.Binaries[:1] },
-		"no templates":    func(g *Grant) { g.Templates = nil },
-		"env AV_JOB":      func(g *Grant) { g.EnvAllow = []string{"AV_JOB"} },
-		"State unpinned":  func(g *Grant) { g.State = "" },
+		"holder":                 func(g *Grant) { g.Holder = "orchestrator" },
+		"zero per_hour":          func(g *Grant) { g.Caps.PerHour = 0 },
+		"orphan template":        func(g *Grant) { g.Binaries = g.Binaries[:1] },
+		"no templates":           func(g *Grant) { g.Templates = nil },
+		"env AV_JOB":             func(g *Grant) { g.EnvAllow = []string{"AV_JOB"} },
+		"State unpinned":         func(g *Grant) { g.State = "" },
+		"State in a TMPDIR root": func(g *Grant) { g.TmpRoots = []string{filepath.Dir(state)} },
+		"env pin on LANG":        func(g *Grant) { g.EnvPinned = map[string]string{"LANG": "C"} },
 	} {
 		g := adapterGrant(1, state)
 		m(&g)
@@ -254,5 +273,9 @@ func TestNewRefusesMalformed(t *testing.T) {
 	d.Exec = nil
 	if _, err := New(adapterGrant(1, state), d); !errors.Is(err, ErrDeps) {
 		t.Errorf("nil Exec: %v, want ErrDeps", err)
+	}
+	d.Exec, d.Journal = &blockExec{}, nil
+	if _, err := New(adapterGrant(1, state), d); !errors.Is(err, ErrDeps) {
+		t.Errorf("nil Journal: %v, want ErrDeps", err)
 	}
 }

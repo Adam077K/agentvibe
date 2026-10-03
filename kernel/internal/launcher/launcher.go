@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -340,6 +341,9 @@ func segment(job string) bool {
 // envNames is the only environment a worker may receive (B1-07 r5; AV_JOB is not passed).
 var envNames = []string{"HOME", "CODEX_HOME", "PATH", "LANG"}
 
+// pinnedEnv (B1-08 r7, item 2) take only Grant.EnvPinned's value; with no pin they are refused.
+var pinnedEnv = []string{"HOME", "CODEX_HOME", "PATH"}
+
 // inside: a clean absolute path strictly inside root.
 func inside(v, root string) bool {
 	return filepath.IsAbs(v) && filepath.Clean(v) == v && strings.HasPrefix(v, root+"/")
@@ -388,7 +392,8 @@ type launcher struct {
 // Tokens (ErrGrant), that carries a forbidden flag (ErrForbiddenFlag), or that has a slot with no
 // rule, a pinned flag with no pin, or a literal -c off ConfigAllow (ErrGrant).
 func New(g Grant, d Deps) (Launcher, error) {
-	if d.Clock == nil || d.Exec == nil || d.Digester == nil || d.Receipts == nil || d.Leases == nil || d.Grant == nil || d.State == "" {
+	if d.Clock == nil || d.Exec == nil || d.Digester == nil || d.Receipts == nil || d.Leases == nil || d.Grant == nil || d.State == "" ||
+		d.Journal == nil {
 		return nil, ErrDeps
 	}
 	if g.Holder != Holder || g.Caps.Concurrent <= 0 || g.Caps.PerHour <= 0 || len(g.Templates) == 0 ||
@@ -404,6 +409,11 @@ func New(g Grant, d Deps) (Launcher, error) {
 	for _, n := range g.EnvAllow {
 		if !slices.Contains(envNames, n) {
 			return nil, fmt.Errorf("%w: env name %q is not one of %v", ErrGrant, n, envNames)
+		}
+	}
+	for n, v := range g.EnvPinned {
+		if !slices.Contains(pinnedEnv, n) || strings.ContainsRune(v, 0) {
+			return nil, fmt.Errorf("%w: env pin %q is not one of %v", ErrGrant, n, pinnedEnv)
 		}
 	}
 	bins := map[string]bool{}
@@ -440,6 +450,15 @@ func New(g Grant, d Deps) (Launcher, error) {
 	g.ForbiddenFlags = slices.Clone(g.ForbiddenFlags)
 	g.EnvAllow = slices.Clone(g.EnvAllow)
 	g.ConfigAllow = slices.Clone(g.ConfigAllow)
+	g.EnvPinned = maps.Clone(g.EnvPinned)
+	g.TmpRoots = slices.Clone(g.TmpRoots)
+	// B1-08 r7: both checks run before the State dir is touched.
+	if err := outOfReach(g, d.State); err != nil {
+		return nil, err
+	}
+	if gr, ok := d.Receipts.(GenesisReporter); !ok || gr.Genesis() == "" || gr.Genesis() != g.ReceiptGenesis {
+		return nil, fmt.Errorf("%w: the receipt log's genesis is not the pinned %q", ErrState, g.ReceiptGenesis)
+	}
 	l := &launcher{g: g, d: d}
 	// Only a fresh State dir (its lock file created now) is initialised. A used one whose
 	// state.json is gone fails closed: the running jobs it recorded are unknown.
@@ -461,6 +480,49 @@ func New(g Grant, d Deps) (Launcher, error) {
 		return nil, fmt.Errorf("%w: %v", ErrState, err)
 	}
 	return l, nil
+}
+
+// outOfReach (B1-08 r7, item 1) refuses a State dir equal to, inside, or containing a root a worker
+// is handed: WorktreeRoot, JobRoot, the CODEX_HOME pin and every TmpRoots entry. Each path is
+// compared after resolving the symlinks of its longest existing prefix.
+func outOfReach(g Grant, state string) error {
+	roots := append([]string{g.WorktreeRoot, g.JobRoot}, g.TmpRoots...)
+	if c, ok := g.EnvPinned["CODEX_HOME"]; ok {
+		roots = append(roots, c)
+	}
+	s, err := resolve(state)
+	if err != nil {
+		return fmt.Errorf("%w: State %q: %v", ErrGrant, state, err)
+	}
+	for _, r := range roots {
+		if !cleanRoot(r) {
+			return fmt.Errorf("%w: worker root %q is not a clean absolute path", ErrGrant, r)
+		}
+		rr, err := resolve(r)
+		if err != nil {
+			return fmt.Errorf("%w: worker root %q: %v", ErrGrant, r, err)
+		}
+		if rr == s || strings.HasPrefix(rr, s+"/") || strings.HasPrefix(s, rr+"/") {
+			return fmt.Errorf("%w: State %q is within reach of worker root %q", ErrGrant, state, r)
+		}
+	}
+	return nil
+}
+
+// resolve resolves the symlinks of p's longest existing prefix and appends the rest unchanged. A
+// prefix that exists but does not resolve (a dangling or looping link) is an error.
+func resolve(p string) (string, error) {
+	tail := ""
+	for {
+		r, err := filepath.EvalSymlinks(p)
+		if err == nil {
+			return filepath.Join(r, tail), nil
+		}
+		if _, lerr := os.Lstat(p); lerr == nil || !errors.Is(err, fs.ErrNotExist) || p == filepath.Dir(p) {
+			return "", err
+		}
+		tail, p = filepath.Join(filepath.Base(p), tail), filepath.Dir(p)
+	}
 }
 
 func (l *launcher) statePath() string { return filepath.Join(l.d.State, "state.json") }
@@ -547,12 +609,13 @@ func cents(v string) (int64, bool) {
 	return c, true
 }
 
-// environ builds the worker's complete environment from req.Env: allow-listed names only,
-// sorted, never nil, so nothing is inherited from the Kernel.
+// environ builds the worker's complete environment from req.Env: allow-listed names only, each
+// pinned name at its pin, sorted, never nil, so nothing is inherited from the Kernel.
 func (l *launcher) environ(env map[string]string) ([]string, error) {
 	out := make([]string, 0, len(env))
 	for k, v := range env {
-		if !slices.Contains(l.g.EnvAllow, k) || strings.ContainsRune(v, 0) {
+		pin, ok := l.g.EnvPinned[k]
+		if !slices.Contains(l.g.EnvAllow, k) || strings.ContainsRune(v, 0) || slices.Contains(pinnedEnv, k) && (!ok || v != pin) {
 			return nil, fmt.Errorf("%w: env %q", ErrSpec, k)
 		}
 		out = append(out, k+"="+v)
@@ -630,7 +693,7 @@ func (l *launcher) Launch(ctx context.Context, req Request) (Receipt, error) {
 	if got, err := l.d.Digester.Digest(bin.Path); err != nil || got != bin.Digest {
 		return Receipt{}, fmt.Errorf("%w: %q measured %q (%v)", ErrBinary, bin.Path, got, err)
 	}
-	rc, err := l.admit(req, bin.Digest, tmpl.Digest)
+	rc, err := l.admit(ctx, req, bin.Digest, tmpl.Digest)
 	if err != nil {
 		return Receipt{}, err
 	}
@@ -672,9 +735,13 @@ func (l *launcher) locked(fn func(s *jobState) (bool, error)) error {
 // admit is one step under the admit lock: the grant is live, the job is not running, the lease
 // verifies at the launcher's clock, the receipt log holds fewer than per_hour launches in the
 // trailing hour, and fewer than concurrent jobs run. Last, the lease is consumed in the
-// AUTHORITATIVE store (Consume, compare-and-set); only then is the Receipt appended and the job
-// recorded running. The local Consumed set is a second refusal, never the one relied on.
-func (l *launcher) admit(req Request, digest, tmpl string) (rc Receipt, err error) {
+// AUTHORITATIVE store (Consume, compare-and-set); only then is the Receipt appended, the launch
+// recorded in the journal and the job recorded running. The local Consumed set is a second refusal,
+// never the one relied on.
+//
+// B1-08 r7 (item 4): the receipts and the journal's launch records in the trailing hour must agree
+// in number, checked before the lease is consumed; a mismatch either way is ErrState.
+func (l *launcher) admit(ctx context.Context, req Request, digest, tmpl string) (rc Receipt, err error) {
 	job, lease := req.JobID, req.Requires.FencedLease
 	err = l.locked(func(s *jobState) (bool, error) {
 		now := l.d.Clock.Now()
@@ -694,6 +761,13 @@ func (l *launcher) admit(req Request, digest, tmpl string) (rc Receipt, err erro
 		if err != nil {
 			return false, fmt.Errorf("%w: launch history: %w", ErrState, err)
 		}
+		logged, head, err := l.journalled(ctx, now.Add(-time.Hour))
+		if err != nil {
+			return false, fmt.Errorf("%w: journal launch records: %v", ErrState, err)
+		}
+		if logged != len(recent) {
+			return false, fmt.Errorf("%w: %d receipts but %d journal launch records in the trailing hour", ErrState, len(recent), logged)
+		}
 		if len(recent) >= l.g.Caps.PerHour {
 			return false, fmt.Errorf("%w: %d in the trailing hour", ErrRateCap, len(recent))
 		}
@@ -707,11 +781,43 @@ func (l *launcher) admit(req Request, digest, tmpl string) (rc Receipt, err erro
 		if err := l.d.Receipts.Append(rc); err != nil {
 			return false, fmt.Errorf("%w: %v", ErrReceipt, err)
 		}
+		// A failed journal append leaves a receipt the journal lacks: this launch never execs, and
+		// every later one is ErrState until the two are re-established.
+		data, err := json.Marshal(rc)
+		if err == nil {
+			_, err = l.d.Journal.Append(ctx, journal.Proposal{Stream: JournalStream, ExpectSeq: head, Type: JournalLaunchType, Data: data})
+		}
+		if err != nil {
+			return false, fmt.Errorf("%w: journal: %v", ErrReceipt, err)
+		}
 		s.Consumed[job+" "+lease] = true
 		s.Running[job] = lease
 		return true, nil
 	})
 	return rc, err
+}
+
+// journalled counts the journal's launch records whose At is after t, and returns the stream head.
+// A launch record that is not a Receipt's JSON is an error.
+func (l *launcher) journalled(ctx context.Context, t time.Time) (n int, head uint64, err error) {
+	evs, err := l.d.Journal.Read(ctx, JournalStream, 1)
+	if err != nil {
+		return 0, 0, err
+	}
+	for _, e := range evs {
+		head = e.Seq
+		if e.Type != JournalLaunchType {
+			continue
+		}
+		var rc Receipt
+		if err := json.Unmarshal(e.Data, &rc); err != nil {
+			return 0, 0, fmt.Errorf("launch record %d: %v", e.Seq, err)
+		}
+		if rc.At.After(t) {
+			n++
+		}
+	}
+	return n, head, nil
 }
 
 // end records jobID's end on lease. strict refuses a job not running on that lease (End); the
