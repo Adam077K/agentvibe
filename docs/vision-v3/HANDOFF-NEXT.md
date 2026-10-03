@@ -299,3 +299,14 @@ Raising `maxTurns` is a separate founder PR (irreversible tier).
 - B1-14a policy compiler;
 - the B1-04 remainder;
 - cross-family (Codex) reviews for #158–#164.
+
+**Update to the FINAL block:** the B1-08 r7 tests are DONE. They are on `origin/build/b1-08-tests-r7` @ 0cfe7ea; all 4 items kill their mutants (19/19). These fail on 160381f, as intended:
+- R7_StateOutOfWorkerReach
+- R7_EnvTakesOnlyPinnedValues
+- R7_ReceiptGenesisChecked
+- R7_JournalAnchor
+
+**Next step:** dispatch the implementer.
+- Base: 0cfe7ea plus the latest main, which includes #164.
+- Fix on `build/b1-08`.
+- Then: Opus re-review → PR → merge train.
