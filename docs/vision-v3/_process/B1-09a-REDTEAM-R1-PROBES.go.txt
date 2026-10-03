@@ -1,0 +1,198 @@
+//go:build donetest
+
+// Red-team probes for B1-09a (scratch only). Each pins a contract item the frozen file leaves open.
+package runner_test
+
+import (
+	"bytes"
+	"context"
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
+	"syscall"
+	"testing"
+	"time"
+
+	"golang.org/x/sys/unix"
+
+	"github.com/Adam077K/agentvibe/kernel/internal/runner"
+)
+
+func kp(pid int) (ppid, pgid int, zombie, ok bool) {
+	k, err := unix.SysctlKinfoProc("kern.proc.pid", pid)
+	if err != nil || int(k.Proc.P_pid) != pid {
+		return 0, 0, false, false
+	}
+	return int(k.Eproc.Ppid), int(k.Eproc.Pgid), k.Proc.P_stat == 5, true
+}
+
+func liveNotZombie(pid int) bool { _, _, z, ok := kp(pid); return ok && !z }
+
+// RT1: the in-place branch must still verify the digest.
+func TestRT_InPlaceChecksDigest(t *testing.T) {
+	marker := filepath.Join(t.TempDir(), "ran")
+	e := mustExec(t, workerConfig())
+	err := e.Run(runner.WithLimits(context.Background(), runner.Limits{Wall: 10 * time.Second, Idle: 10 * time.Second, Stdout: os.Stderr}),
+		"/bin/bash", "sha256:"+strings.Repeat("0", 64), []string{"-c", "/usr/bin/touch " + marker}, []string{})
+	if !errors.Is(err, runner.ErrDigest) || exists(marker) {
+		t.Fatalf("protected /bin/bash with a foreign digest: err %v, ran %v; want ErrDigest, nothing ran", err, exists(marker))
+	}
+}
+
+// RT2: cases 4 and 5, compared against the RESOLVED path as well ($TMPDIR is under a symlink on darwin).
+func TestRT_CopyAssertResolved(t *testing.T) {
+	script := []byte("#!/bin/sh\nprintf %s \"$0\"\n")
+	e := mustExec(t, workerConfig())
+	run := func(p string) (string, error) {
+		var out bytes.Buffer
+		err := e.Run(runner.WithLimits(context.Background(), runner.Limits{Wall: 10 * time.Second, Idle: 10 * time.Second, Stdout: &out}), p, fileDigest(p), nil, []string{})
+		return out.String(), err
+	}
+	wbin := filepath.Join(t.TempDir(), "w")
+	os.WriteFile(wbin, script, 0o555)
+	ro := filepath.Join(t.TempDir(), "ro")
+	rbin := filepath.Join(ro, "w")
+	os.Mkdir(ro, 0o755)
+	os.WriteFile(rbin, script, 0o555)
+	os.Chmod(ro, 0o555)
+	t.Cleanup(func() { os.Chmod(ro, 0o755) })
+	for _, p := range []string{wbin, rbin} {
+		real, _ := filepath.EvalSymlinks(p)
+		got, err := run(p)
+		if err != nil || got == p || got == real || got == "" {
+			t.Errorf("%s ran as %q (resolved %s, err %v), want a private copy", p, got, real, err)
+		}
+	}
+}
+
+// RT3: a leader that exits 0 leaves its group and setsid grandchild; Run must not return them alive.
+func TestRT_NormalExitKillsTree(t *testing.T) {
+	dir := t.TempDir()
+	env, pids, _ := treeEnv(t, dir)
+	sh := filepath.Join(dir, "leader.sh")
+	os.WriteFile(sh, []byte("#!/bin/sh\n\"$B1_09A_SELF\" "+helperPrefix+"mid &\n"+
+		"while [ ! -s \"$B1_09A_PIDS\" ] || [ $(/usr/bin/wc -l < \"$B1_09A_PIDS\") -lt 2 ]; do /bin/sleep 0.05; done\nexit 0\n"), 0o755)
+	err, _ := runExec(t, context.Background(), sh, fileDigest(sh), nil, env, runner.Limits{Wall: 20 * time.Second, Idle: 20 * time.Second, Stdout: os.Stderr})
+	if err != nil {
+		t.Fatalf("leader exit 0: err %v", err)
+	}
+	if n := len(readPids(pids)); n != 2 {
+		t.Fatalf("%d of 2 pids recorded", n)
+	}
+	assertDead(t, pids, "leader exited 0")
+}
+
+// RT4: the Runner hands job.Limits to Exec, and records an ended job so a restart leaves it alone.
+func TestRT_RunnerLimitsAndStatus(t *testing.T) {
+	bin := self(t)
+	state := t.TempDir()
+	fl := &fakeLauncher{exec: mustExec(t, workerConfig())}
+	r, err := runner.New(runner.Config{State: state, Capacity: 2, Launcher: fl})
+	if err != nil || r.Reconcile(context.Background()) != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	var out bytes.Buffer
+	ok := runner.Job{Req: request("job-ok", bin, []string{helperPrefix + "chatty"}, map[string]string{"B1_09A_N": "3"}),
+		Limits: runner.Limits{Wall: 20 * time.Second, Idle: 20 * time.Second, Stdout: &out}}
+	if err := r.Run(ctx, ok); err != nil || out.String() != "x\nx\nx\n" {
+		t.Errorf("chatty through Runner: err %v, stdout %q; want nil and job.Limits.Stdout to get every byte", err, out.String())
+	}
+	if st, _ := r.Status("job-ok"); st != runner.StatusExited {
+		t.Errorf("job-ok status %q after a clean end, want exited", st)
+	}
+	pids := filepath.Join(t.TempDir(), "pids")
+	reap(t, pids)
+	wall := runner.Job{Req: request("job-wall", bin, []string{helperPrefix + "tree"}, map[string]string{"B1_09A_SELF": bin, "B1_09A_PIDS": pids}),
+		Limits: runner.Limits{Wall: 2 * time.Second, Idle: 20 * time.Second, Stdout: os.Stderr}}
+	t0 := time.Now()
+	if err := r.Run(ctx, wall); !errors.Is(err, runner.ErrWall) || time.Since(t0) > 4*time.Second {
+		t.Errorf("tree through Runner with Wall 2s: err %v after %v; want ErrWall from job.Limits", err, time.Since(t0))
+	}
+	assertDead(t, pids, "runner wall")
+	if st, _ := r.Status("job-wall"); st != runner.StatusKilled {
+		t.Errorf("job-wall status %q, want killed", st)
+	}
+	fl2 := &fakeLauncher{exec: mustExec(t, workerConfig())}
+	r2, _ := runner.New(runner.Config{State: state, Capacity: 2, Launcher: fl2})
+	if err := r2.Reconcile(context.Background()); err != nil || len(fl2.ends) != 0 || fl2.count() != 0 {
+		t.Errorf("restart after clean ends: err %v, ends %q, launches %d; want none", err, fl2.ends, fl2.count())
+	}
+}
+
+// RT5: daemon dies, then the LEADER dies before the restart; the group member and its setsid child live on.
+func TestRT_ReconcileLeaderDeadGroupAlive(t *testing.T) {
+	bin := self(t)
+	state := t.TempDir()
+	pids := filepath.Join(t.TempDir(), "pids")
+	reap(t, pids)
+	d := execCommand(bin, helperPrefix+"daemon")
+	d.Env = []string{"B1_09A_SELF=" + bin, "B1_09A_STATE=" + state, "B1_09A_PIDS=" + pids}
+	d.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	if err := d.Start(); err != nil {
+		t.Fatal(err)
+	}
+	exited := make(chan struct{})
+	go func() { d.Wait(); close(exited) }()
+	waitPids(t, pids, 3, 10*time.Second)
+	syscall.Kill(-d.Process.Pid, syscall.SIGKILL)
+	<-exited
+	leader := 0
+	for _, p := range readPids(pids) {
+		if _, pg, _, ok := kp(p); ok && pg != p {
+			leader = pg // mid's pgid is the leader
+		}
+	}
+	if leader == 0 {
+		t.Fatal("no leader found")
+	}
+	syscall.Kill(leader, syscall.SIGKILL)
+	for end := time.Now().Add(2 * time.Second); liveNotZombie(leader) && time.Now().Before(end); {
+		time.Sleep(10 * time.Millisecond)
+	}
+	fl := &fakeLauncher{exec: mustExec(t, workerConfig())}
+	r, err := runner.New(runner.Config{State: state, Capacity: 2, Launcher: fl})
+	if err != nil || r.Reconcile(context.Background()) != nil {
+		t.Fatal("restart/reconcile", err)
+	}
+	assertDead(t, pids, "reconcile with the leader already dead")
+}
+
+// RT6: SIGINT goes to the GROUP at 90% (mid dies then, the trapping leader lives), and SIGKILL lands
+// close to 100%.
+func TestRT_SigintReachesGroup(t *testing.T) {
+	env, pids, ints := treeEnv(t, t.TempDir())
+	bin := self(t)
+	const wall = 2 * time.Second
+	t0 := time.Now()
+	type res struct {
+		err  error
+		took time.Duration
+	}
+	done := make(chan res, 1)
+	go func() {
+		err, took := runExec(t, context.Background(), bin, fileDigest(bin), []string{helperPrefix + "tree"}, env, runner.Limits{Wall: wall, Idle: 30 * time.Second, Stdout: os.Stderr})
+		done <- res{err, took}
+	}()
+	waitPids(t, pids, 3, 2*time.Second)
+	mid := 0
+	for _, p := range readPids(pids) {
+		if pp, pg, _, ok := kp(p); ok && pg != p && pp == pg {
+			mid = p
+		}
+	}
+	time.Sleep(time.Until(t0.Add(wall * 95 / 100)))
+	midLive := mid != 0 && liveNotZombie(mid)
+	rr := <-done
+	if got := readPids(ints); len(got) > 0 {
+		t.Logf("SIGINT reached the leader at %v of %v (frozen window [80%%,100%%))", time.Duration(int64(got[0])-t0.UnixNano()), wall)
+	}
+	if mid == 0 || midLive {
+		t.Errorf("at 95%% of the wall the group member (pid %d) is still running: SIGINT did not reach the process group", mid)
+	}
+	if rr.took > wall+time.Second {
+		t.Errorf("SIGKILL stage returned after %v; wall %v", rr.took, wall)
+	}
+}
