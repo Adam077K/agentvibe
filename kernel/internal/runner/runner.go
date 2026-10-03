@@ -1,0 +1,104 @@
+// Package runner is the Kernel runner's process half (B1-09a, 09a §8.2): admission under a
+// capacity cap, the wall-clock and idle backstops, the process-group kill, and reconciliation after
+// the daemon dies mid-job. It also holds the real launcher.Exec.
+//
+// This file is the surface frozen with the B1-09a done-tests (runner_donetest_test.go, build tag
+// donetest). Every entry point returns ErrNotImplemented: B1-09a implements it. Measurements behind
+// the contract: docs/vision-v3/_process/DR-B1-09a-MEASURE-2026-10-03.md.
+package runner
+
+import (
+	"context"
+	"errors"
+	"io"
+	"time"
+
+	"github.com/Adam077K/agentvibe/kernel/internal/launcher"
+)
+
+var (
+	// ErrNotImplemented is returned by every entry point until B1-09a lands.
+	ErrNotImplemented = errors.New("runner: not implemented")
+	// ErrDigest: the bytes Exec would execute do not hash to the digest it was given, or the digest
+	// is not "sha256:" + 64 lowercase hex. Nothing ran.
+	ErrDigest = errors.New("runner: executed bytes do not match the pinned digest")
+	// ErrSpec: Exec.Run was called with no Limits on its ctx, a nil env, or a non-positive Wall or
+	// Idle; or New was given a malformed Config. Nothing ran.
+	ErrSpec = errors.New("runner: missing or malformed launch limits")
+	// ErrCapacity: Config.Capacity jobs are already admitted. Refused before Launcher.Launch.
+	ErrCapacity = errors.New("runner: capacity reached")
+	// ErrWall: the wall-clock backstop fired. SIGINT went to the process group at 90% of Wall and
+	// SIGKILL to the group and every descendant at 100%.
+	ErrWall = errors.New("runner: wall-clock backstop")
+	// ErrIdle: the worker wrote no stdout byte for Idle; the group and every descendant were killed.
+	ErrIdle = errors.New("runner: idle backstop")
+)
+
+// Limits are one launch's backstops and plumbing. launcher.Exec.Run's signature is frozen by B1-08,
+// so they travel on the ctx passed to Launcher.Launch (WithLimits); Exec.Run refuses a ctx that
+// carries none (ErrSpec), so no worker ever runs without backstops.
+type Limits struct {
+	Wall   time.Duration // SIGINT the process group at 90%, SIGKILL it and every descendant at 100%
+	Idle   time.Duration // no stdout byte for Idle: SIGKILL the group and every descendant
+	Stdout io.Writer     // receives every byte of the worker's stdout; each byte resets Idle
+	Dir    string        // the worker's working directory; "" is the Exec's choice
+}
+
+// WithLimits returns ctx carrying l for Exec.Run.
+func WithLimits(ctx context.Context, l Limits) context.Context { return ctx }
+
+// NewExec returns the real launcher.Exec. Run executes only bytes that hash to digest, in a new
+// process group, with exactly env as the environment (nil env is ErrSpec; nothing is inherited from
+// the Kernel), and returns only after the worker's process group and every descendant are dead.
+// ctx cancellation kills the tree and returns ctx.Err().
+func NewExec() launcher.Exec { return stubExec{} }
+
+type stubExec struct{}
+
+func (stubExec) Run(context.Context, string, string, []string, []string) error {
+	return ErrNotImplemented
+}
+
+// Status is a job's state in the runner's persisted record.
+type Status string
+
+const (
+	StatusRunning Status = "running"
+	StatusExited  Status = "exited" // Launch returned; the worker's outcome is the adapter's to classify
+	StatusKilled  Status = "killed" // a backstop or ctx cancellation killed it
+	// StatusInterrupted: the daemon died while the job ran; Reconcile killed what survived and
+	// ended the launch. Never a pass.
+	StatusInterrupted Status = "interrupted"
+)
+
+// Job is one admitted unit of work.
+type Job struct {
+	Req    launcher.Request // Req.JobID names the job; Req.Requires.FencedLease is its lease
+	Limits Limits
+}
+
+// Config configures a Runner.
+type Config struct {
+	State    string            // the runner's persisted state directory; it survives the daemon
+	Capacity int               // at most Capacity jobs admitted at once; must be > 0
+	Launcher launcher.Launcher // the Kernel launcher, built with NewExec()
+}
+
+// Runner admits jobs and launches them under their Limits.
+type Runner struct{}
+
+// New returns a Runner on cfg. A malformed Config is ErrSpec.
+func New(cfg Config) (*Runner, error) { return nil, ErrNotImplemented }
+
+// Run admits job (ErrCapacity when Capacity jobs are already admitted, before Launch is called),
+// records it running with its process identity in State before the worker can outlive the daemon,
+// launches it under job.Limits and returns the Launch error once the whole tree is dead.
+func (r *Runner) Run(ctx context.Context, job Job) error { return ErrNotImplemented }
+
+// Reconcile runs after a restart: for every job State records as running, it kills the surviving
+// process group and every descendant (guarding against pid reuse), marks the job
+// StatusInterrupted and calls Launcher.End for its lease. A second Reconcile is a no-op.
+func (r *Runner) Reconcile(ctx context.Context) error { return ErrNotImplemented }
+
+// Status reports jobID's recorded status.
+func (r *Runner) Status(jobID string) (Status, error) { return "", ErrNotImplemented }
