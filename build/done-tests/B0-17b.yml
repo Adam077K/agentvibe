@@ -262,18 +262,47 @@
 #   passes there; it pins guards f9f54d6 already has.
 #   Proof, $TMPDIR only: an r6 reference (f9f54d6 plus an overlay, the adapter given the r5 line)
 #   passes every B108 test. Mutants: 23 killed, 1 equivalent (above).
+#
+# RE-FREEZE r7 2026-10-03 (B1-08): 2026-10-03 re-freeze r7 threat-model ruling
+#   (docs/vision-v3/_process/DR-B1-08-THREAT-MODEL-2026-10-03.md). Added
+#   launcher_r7_donetest_test.go; base 51c0df3 (implementation 160381f + the DR). Pins:
+#   1 New refuses (ErrGrant) a State dir equal to, inside or containing WorktreeRoot, JobRoot,
+#     the CODEX_HOME pin or any Grant.TmpRoots entry, after symlink resolution
+#     (longest existing prefix);
+#   2 launcher.go:528: HOME, CODEX_HOME, PATH take only Grant.EnvPinned's value, else ErrSpec;
+#   3 launcher.go:191: New refuses unless Deps.Receipts is a GenesisReporter whose Genesis() is
+#     exactly Grant.ReceiptGenesis (non-empty);
+#   4 Deps.Journal required; one JournalStream/JournalLaunchType event (Data = Receipt JSON) per
+#     admitted launch; trailing-hour receipts and journal launch records must agree, else ErrState
+#     before Consume; a failed journal append never execs.
+#   Contract (declarations only): Grant.EnvPinned, Grant.TmpRoots, Deps.Journal,
+#   GenesisReporter, JournalStream, JournalLaunchType, fileLog.Genesis accessor. Earlier files
+#   edited only where r7 demands it: pinned() calls r7Pinned (env/tmp pins, genesis, a journal
+#   shared per receipt sink); r3 RateSurvivesRestart seeds that journal (r7Seed); r6
+#   StateIsPinned's positive case builds through pinned. launcher_test.go (the implementer's)
+#   needs Deps.Journal and a GenesisReporter sink once implemented.
+#   ON 160381f plus the declarations: 4 FAIL, every earlier B108 test passes. They are
+#   R7_StateOutOfWorkerReach, R7_EnvTakesOnlyPinnedValues, R7_ReceiptGenesisChecked,
+#   R7_JournalAnchor.
+#   Proof, $TMPDIR only: an r7 reference passes every B108 test. Mutants, 19 killed, 0 survived:
+#   item 1 (no check; lexical only; inside-only; TmpRoots skipped; CODEX_HOME skipped; prefix
+#   without "/"; no longest-prefix resolution), item 2 (no check; unpinned allowed; HOME only),
+#   item 3 (no check; non-reporter allowed; empty pin allowed), item 4 (journal optional; no
+#   append; no count check; one-sided count; append error ignored; count after Consume).
 register: B0-17b
 jobs:
   - id: B1-08
     files:
       - path: kernel/internal/launcher/launcher_donetest_test.go
-        sha256: ed4d64bf3980105a44c76cdc07d60bc7bc69083e559073bebb0307fe0bf088cd
+        sha256: cfa7eb15c017152d8abcaf58efcbc8d8ab83916e20c13227bc7814b53a414868
       - path: kernel/internal/launcher/launcher_r3_donetest_test.go
-        sha256: ccd31f5fa25ee415e4ef407a615c7062f46b88c4a9ec39c5e948b3e27eeccf3d
+        sha256: 75851e7f23ead0fca22a1be23f3dc98f10c8903267a0fedff4133dda1b82fbbc
       - path: kernel/internal/launcher/launcher_r4_donetest_test.go
         sha256: 3957bc7d50fa8ec97f833c98822f0b5fd0e567713c8e6c6c200afb632dd63fe4
       - path: kernel/internal/launcher/launcher_r6_donetest_test.go
-        sha256: 6e7fe41ce95e3a7eb1e2d7d67ad4ebfe2c3602e8792079cf912754fa38155fb7
+        sha256: 6489e12a6eebd4a67d771b98392c12a0395f0adc2a0ae84aaecb1221d612405e
+      - path: kernel/internal/launcher/launcher_r7_donetest_test.go
+        sha256: 43f97d80bf5e95f9a9c470b4fe8cfe27e00f0a43f29bc79cfb99640e27541392
   - id: B1-12
     files:
       - path: kernel/internal/outbox/outbox_donetest_test.go

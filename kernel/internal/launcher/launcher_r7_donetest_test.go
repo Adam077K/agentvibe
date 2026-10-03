@@ -57,6 +57,30 @@ const (
 func (*r3Log) Genesis() string    { return r7FakeGenesis }
 func (*receipts) Genesis() string { return r7FakeGenesis }
 
+// r7Blank is a sink that reports an empty genesis: "" is never a pin, even when the grant's is "".
+type r7Blank struct{ *r3Log }
+
+func (r7Blank) Genesis() string { return "" }
+
+// r7Seed gives a pre-seeded receipt log the launch records its shared journal would hold, as the
+// launcher that admitted those launches would have written them (r3 RateSurvivesRestart).
+func r7Seed(l *r3Log) *r3Log {
+	ctx := context.Background()
+	v, _ := r7Journals.LoadOrStore(ReceiptSink(l), &memJournal{})
+	j := v.(*memJournal)
+	for _, rc := range l.got {
+		data, err := json.Marshal(rc)
+		seq, _, _ := j.Head(ctx, JournalStream)
+		if err == nil {
+			_, err = j.Append(ctx, journal.Proposal{Stream: JournalStream, ExpectSeq: seq, Type: JournalLaunchType, Data: data})
+		}
+		if err != nil {
+			panic(err)
+		}
+	}
+	return l
+}
+
 // r7Journals is the journal of each receipt sink: every launcher on one sink shares one journal,
 // as every launcher on one machine shares the Kernel's.
 var r7Journals sync.Map
@@ -132,7 +156,7 @@ func (m *memJournal) Streams(context.Context) ([]string, error) {
 	return slices.Sorted(maps.Keys(m.ev)), nil
 }
 
-func (m *memJournal) Verify(context.Context) error             { return nil }
+func (m *memJournal) Verify(context.Context) error              { return nil }
 func (m *memJournal) StateHash(context.Context) (string, error) { return "", nil }
 func (m *memJournal) PutBlob(context.Context, string, []byte) (journal.BlobRef, error) {
 	return "", errors.New("memJournal: no blobs")
@@ -320,6 +344,7 @@ func TestB108_R7_ReceiptGenesisChecked(t *testing.T) {
 	refused("the pin upper-cased", sinkA, strings.ToUpper(gA), false)
 	refused("a sink that reports no genesis", sinkA, gA, true)
 	refused("a fake sink under another pin", &r3Log{}, gA, false)
+	refused("an empty genesis matching an empty pin", r7Blank{&r3Log{}}, "", false)
 
 	r := newR4(t, at0300())
 	r.sink = sinkA

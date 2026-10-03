@@ -444,7 +444,7 @@ func TestB108_R3_RateSurvivesRestart(t *testing.T) {
 		for i := 0; i < 120; i++ {
 			l.got = append(l.got, Receipt{JobID: "earlier", At: at(i)})
 		}
-		return l
+		return r7Seed(l) // r7: the journal holds the launch records these receipts imply
 	}
 	spread := func(i int) time.Time { return start.Add(time.Duration(i) * 29 * time.Second) }
 
