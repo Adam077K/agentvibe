@@ -74,6 +74,30 @@
 #   default_permissions is NOT required. Measured: the built-in ":workspace" puts /tmp back, and a
 #   user-config value did not override the profile's sandbox_mode (DR-B1-07, "Round 2").
 #
+# RE-FREEZE r4 2026-10-03: 2026-10-03 re-freeze r3 after re-review. The Opus re-review PASSED b0f1e27
+# on the security and adversarial lenses (no critical or high finding) and raised 4 MED findings and
+# 1 surviving mutant (DR-B1-07, "Round 3"). Branch build/b1-07-tests-r3 = b0f1e27 + origin/main
+# (the 11,000 kernel budget). The r1 and r2 test files and the fixtures are unchanged (hashes
+# identical). LaunchSpec gains Home. Added codex_r3_donetest_test.go:
+#   R3_ProfileIsParsedAsTOML: a required key only inside a """/''' string (closing delimiter on a
+#     key-shaped line, the review's case), a comment, an inline table, a one-line string, a
+#     multi-line array, an array of tables or a sub-table is missing; a duplicate key (quoted, or
+#     dotted against a table), a bare-word, unterminated or missing value, or an unterminated """
+#     is ErrSpec. No Go TOML library is in the offline module cache: behaviour is pinned, not a library.
+#   R3_PathsResolvedBeforeComparison: -C through a symlink to / or the worktree's parent; -o and
+#     CODEX_HOME by real path while the worktree is named by an alias; CODEX_HOME through a symlink
+#     into the worktree; -o, CODEX_HOME and HOME in another letter case (case-insensitive FS only).
+#   R3_HomePinned: Env[HOME] absent, or exactly the pinned Home (clean, not /, outside the worktree).
+#     Measured: with CODEX_HOME unset, codex 0.154.0 loads $HOME/.codex; it does not load XDG config.
+#   R3_LstatErrorRefuses: ENOTDIR and EACCES under -o refuse (the review's survivor at :96).
+# On b0f1e27 unchanged, 3 tests FAIL: R3_ProfileIsParsedAsTOML, R3_PathsResolvedBeforeComparison and
+# R3_HomePinned. R3_LstatErrorRefuses passes, because the code was right and the gap was the test.
+# Proof, $TMPDIR only: b0f1e27 plus the fixes passes the package (-race -count=3). Mutants: 11 of 12
+# killed (line scan as on b0f1e27; no value grammar; -C, -o and CODEX_HOME lexical only; path compared
+# by string, not file identity; HOME unchecked, allowed in the worktree, allowed at /, or its pin
+# ignored; Lstat errors ignored). The survivor, "no multi-line guard", is equivalent: the value grammar
+# already refuses a """ or ''' opening.
+#
 # OPEN (not decided here):
 # 1. (r3) 09a §8.2 and B1-08's codexTokens carry --ignore-rules, not --ignore-user-config (build/b1-08-tests-r2).
 # 2. Who measures BinaryDigest and ProfileDigest, and when (launcher/runner, B1-08/B1-09).
@@ -89,6 +113,8 @@ jobs:
         sha256: d1d5a84fad1d5824a6bf6f19a047e0876514d8191cd1a6ff92b03c2146ffb1d2
       - path: kernel/internal/adapter/codex_r2_donetest_test.go
         sha256: abc3bb86276426e91962be731821abd357a5c3d23fc12c3c93052f1ed028c8ed
+      - path: kernel/internal/adapter/codex_r3_donetest_test.go
+        sha256: 1269e8c265add32562381eab3823cdd7039de44026faf8bf5ebe2acae1c1b1b8
       - path: kernel/internal/adapter/testdata/codex/collab-spawn.jsonl
         sha256: 3ffd0b33825a5f58b07a180e81c3750bb6003e72225f5c2b37cbd6ebb9519878
       - path: kernel/internal/adapter/testdata/codex/empty.jsonl

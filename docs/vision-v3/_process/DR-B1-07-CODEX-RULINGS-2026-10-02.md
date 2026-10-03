@@ -155,3 +155,50 @@ check the values. Two holes remain:
   replacing it. This is unmeasured.
 
 Pinning required values, and measuring how tables merge, are the next step.
+
+## Round 3 (2026-10-03): the re-review's MED findings
+
+An Opus re-review passed `b0f1e27` on the security and adversarial lenses, with no critical or high finding.
+It raised four MED findings and one surviving mutant. The round-3 tests in `codex_r3_donetest_test.go` pin
+all of them. The required-key list, rulings 1–3 and 5–6, and round 2's decisions are unchanged.
+
+1. **The profile is read as TOML, not line by line.** A required key that appears only inside a string
+   counts as missing. This covers a `"""` or `'''` multi-line string whose closing delimiter shares a line
+   with a key-shaped line, which is the re-review's case. The same holds for a key that appears only in a
+   comment, an inline table, an array of tables, a sub-table or a multi-line array.
+   - A duplicate key in any spelling (quoted, or dotted against a table) is `ErrSpec`.
+   - A value that is not TOML (a bare word, an unterminated string, a missing value) is `ErrSpec`.
+   - **No Go TOML library is available offline.** The module cache at `~/.agentvibe/gomod` holds only
+     `modernc.org/sqlite` and its dependencies. The tests therefore pin behaviour, not a library: a minimal
+     strict parser that refuses anything it does not understand passes them.
+2. **`-o`, `CODEX_HOME` and `HOME` are compared to the worktree after resolution.** The resolution takes
+   the longest existing prefix through `EvalSymlinks`, then checks identity with `os.SameFile` against the
+   worktree and each ancestor. So each of the following is inside the worktree:
+   - a path reached through a symlink;
+   - a path reached when the worktree is named by an alias;
+   - a path in another letter case, on a case-insensitive filesystem.
+3. **`-C` is resolved through symlinks and must land inside the worktree.** A `-C` inside the worktree that
+   is a symlink to `/` or to the worktree's parent is `ErrSpec`.
+4. **`HOME` is checked; XDG is not.** This was measured on codex-cli 0.154.0, using throwaway homes with no
+   credential, so no model turn was served:
+   - With `CODEX_HOME` unset, codex loads `$HOME/.codex/config.toml`; the banner showed `model:
+     home-model`.
+   - It does not load config from `XDG_CONFIG_HOME`, `XDG_DATA_HOME` or `XDG_STATE_HOME`; the banner
+     showed the default model in each case.
+
+   So `Env["HOME"]` must be absent, which means the launcher's own value (the real user home), or exactly
+   the pinned `LaunchSpec.Home`. The pinned value must be clean, not `/`, and outside the worktree.
+5. **`noSymlink`: any `Lstat` error other than not-exist refuses.** This covers permission denied and "not
+   a directory", and kills the re-review's surviving mutant at `:96`.
+
+**Follow-up, needs founder consent.** Precedence between the profile and the user config is still
+unmeasured: whether a profile key overrides the same key in `~/.codex/config.toml`, and whether a table
+such as `mcp_servers` or `features` is replaced or deep-merged. The banner shows only the model, approval
+and sandbox mode, and settling the rest needs a served model turn. A served turn spends the founder's
+subscription, so it waits for his consent.
+
+**Residual, noted and not pinned.** The binary also reads environment variables that can change its
+behaviour, for example `CODEX_SANDBOX`, `CODEX_SANDBOX_NETWORK_DISABLED`, `CODEX_CA_CERTIFICATE` and the
+`CODEX_*_BASE_URL` family. This list comes from the binary's strings and was not measured. The adapter
+pins only `CODEX_HOME` and `HOME`. Allowing a fixed set of environment variables is the launcher's work
+(B1-08).
