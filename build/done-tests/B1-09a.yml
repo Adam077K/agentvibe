@@ -1,0 +1,43 @@
+# Done-test register, B1-09a (docs/vision-v3/14-BUILD-PLAN.md §6 row B1-09a, "Runner: admission,
+# capacity/wall/idle backstops, pgid kill"; acceptance "Daemon killed mid-job → reconciled, no orphan").
+# Canon: 09a §8.2 (own process group; wall-clock SIGINT 90%, SIGKILL pgid 100%; 5-minute idle backstop),
+# §15 (orphan processes 2 min after kill: 0). Measured first, no model turn, no network:
+# docs/vision-v3/_process/DR-B1-09a-MEASURE-2026-10-03.md.
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest ./internal/runner/
+# kernel/internal/runner/runner.go (the stub surface) is NOT registered: it is what the job implements.
+# The real launcher.Exec is runner.NewExec(); launcher.Exec's signature is frozen by B1-08, so a launch's
+# backstops travel on ctx (runner.WithLimits) and Exec.Run refuses a ctx without them (ErrSpec).
+#
+# Round 1, 2026-10-03: 7 tests, red 7 of 7 against the stub (every one "runner: not implemented").
+#   ExecRunsOnlyMatchingDigest  matching digest runs; other-bytes, bare-hex, upper-case, trailing-newline
+#                               and empty digests refuse (ErrDigest); no limits, nil env, zero wall or
+#                               idle refuse (ErrSpec); replaced by rename or rewritten in place after the
+#                               check refuses; under a live rename swapper (100 runs) the other bytes
+#                               never run and the good bytes run at least once.
+#   ExecEnvExact                the child's environ is exactly env (a Kernel-side var does not leak;
+#                               empty env stays empty, never inherited), and argv exactly argv.
+#   CapacityCap                 New refuses capacity 0/-1, empty State, nil Launcher (ErrSpec); six
+#                               concurrent Runs with capacity 2: exactly 2 Launch calls, 4 ErrCapacity;
+#                               the N+1th while N run is refused before Launch; slots free on end.
+#   WallBackstopKillsTree       ErrWall no earlier than the wall; SIGINT reaches the leader in
+#                               [80%, 100%) of the wall; leader, child and setsid grandchild all dead.
+#                               The child dies at the SIGINT stage, so the grandchild must be found first.
+#   IdleBackstopKillsTree       a silent tree: ErrIdle and the whole tree dead; control: output every
+#                               100ms for 1.5s outlives idle 700ms and every byte reaches Limits.Stdout.
+#   CtxCancelKillsTree          cancel: context.Canceled, neither backstop error, whole tree dead.
+#   DaemonKilledMidJob          the acceptance: a runner process starts a tree, is SIGKILLed alone; a new
+#                               Runner on the same State reads the job as running, Reconcile kills every
+#                               survivor, marks it interrupted, calls Launcher.End once with its lease,
+#                               never relaunches; a second Reconcile is a no-op.
+# Reference implementation NOT run: the attempt to build one in $TMPDIR was refused by the permission
+# system, and per protocol it was not retried in another form. Passability rests on the measurements.
+#
+# OPEN (not decided here): see the B1-09a return, founder questions 1-5.
+register: B1-09a
+jobs:
+  - id: B1-09a
+    files:
+      - path: kernel/internal/runner/runner_donetest_test.go
+        sha256: 6ccb37ff549428a938e1641a651426e357c4e6e3ab792c6358b3da707ff03608
