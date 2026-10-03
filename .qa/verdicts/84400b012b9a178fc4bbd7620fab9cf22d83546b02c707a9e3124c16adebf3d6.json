@@ -1,0 +1,11 @@
+{
+  "subject": "84400b012b9a178fc4bbd7620fab9cf22d83546b02c707a9e3124c16adebf3d6",
+  "base": "e4a08112e46792faac444df5446ff742c6f34b4e",
+  "tier": "lite",
+  "tier_driver": "build/done-tests/B0-17b.yml",
+  "verdict": "PASS",
+  "by": "opus-5.5 reviewer (review-b1-08h)",
+  "run_id": null,
+  "evidence": null,
+  "recorded_at": "2026-10-03T18:42:38.812Z"
+}

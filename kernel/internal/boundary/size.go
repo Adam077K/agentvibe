@@ -7,8 +7,9 @@ import (
 	"strings"
 )
 
-// DefaultMaxLines is the Kernel's size budget (09a §2, "~11,000 lines (parameter)"; DR-KERNEL-BUDGET-2026-10-02).
-const DefaultMaxLines = 11000
+// DefaultMaxLines is the Kernel's size budget (09a §2, a parameter; DR-KERNEL-BUDGET-2026-10-02, and the
+// founder ruling of 2026-10-03 raising it to 15,000 "for now").
+const DefaultMaxLines = 15000
 
 // CountLines counts the physical lines of every .go file under root except _test.go files, in
 // every directory: testdata and _ or . prefixed directories count, and so does anything reached

@@ -34,3 +34,7 @@ still to come.
 
 **Not changed.** Historical records keep the figure they stated at the time: `R6-REVIEW-opus.md` and the
 B0-16 session file. No done-test register pins the budget or the counted set.
+
+## Amendment 2026-10-03
+
+Founder raised the budget to 15,000 for now. Reason: after B1-08 the Kernel stood at 10,518 of 11,000, and the next jobs (Consume store, real Exec, grant status, B1-14a, B1-04 remainder) don't fit in 482 lines.

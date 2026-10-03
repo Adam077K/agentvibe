@@ -98,7 +98,7 @@ const GOOD = `---
 name: builder
 description: |
   Engine. A fixture that exists to be well-formed, so that each constructed failure below is the rule under test and nothing else.
-model: claude-opus-5
+model: claude-opus-5-5
 effort: high
 tools: [Read, Write, Edit, Glob, Grep]
 maxTurns: 25
@@ -209,13 +209,13 @@ test('the roster constant agrees with disk in both directions', () => {
 
 // ── 1 · Frontmatter enums (PS-MODEL-ENUM · PS-EFFORT-ENUM · PS-MAXTURNS-RANGE) ──
 
-test('PS-MODEL-ENUM: the target model set is the Claude-5 line plus Haiku 4.5', () => {
+test('PS-MODEL-ENUM: the target model set is exactly Opus 5.5 and Sonnet 5.5', () => {
   // TOKEN-EFFICIENCY.md §6 is the only VERIFIED inventory of what this fleet runs.
-  assert.deepEqual(VALID_MODELS, ['claude-opus-5', 'claude-sonnet-5', 'claude-fable-5', 'claude-haiku-4-5']);
+  assert.deepEqual(VALID_MODELS, ['claude-opus-5-5', 'claude-sonnet-5-5']);
 });
 
 test('PS-MODEL-ENUM fires: a superseded pin is refused, because it silently clamps effort', () => {
-  const r = lintText(GOOD.replace('model: claude-opus-5', 'model: claude-sonnet-4-6'));
+  const r = lintText(GOOD.replace('model: claude-opus-5-5', 'model: claude-sonnet-4-6'));
   assert.match(r.issues.join('\n'), /model="claude-sonnet-4-6" not in valid set/);
 });
 
