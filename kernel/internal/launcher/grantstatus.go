@@ -43,6 +43,8 @@ func RevokeGrant(ctx context.Context, j journal.Journal, digest string) error {
 // digest, that digest was never revoked anywhere in the stream, and now() is before that
 // release's until. Every record in the stream is parsed strictly, not only the head: one it cannot
 // read, of any type at any position, is an error, as is a stream it cannot read. It fails closed.
+// Review r1 (2026-10-03): a now() that is the zero time or lies outside the int64 Unix-nanosecond
+// range is an error, never compared.
 func NewGrantStatus(j journal.Journal, digest string, now func() time.Time) (GrantStatus, error) {
 	return nil, errGrantNotImplemented
 }

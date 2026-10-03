@@ -59,6 +59,28 @@
 #     G16 ruling: the latest TRANSITION wins; revoke(A) after release(B) leaves nothing live until a
 #        new digest is released                                        TestB1_08d_R2_LatestTransitionWins
 #
+# RE-FREEZE 2026-10-03: "2026-10-03 review r1 gaps". The review of 40ee162 returned SHIP with a test
+# gap. Two NEW files; every earlier file is unchanged (hashes identical). The stub launch.go gains
+# TypeConsumed ("lease.consumed") and the contract of a consumed claim; grantstatus.go's contract
+# gains the clock rule. Red: 21 of 21 against the stubs. Written against the review's description;
+# the implementation was not run here. Per the review, V1-V3 should pass on 40ee162 and V4-V5 fail
+# on it until the implementer's fix lands.
+#   launch_r3_donetest_test.go
+#     V1 ClaimJob while a consumed claim is live is ErrHeld; after Release it claims
+#                                                                     TestB1_08d_R3_ConsumedClaimIsHeld
+#     V2 Check of a consumed, live claim is nil; another token is ErrStaleToken
+#                                                                     TestB1_08d_R3_ConsumedClaimChecks
+#     V3 A forged lease.consumed head (extended expiry, other token, other runner, second
+#        consumption, consumption after release) is ErrCorrupt on Check, Verify and ClaimJob
+#                                                                     TestB1_08d_R3_ForgedConsumptionIsCorrupt
+#     V4 Read window, via a deterministic Read hook firing before the 1st/2nd/3rd Read: never
+#        ErrCorrupt; Check racing the holder's Release is ErrStaleToken (nil also allowed once the
+#        reader has read past the first Read); the losing ClaimJob on an expired consumed claim is
+#        ErrHeld                                                       TestB1_08d_R3_ReadWindowIsNeverCorrupt
+#   grantstatus_r3_donetest_test.go
+#     V5 a zero clock, or one outside the int64 Unix-nanosecond range (year 1, 2262+1ns, 2263,
+#        9999), fails Live                                            TestB1_08d_R3_UnrepresentableClockFailsClosed
+#
 # OPEN (not decided here):
 # 1. Cross-process: journal.Open is single-writer (ErrLocked), so "two store instances on the same
 #    dir" is pinned as two LaunchVerifiers over one Journal handle.
@@ -74,3 +96,7 @@ jobs:
         sha256: 5273fbcc1a14de2cb5378a8ef8cd97d84661681e0a38283923e6fe94c28c0861
       - path: kernel/internal/launcher/grantstatus_r2_donetest_test.go
         sha256: 4cd423060e333273d25573d14bf130c74946e9e0b99de2ef3a2d50b396d8cc58
+      - path: kernel/internal/lease/launch_r3_donetest_test.go
+        sha256: 03161d5addbeb62c380d80850ab7f1f7a48707ac5d17b095ad15783c8e82323c
+      - path: kernel/internal/launcher/grantstatus_r3_donetest_test.go
+        sha256: 1b9ae21732b9234506b20f4501df5f6606a29baa705871f56a56a134f5739184
