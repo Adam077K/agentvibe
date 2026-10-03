@@ -42,11 +42,11 @@ const MISSING_BUILD = [
 
 /** Prefixes that belong to the server, not the client. An unmatched one is a 404, not the SPA. */
 function isServerPath(p: string): boolean {
-  return p === '/api' || p.startsWith('/api/') || p === '/events';
+  return p === '/api' || p.startsWith('/api/') || p === '/events' || p.startsWith('/events/');
 }
 
 /** The segments to join onto the root, or null when the path is an attack. */
-function safeSegments(rawPath: string): string[] | null {
+export function safeSegments(rawPath: string): string[] | null {
   let decoded: string;
   try {
     decoded = decodeURIComponent(rawPath);
@@ -79,16 +79,28 @@ function isFile(p: string): boolean {
   }
 }
 
+/**
+ * On every served file. nosniff stops a browser reinterpreting a file as another type;
+ * frame-ancestors 'none' stops the page being framed by another site, which would let it be
+ * clickjacked. Neither changes what the page itself loads.
+ */
+const FILE_HEADERS = {
+  'x-content-type-options': 'nosniff',
+  'content-security-policy': "frame-ancestors 'none'",
+};
+
 function serveFile(file: string, headers: Record<string, string> = {}): Response {
   const bun = Bun.file(file);
-  return new Response(bun, { headers: { 'content-type': bun.type, ...headers } });
+  return new Response(bun, { headers: { 'content-type': bun.type, ...FILE_HEADERS, ...headers } });
 }
 
 export function serveClient(distDir: string = DEFAULT_CLIENT_DIST): MiddlewareHandler {
   return async (c: Context) => {
     const pathname = new URL(c.req.url).pathname;
 
+    // Any method: a POST to an unmatched /api path is a JSON 404 too, not Hono's text one.
     if (isServerPath(pathname)) return c.json({ error: `no such route: ${pathname}` }, 404);
+    if (c.req.method !== 'GET' && c.req.method !== 'HEAD') return c.text('Not found.', 404);
 
     // Looked up per request, so a build finished after the server started is picked up
     // without a restart.
@@ -121,7 +133,7 @@ export function serveClient(distDir: string = DEFAULT_CLIENT_DIST): MiddlewareHa
   };
 }
 
-/** Mount last: `app.get('*', serveClient(dir))`. */
+/** Mount last: `app.all('*', serveClient(dir))`. */
 export function mountClient(app: Hono, distDir: string = DEFAULT_CLIENT_DIST): void {
-  app.get('*', serveClient(distDir));
+  app.all('*', serveClient(distDir));
 }

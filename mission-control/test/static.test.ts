@@ -10,6 +10,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createApp } from '../server/app.ts';
 import { LiveState } from '../server/state.ts';
+import { safeSegments } from '../server/routes/static.ts';
 
 const SECRET = 'SECRET-OUTSIDE-DIST-7f3a';
 let tmp: string;
@@ -86,6 +87,30 @@ describe('static client', () => {
     expect(res.status).toBe(404);
   });
 
+  test('files carry nosniff and a frame-ancestors policy', async () => {
+    for (const p of ['/', '/assets/app-abc123.js', '/fleet']) {
+      const res = await get(p);
+      expect(res.headers.get('x-content-type-options')).toBe('nosniff');
+      expect(res.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
+    }
+  });
+
+  test('/events/ and /events/x are 404s, not the SPA page', async () => {
+    for (const p of ['/events/', '/events/x']) {
+      const res = await get(p);
+      expect(res.status).toBe(404);
+      expect(await res.text()).not.toContain('<div id="root">');
+    }
+  });
+
+  test('an unmatched /api path is a JSON 404 for every method', async () => {
+    for (const method of ['GET', 'POST', 'PUT', 'DELETE']) {
+      const res = await get('/api/definitely-not-a-route', { method });
+      expect(res.status).toBe(404);
+      expect(res.headers.get('content-type')).toContain('application/json');
+    }
+  });
+
   test('the cross-site guard still sits above the static handler', async () => {
     const res = await get('/', { headers: { 'sec-fetch-site': 'cross-site' } });
     expect(res.status).toBe(403);
@@ -122,11 +147,28 @@ describe('static root confinement', () => {
     });
   }
 
-  test('a dot-dot segment is refused with a 4xx, not folded into the shell', async () => {
-    for (const p of ['/..%2fpackage.json', '/assets/..%2f..%2fpackage.json', '/..%5cpackage.json']) {
+  // THE URL PARSER NORMALISES LITERAL `/../`, `/%2e%2e/` AND `\` BEFORE THE HANDLER SEES THEM
+  // (new Request() does it here, and so does the HTTP layer), so the cases above land on a
+  // harmless path and never reach safeSegments. Only a dot-dot hidden behind %2f or %5c survives
+  // to the handler. These pin that the handler itself answers 400 for it — the layer the cases
+  // above cannot exercise — and the unit tests below pin the function directly.
+  test('a dot-dot hidden behind %2f or %5c is a 400 from the handler', async () => {
+    for (const p of [
+      '/..%2fpackage.json',
+      '/assets/..%2f..%2fpackage.json',
+      '/..%5cpackage.json',
+      '/assets/%2e%2e%5c%2e%2e%5cpackage.json',
+      '/%2e%2e%2fpackage.json',
+    ]) {
       const res = await get(p);
-      expect(res.status).toBeGreaterThanOrEqual(400);
-      expect(res.status).toBeLessThan(500);
+      expect(res.status).toBe(400);
+      expect(await res.text()).not.toContain(SECRET);
+    }
+  });
+
+  test('NUL and malformed percent-encoding are 400s', async () => {
+    for (const p of ['/%00/x', '/package.json%00.js', '/%E0%A4%A']) {
+      expect((await get(p)).status).toBe(400);
     }
   });
 
@@ -152,5 +194,30 @@ describe('client/dist missing', () => {
   test('/api still works', async () => {
     const res = await appNoDist.fetch(new Request('http://127.0.0.1:4300/api/health'));
     expect(res.status).toBe(200);
+  });
+});
+
+describe('safeSegments', () => {
+  test('returns the segments of an ordinary path, dropping empty and dot segments', () => {
+    expect(safeSegments('/')).toEqual([]);
+    expect(safeSegments('/assets/app.js')).toEqual(['assets', 'app.js']);
+    expect(safeSegments('//a/./b//')).toEqual(['a', 'b']);
+    expect(safeSegments('/a%20b')).toEqual(['a b']);
+  });
+
+  test('refuses a dot-dot segment however it was spelled before decoding', () => {
+    for (const p of ['/..', '/../x', '/a/../x', '/..%2fx', '/a/%2e%2e/x', '/%2e%2e%2fx', '/a%2f..%2fx']) {
+      expect(safeSegments(p)).toBeNull();
+    }
+  });
+
+  test('refuses NUL, backslash and malformed encoding', () => {
+    for (const p of ['/%00', '/a%00b', '/a%5cb', '/a\\b', '/%E0%A4%A', '/%']) {
+      expect(safeSegments(p)).toBeNull();
+    }
+  });
+
+  test('decodes exactly once: a double-encoded dot-dot is a literal name, not a traversal', () => {
+    expect(safeSegments('/%252e%252e/x')).toEqual(['%2e%2e', 'x']);
   });
 });

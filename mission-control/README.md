@@ -14,10 +14,15 @@ One port. The Hono server on 4300 serves the built client as well as `/api` and 
 ```bash
 cd mission-control
 bun install
-bun run trust seed    # once per machine: trust the projects discovered right now (see below)
+bun run trust list    # what is discovered, and what is trusted (nothing is, on a fresh machine)
+bun run trust add <path>   # trust each project you have READ — see "Trusted projects" below
 bun run build         # builds client/dist
 bun run server        # http://127.0.0.1:4300 — the page, /api and /events, one origin
 ```
+
+Until a project is trusted, no program runs for it: it is still shown, with the reason.
+`bun run trust seed` trusts every discovered project unread, which is the premise behind the
+2026-08-14 RCEs; use it only after reading what `trust list` printed.
 
 `bun run start` is `bun run build && bun run server`. Open <http://127.0.0.1:4300>;
 `curl http://127.0.0.1:4300/api/health` → `{"ok":true,"port":4300,"host":"127.0.0.1"}`.
@@ -26,9 +31,15 @@ bun run server        # http://127.0.0.1:4300 — the page, /api and /events, on
 not need a server restart.
 
 The static handler is `server/routes/static.ts`, mounted after every API route and behind the
-cross-site guard. A path under `/api` that no route claims is a JSON 404, never the page. The
-client root is confined: a NUL, backslash or `..` segment is a `400`, and a file whose real path
-leaves `client/dist` (a symlink) is a `404`. `test/static.test.ts` pins each of these.
+cross-site guard. A path under `/api` or `/events` that no route claims is a JSON 404 for any
+method, never the page. Served files carry `X-Content-Type-Options: nosniff` and
+`Content-Security-Policy: frame-ancestors 'none'`.
+
+The client root is confined in layers. The HTTP layer normalises a literal `/../x`, `/%2e%2e/x`
+or `/..\x` onto a harmless path, which is then a plain `404`. A `..` hidden behind `%2f` or
+`%5c` (`/..%2fx`) survives to the handler, which refuses it with a `400`, as it does a NUL, a
+backslash or malformed percent-encoding. Last, a file whose real path leaves `client/dist` (a
+symlink) is a `404`. `test/static.test.ts` pins each layer, including `safeSegments` directly.
 
 **Developing the client** still uses two processes: `bun run server` on 4300 plus `bun run dev`
 on 4301, which proxies `/api` and `/events` to 4300.
@@ -50,10 +61,13 @@ before using it.
 
 ### Attended use only
 
-**The agents these runners start run unisolated, as your user, with only Claude Code's own
-sandbox between them and your machine.** There is no container and no separate account. Start a
-runner when you are at the machine and watching it, and stop it when you leave. Do not leave one
-running unattended, overnight, or against a project you have not read.
+**The agents these runners start run unisolated, as your user.** There is no container and no
+separate account. The controls that exist are narrow: the Builder is launched with a tool
+allowlist (`Read,Write,Edit,Glob,Grep`; `Bash`, `Agent` and `Task` disallowed) and the Referee
+runs under Codex `-s read-only`. Neither is a sandbox around the machine, and the Builder can
+still write any file your user can. So start a runner when you are at the machine and watching
+it, and stop it when you leave. Do not leave one running unattended, overnight, or against a
+project you have not read.
 
 ## Trusted projects — which directories may have programs run for them
 
