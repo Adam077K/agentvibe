@@ -33,9 +33,23 @@
 # Red 9 of 9 against the stub. The scratch reference passes (-race); the red-team reference passes
 # every test except repeated continuity ids / freshness inputs (a fail-safe addition here).
 # Mutants: 54 of 54 killed (16 new: the red-team's classes, plus delimited join, R2 tie).
+#
+# RE-FREEZE r3 2026-10-03: 2026-10-03 review r1 fail-open. The Opus review FAILED f562abc on two
+# MED-security fail-open findings. Added TestB1_14a_ReviewR1FailOpen; nothing earlier changed:
+#   1. Walk refuses (ErrWalk) an action whose venture is "*" or whose verb holds "*" (P1 never and
+#      the keel overlay, against venture *, verb * and verb payments.*).
+#   2. A continuity route counts only when its venture is the snapshot's Charter.Venture: a P2 kill
+#      {*,*} with a route {*,*} holds other/payments.charge and keel/payments.charge at P2.
+#   3. Orchestrator grammar ruling: rule and action verbs and ventures are lowercase [a-z0-9_]+
+#      segments joined by "."; "*" only as a whole segment and only in rules. Case variants, spaces,
+#      zero-width and non-ASCII characters, hyphens, empty segments and partial "*" are refused at
+#      NewPolicy (ErrRule) or Walk (ErrWalk), with positive controls.
+#   4. A snapshot whose Charter.Venture is "*" is ErrSnapshot.
+# The stub gains ErrWalk. Red 10 of 10 on the stub. On f562abc: the 9 earlier tests pass and all 6
+# new subtests fail. No implementation was run in scratch.
 register: B1-14a
 jobs:
   - id: B1-14a
     files:
       - path: kernel/internal/policy/policy_donetest_test.go
-        sha256: e35dfad0361e7c79ae0ccf01bb985168025de72595f8d3b452021b2681698277
+        sha256: d4096800fc2fe28c86762edd65f9446a04b3086c227eb7fe3b53691c7cfc8f7e
