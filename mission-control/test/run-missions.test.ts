@@ -7,7 +7,7 @@
 // Every test uses its own temp MC_MISSIONS_DIR; nothing here touches ~/.agentvibe.
 
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -183,4 +183,177 @@ describe('reconcileWorking — a crashed runner does not leave a card working fo
     expect(status(ID)).toBe('working');
     expect(status(ID2)).toBe('waiting');
   });
+});
+
+// ── lock takeover, exclusivity under real concurrency ────────────────────────────────────────
+
+const RUNNER_TS = path.resolve(import.meta.dir, '..', 'scripts', 'run-missions.ts');
+
+/** Run `script` (an ES module body) in a child bun; resolve with its trimmed stdout. */
+function bunRun(script: string, args: string[], env: Record<string, string> = {}): Promise<{ out: string; code: number | null }> {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, ['-e', script, ...args], { env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'inherit'] });
+    let out = '';
+    child.stdout.on('data', (d: Buffer) => (out += d.toString('utf8')));
+    child.on('close', (code) => resolve({ out: out.trim(), code }));
+  });
+}
+
+// Each claimer spins to a shared start instant so they hit the lock together, claims, then stays
+// alive for a moment so a winner is never mistaken for a dead owner by a slower peer.
+const CLAIMER = `
+  import { claimMission } from ${JSON.stringify(RUNNER_TS)};
+  const [id, dir, startAt] = process.argv.slice(1);
+  while (Date.now() < Number(startAt)) {}
+  const won = claimMission(id, dir);
+  console.log(won ? 'WON' : 'LOST');
+  await new Promise((r) => setTimeout(r, 700));
+`;
+
+describe('claimMission — takeover of a stale lock is exclusive', () => {
+  test('N concurrent claimers over a dead-pid lock: exactly one winner, every trial', async () => {
+    const claimers = 6;
+    for (let trial = 0; trial < 12; trial++) {
+      const d = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-race-'));
+      try {
+        const b = boardPath(d);
+        appendMissionLine(waiting(ID), b);
+        appendMissionLine({ id: ID, ts: 2, status: 'queued' }, b);
+        fs.mkdirSync(path.join(d, ID), { recursive: true });
+        fs.writeFileSync(path.join(d, ID, 'runner.lock'), String(deadPid()));
+        const startAt = String(Date.now() + 600);
+        const results = await Promise.all(Array.from({ length: claimers }, () => bunRun(CLAIMER, [ID, d, startAt])));
+        const outs = results.map((r) => r.out);
+        expect(outs.every((o) => o === 'WON' || o === 'LOST')).toBe(true);
+        expect(outs.filter((o) => o === 'WON')).toHaveLength(1);
+        expect(readBoardLines(b).filter((l) => l.status === 'working')).toHaveLength(1);
+      } finally {
+        fs.rmSync(d, { recursive: true, force: true });
+      }
+    }
+  }, 120_000);
+
+  test('a lock removed by a peer between our attempt and our read is free, not a crash', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    // No lock on disk at all, and a stale-owner marker for nothing: the claim must simply succeed.
+    expect(claimMission(ID, dir)).toBe(true);
+  });
+
+  test('an empty lock younger than the bound is held; one older than it is retaken', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    const lock = path.join(dir, ID, 'runner.lock');
+    fs.mkdirSync(path.dirname(lock), { recursive: true });
+    fs.writeFileSync(lock, '');
+    expect(claimMission(ID, dir)).toBe(false);
+    expect(status(ID)).toBe('queued');
+    const old = new Date(Date.now() - 10 * 60_000);
+    fs.utimesSync(lock, old, old);
+    expect(claimMission(ID, dir)).toBe(true);
+    expect(status(ID)).toBe('working');
+  });
+
+  test('a garbage lock past the bound is retaken the same way', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    const lock = path.join(dir, ID, 'runner.lock');
+    fs.mkdirSync(path.dirname(lock), { recursive: true });
+    fs.writeFileSync(lock, 'not-a-pid\n');
+    const old = new Date(Date.now() - 10 * 60_000);
+    fs.utimesSync(lock, old, old);
+    expect(claimMission(ID, dir)).toBe(true);
+  });
+});
+
+// ── the runner, end to end, against fake workers ─────────────────────────────────────────────
+//
+// The real script is spawned with `--once`, with MC_CLAUDE_BIN / MC_CODEX_BIN pointing at two small
+// node scripts. This is the wiring test: claim, release, reconcile and the Referee's output file
+// are exercised through main(), not through the helpers.
+
+const FAKE_CLAUDE = `#!/usr/bin/env node
+const fs = require('node:fs');
+fs.writeFileSync('out.md', 'hello');
+const out = (o) => console.log(JSON.stringify(o));
+out({ type: 'system', subtype: 'init', model: 'fake', session_id: 's1' });
+out({ type: 'assistant', message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: 'out.md' } }] } });
+out({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 't1', is_error: false, content: 'ok' }] } });
+out({ type: 'result', is_error: false, result: 'wrote out.md', total_cost_usd: 0.01, subtype: 'success' });
+`;
+
+const FAKE_CODEX = `#!/usr/bin/env node
+if (process.env.FAKE_CODEX_MODE === 'pass') {
+  const text = 'fine\\nVERDICT: {"verdict":"PASS","reasons":["ok"]}';
+  console.log(JSON.stringify({ type: 'item.completed', item: { type: 'agent_message', text } }));
+}
+`;
+
+describe('run-missions main(), end to end with fake workers', () => {
+  let work: string;
+  let bins: { claude: string; codex: string };
+  beforeEach(() => {
+    work = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-work-'));
+    const mk = (name: string, body: string) => {
+      const f = path.join(work, name);
+      fs.writeFileSync(f, body, { mode: 0o755 });
+      return f;
+    };
+    bins = { claude: mk('fake-claude', FAKE_CLAUDE), codex: mk('fake-codex', FAKE_CODEX) };
+  });
+  afterEach(() => {
+    fs.rmSync(work, { recursive: true, force: true });
+  });
+
+  const runOnce = (mode: 'pass' | 'silent') =>
+    new Promise<number | null>((resolve) => {
+      const child = spawn(process.execPath, [RUNNER_TS, '--once', '--workdir', work, '--launch-log', path.join(work, 'launches.csv')], {
+        env: { ...process.env, MC_MISSIONS_DIR: dir, MC_CLAUDE_BIN: bins.claude, MC_CODEX_BIN: bins.codex, FAKE_CODEX_MODE: mode },
+        stdio: 'ignore',
+      });
+      child.on('close', resolve);
+    });
+
+  test('claims, runs both workers, records the verdict, and releases the lock', async () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    expect(await runOnce('pass')).toBe(0);
+    const m = foldBoard(readBoardLines(board())).find((x) => x.id === ID)!;
+    expect([m.status, m.verdict]).toEqual(['done', 'PASS']);
+    expect(readBoardLines(board()).filter((l) => l.status === 'working')).toHaveLength(1);
+    expect(fs.existsSync(path.join(dir, ID, 'runner.lock'))).toBe(false);
+  }, 30_000);
+
+  test('a refused claim does not launch: a live-owner lock leaves the mission queued', async () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    put(waiting(ID2));
+    put({ id: ID2, ts: 2, status: 'queued' });
+    fs.mkdirSync(path.join(dir, ID), { recursive: true });
+    fs.writeFileSync(path.join(dir, ID, 'runner.lock'), String(process.pid));
+    expect(await runOnce('pass')).toBe(0);
+    expect(status(ID)).toBe('queued');
+    expect(status(ID2)).toBe('done');
+  }, 30_000);
+
+  test('startup reconciles a working card whose runner is dead', async () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'working', runnerPid: deadPid() });
+    put(waiting(ID2));
+    put({ id: ID2, ts: 2, status: 'queued' });
+    expect(await runOnce('pass')).toBe(0);
+    expect(status(ID)).toBe('waiting');
+    expect(status(ID2)).toBe('done');
+  }, 30_000);
+
+  test("a previous run's referee-last-message.txt (PASS) is not read as this run's verdict", async () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    fs.mkdirSync(path.join(dir, ID), { recursive: true });
+    fs.writeFileSync(path.join(dir, ID, 'referee-last-message.txt'), 'old run\nVERDICT: {"verdict":"PASS","reasons":["stale"]}\n');
+    expect(await runOnce('silent')).toBe(0);
+    const m = foldBoard(readBoardLines(board())).find((x) => x.id === ID)!;
+    expect(m.status).toBe('failed');
+    expect(m.verdict).toBeUndefined();
+  }, 30_000);
 });

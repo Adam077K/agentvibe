@@ -23,7 +23,7 @@
 // This script, like consume-dispatch.ts, is OUTSIDE server/**: spawning is its whole job.
 
 import { spawn } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { appendMissionLine } from '../server/index-cache.ts';
@@ -250,6 +250,7 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
     `VERDICT: {"verdict":"PASS"|"FAIL","reasons":["short reason", "..."]}`,
   ].join('\n');
   const args = ['exec', '--json', '--skip-git-repo-check', '-s', 'read-only', '-m', CODEX_MODEL, '-C', WORKDIR, '-o', outFile, prompt];
+  fs.rmSync(outFile, { force: true }); // a relaunch must not read the dead run's last message
   emit(REFEREE, { kind: 'status', status: 'starting', text: `codex exec (${CODEX_MODEL}) read-only` });
   const t0 = Date.now();
   let lastMessage = '';
@@ -304,40 +305,111 @@ function pidAlive(pid: number): boolean {
 
 const lockPath = (id: string, dir: string) => path.join(path.dirname(eventsPath(id, dir)), 'runner.lock');
 
+/** An unparseable lock (empty, garbage) is retaken once it is this old. Locks are written whole, so this is outside damage. */
+export const LOCK_STALE_MS = 60_000;
+
+/**
+ * Take the lock iff it does not exist. The pid is written to a private temp file first and then
+ * link()ed into place — link() fails with EEXIST if the target exists, so the lock is created
+ * atomically AND complete: a peer can never read it half-written and mistake it for garbage.
+ */
 function takeLock(file: string): boolean {
+  const tmp = `${file}.${process.pid}.${randomBytes(4).toString('hex')}`;
+  fs.writeFileSync(tmp, String(process.pid));
   try {
-    fs.writeFileSync(file, String(process.pid), { flag: 'wx' });
+    fs.linkSync(tmp, file);
     return true;
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
     return false;
+  } finally {
+    fs.rmSync(tmp, { force: true });
   }
 }
 
-/** True iff this runner now owns `id`: it held the lock, found the mission still `queued`, and wrote `working`. */
+/**
+ * `free` — no lock. `held` — a live owner (or an unparseable lock still inside LOCK_STALE_MS).
+ * `stale` — the owner is gone; `key` names THIS lock file's identity (inode + mtime), read through
+ * one open fd so the identity and the pid are of the same file.
+ */
+function inspectLock(file: string): 'free' | 'held' | { stale: string } {
+  let fd: number;
+  try {
+    fd = fs.openSync(file, 'r');
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return 'free'; // a peer removed it: not an error
+    throw e;
+  }
+  try {
+    const st = fs.fstatSync(fd);
+    const text = fs.readFileSync(fd, 'utf8').trim();
+    const owner = /^\d+$/.test(text) ? Number(text) : 0;
+    const dead = owner > 0 ? !pidAlive(owner) : Date.now() - st.mtimeMs > LOCK_STALE_MS;
+    return dead ? { stale: `${st.ino}-${st.mtimeMs}` } : 'held';
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
+/**
+ * True iff this runner now owns `id`: it held the lock, found the mission still `queued`, and wrote `working`.
+ *
+ * Replacing a STALE lock is exclusive too. Every claimer that sees the same stale lock races to
+ * create one marker file named for that lock's identity (O_EXCL); only the winner may remove it
+ * and retake. Remove-then-create without that gate let a second claimer delete the first one's
+ * brand-new lock. A marker whose creator crashed is itself reaped after LOCK_STALE_MS.
+ */
 export function claimMission(id: string, dir: string = missionsDir()): boolean {
   const file = lockPath(id, dir);
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  if (!takeLock(file)) {
-    const owner = Number.parseInt(fs.readFileSync(file, 'utf8'), 10);
-    // A lock whose owner is gone belongs to a crash between lock and `working`: retake it once.
-    // Two runners starting in the same instant over one stale lock can still both pass here;
-    // that window is a few microseconds and the re-read below closes most of it.
-    if (!(owner > 0 && !pidAlive(owner))) return false;
+  let owned = false;
+  for (let attempt = 0; attempt < 3 && !owned; attempt++) {
+    if (takeLock(file)) {
+      owned = true;
+      break;
+    }
+    const seen = inspectLock(file);
+    if (seen === 'free') continue; // lost it to a peer's release between our attempt and our look: retry
+    if (seen === 'held') return false;
+    const marker = `${file}.takeover-${seen.stale}`;
+    try {
+      fs.writeFileSync(marker, String(process.pid), { flag: 'wx' });
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
+      try {
+        if (Date.now() - fs.statSync(marker).mtimeMs > LOCK_STALE_MS) fs.rmSync(marker, { force: true }); // reaped; the next poll retakes
+      } catch {
+        /* gone */
+      }
+      return false;
+    }
     fs.rmSync(file, { force: true });
-    if (!takeLock(file)) return false;
   }
+  if (!owned) return false;
   const mission = foldBoard(readBoardLines(boardPath(dir))).find((m) => m.id === id);
   if (mission?.status !== 'queued') {
     fs.rmSync(file, { force: true });
     return false;
   }
-  appendMissionLine({ id, ts: Date.now(), status: 'working', runnerPid: process.pid } satisfies MissionLine, boardPath(dir));
+  try {
+    appendMissionLine({ id, ts: Date.now(), status: 'working', runnerPid: process.pid } satisfies MissionLine, boardPath(dir));
+  } catch (e) {
+    fs.rmSync(file, { force: true });
+    throw e;
+  }
   return true;
 }
 
 export function releaseMission(id: string, dir: string = missionsDir()): void {
-  fs.rmSync(lockPath(id, dir), { force: true });
+  const file = lockPath(id, dir);
+  fs.rmSync(file, { force: true });
+  let names: string[] = [];
+  try {
+    names = fs.readdirSync(path.dirname(file));
+  } catch {
+    /* no mission dir, nothing to clear */
+  }
+  for (const n of names) if (n.startsWith('runner.lock.takeover-')) fs.rmSync(path.join(path.dirname(file), n), { force: true });
 }
 
 /** `working` cards whose runner died go back to `waiting`, each with an event. Returns the ids reset. */
