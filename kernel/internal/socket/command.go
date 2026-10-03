@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/Adam077K/agentvibe/kernel/internal/launcher"
 	"github.com/Adam077K/agentvibe/kernel/internal/nouns"
 )
 
@@ -173,8 +174,9 @@ func nonEmpty(raw json.RawMessage) error {
 // id is B1-02's id: a non-empty string.
 func id(raw json.RawMessage) error { return nonEmpty(raw) }
 
-// stream is a non-empty stream name that is not the socket's own refusal stream: Userland may
-// propose events, but not forge the Kernel's record of what it refused.
+// stream is a non-empty stream name that is neither the socket's own refusal stream nor the
+// launcher's journal stream: Userland may propose events, but not forge the Kernel's record of what
+// it refused or of what it launched (a foreign append moves the launcher's head, which is ErrState).
 func stream(raw json.RawMessage) error {
 	s, err := stringOf(raw)
 	switch {
@@ -182,7 +184,7 @@ func stream(raw json.RawMessage) error {
 		return err
 	case s == "":
 		return errors.New("is empty")
-	case s == RefusalStream:
+	case s == RefusalStream || s == launcher.JournalStream:
 		return fmt.Errorf("is %q, which only the Kernel appends to", s)
 	}
 	return nil

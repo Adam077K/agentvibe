@@ -1,0 +1,68 @@
+# Done-test register, B1-18 (docs/vision-v3/14-BUILD-PLAN.md:307: "Budget Ledger v1 on the Journal: four
+# resources, tranches with completion reserves"; acceptance "The acceptance reserve cannot be spent on
+# execution; the projection carries `journal_offset`"). Each frozen file with the sha256 of its bytes,
+# computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    node --test userland/test/budget.donetest.test.ts   (Node 24; node:sqlite is built in, no new dependency)
+#
+# Canon: 09b-ECONOMICS-EVALS-SIM-IMPROVEMENT.md §1, §3, §3.1, §4; 09a-ENGINEERING.md §4.1-§4.2.
+#
+# First frozen 2026-10-03 by a test builder that is not the implementer. Location: Userland
+# (userland/src/budget.ts), because B1-18 is protected_base: false and Allocation is not Kernel. The ledger
+# reaches the Journal through an injected JournalPort (propose with expect_seq, read). The tests supply the
+# port: an in-memory one, and a file-backed one for the SIGKILL child. userland/src/budget.ts is NOT
+# registered: it is the interface the job implements (the B1-02 pattern).
+#
+# DECISION: orchestrator, 2026-10-03, option A — Userland, userland/src/budget.ts behind an injected
+# JournalPort, no new dependency (jobs.yml protected_base: false; 03-MISSION-ENGINE.md:35 names the Budget
+# Ledger an Allocation record; 0 Kernel lines). Rejected: kernel/internal/budget over journal.Journal.
+# SPEC GAP / DEPENDENCY: the command socket has no read verb, so the production JournalPort.read does not
+# exist. It depends on B1-19 (Board through the command API) or a new register row. Until then only the test
+# ports implement read.
+#
+# Fifteen tests. Two pin the acceptance line; the rest pin the brief's money-safety edges: replay and
+# lost-ack idempotency, CAS under concurrency and a forced cut-in, a quantity grammar with a 2^63-1 bound,
+# full precision, append-only, restart over same, stale, deleted and garbage projections, SIGKILL, and
+# fail-closed on a read or write error.
+# Red against the stub: 15/15. Green against a $TMPDIR reference: 15/15, five runs.
+# Mutants, 12 of 12 killed: number arithmetic, BigInt() parsing, no catch-up, no idempotency, a loose
+# idempotency digest, no pool check, execution spilling into acceptance, no unit check, append at a fresh
+# head, no per-resource sum bound, no completion-reserve check, no projection writes.
+#
+# Extended 2026-10-03 (same day, before any implementation) on the orchestrator's option-A rider:
+# (1) B1_18_ProjectionIsDisposable: delete the projection, rebuild from the port's Journal, and every
+# balance (journal_offset included) and every replay is identical; (2) B1_18_NoSpendOnProjectionAlone: a
+# port that answers seq_conflict forever, or is unavailable, gets every debit DENIED, and every grant is
+# backed by a new Journal event; (3) a fixture control in the same test proves the test port enforces real
+# expect_seq compare-and-swap. Red against the stub: 17/17. Green against the reference: 17/17, five runs.
+# Mutants, 14 of 14 killed: the 12 above plus granting on a failed write and granting after conflict
+# retries are exhausted.
+#
+# Re-frozen 2026-10-03 orchestrator rulings (all fail-safe), before any implementation: (1) quantities are
+# integer minor units only, so a fraction or decimal point is refused and nothing is rounded; (2) cash is
+# spelled `cash:<ISO4217>` in minor units (cash:USD = cents), and a tranche holds exactly ONE currency;
+# (3) a zero-quantity debit or hold is refused. New test B1_18_OrchestratorRulingsOnUnits; fixtures moved from
+# USD_cents to cash:USD; '0' and fractional strings added to the refused-quantity list. Red against the stub:
+# 18/18. Green against the reference: 18/18, five runs. Mutants, 18 of 18 killed: the 14 above plus allow
+# zero, accept "N.0" as N, loose cash spelling, and a multi-currency tranche.
+#
+# Re-frozen 2026-10-03 red-team r1 gaps (the red-team on 96d31d2 returned GAPS; reachability proven). Six tests
+# added: IdempotencyKeyCoversTrancheResourceAndUnit (another tranche or the allowance resource is
+# idempotency_conflict; another unit is never a replay; also from a second ledger); ForeignProjectionIsNotTrusted
+# (a projection from Journal X opened on a same-length Journal Y: catch-up checks the head event, not only its
+# seq); CrashAtEveryProjectionWrite (child SIGKILLs itself after its Nth node:sqlite call, N = 1..16: reopen
+# equals rebuild, every key replays); ReadFailureDeniesWithAWarmProjection (unavailable, nothing appended);
+# TrancheOpenRaceRechecks (B refused after the cut-in, exactly 2 appends); ChangedRowsCarryTheirDebitSeq.
+# LostAck LOOSENED by orchestrator ruling: a ledger that reads back its own append may report ok:true with
+# that seq and replayed:false; either way the money is counted exactly once and the retry appends nothing.
+# The crash child's loop is bounded at 300 debits. Item 7 skipped (low). Red against the stub: 24/24. Green
+# against a $TMPDIR reference (rewritten: one stream, head-event check, one transaction per event): 24/24,
+# five runs. Mutants, 25 of 25 non-equivalent killed: the 18 above plus key digest without tranche, without
+# resource/unit, no head-event check, non-atomic projection write, skip the read when warm, open without
+# re-check, stale row offset. One equivalent survivor: never loading the projection (always rebuilding).
+register: B1-18
+jobs:
+  - id: B1-18
+    files:
+      - path: userland/test/budget.donetest.test.ts
+        sha256: 1a5f02cf2df938e413bfe0a2731ce94dcc239ac7aaa9d9a18b29c14203616f19

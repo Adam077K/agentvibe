@@ -1,0 +1,11 @@
+{
+  "subject": "e666bce2f1ef2f0f71cc486ef43a894290e78c4aa32db0929c89bd900823d2e9",
+  "base": "f2ed126cfbec8cc60a74ddb48a76be42b7aa4c8d",
+  "tier": "lite",
+  "tier_driver": "build/done-tests/B1-18.yml",
+  "verdict": "PASS",
+  "by": "rereview-b1-18 (opus-5.5)",
+  "run_id": null,
+  "evidence": null,
+  "recorded_at": "2026-10-03T18:49:55.500Z"
+}

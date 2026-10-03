@@ -27,7 +27,7 @@ function job(overrides = {}) {
     depends_on: [],
     founder_deps: [],
     gate_deps: [],
-    builder: { family: 'claude', model: 'claude-opus-5' },
+    builder: { family: 'claude', model: 'claude-opus-5-5' },
     referee: { family: 'codex', model: 'gpt-6-astra' },
     turns_est: 10,
     window_hours_est: 1.3,
@@ -50,7 +50,7 @@ function jobYaml(id, extraLines = []) {
     `  depends_on: [${extraLines.depends || ''}]`,
     `  founder_deps: []`,
     `  gate_deps: []`,
-    `  builder: {family: ${extraLines.builderFamily || 'claude'}, model: "claude-opus-5"}`,
+    `  builder: {family: ${extraLines.builderFamily || 'claude'}, model: "claude-opus-5-5"}`,
     `  referee: {family: codex, model: "gpt-6-astra"}`,
     `  turns_est: 10`,
     `  window_hours_est: 1.3`,
@@ -78,14 +78,14 @@ test('refuses an admitted job with turns_est >= 26 (split trigger), warns only o
 test('refuses a same-family referee (normalised comparison), never flags "both"/"either", and refuses a family value outside claude|codex|either|both', () => {
   const sameFamily = lintJobs([job({
     id: 'X-05',
-    builder: { family: 'claude', model: 'claude-opus-5' },
-    referee: { family: 'claude', model: 'claude-opus-5' },
+    builder: { family: 'claude', model: 'claude-opus-5-5' },
+    referee: { family: 'claude', model: 'claude-opus-5-5' },
   })]);
   assert.ok(sameFamily.errors.some(e => e.includes('X-05') && e.includes('same-family referee')));
 
   const crossFamilyForms = lintJobs([
-    job({ id: 'X-06', builder: { family: 'both', models: ['claude-opus-5', 'gpt-6-astra'] }, referee: { family: 'claude', model: 'claude-opus-5' } }),
-    job({ id: 'X-07', builder: { family: 'either', models: ['claude-opus-5', 'gpt-6-astra'] }, referee: { family: 'either', models: ['claude-opus-5', 'gpt-6-astra'] } }),
+    job({ id: 'X-06', builder: { family: 'both', models: ['claude-opus-5-5', 'gpt-6-astra'] }, referee: { family: 'claude', model: 'claude-opus-5-5' } }),
+    job({ id: 'X-07', builder: { family: 'either', models: ['claude-opus-5-5', 'gpt-6-astra'] }, referee: { family: 'either', models: ['claude-opus-5-5', 'gpt-6-astra'] } }),
   ]);
   assert.deepEqual(crossFamilyForms.errors, []);
 
