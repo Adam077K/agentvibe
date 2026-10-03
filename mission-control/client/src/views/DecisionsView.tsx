@@ -9,12 +9,31 @@
 // once so the card leaves Pending on the press, not on the next tick — and a 409 (answered
 // elsewhere, or the runner gave up waiting) is shown as the reason rather than swallowed.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { DecisionRow, DecisionsPayload } from '../api.ts';
 import { formatRelative } from '../format.ts';
 import { EmptyState, HeadlineBar } from '../ui.tsx';
 import type { Freshness } from '../App.tsx';
 import { usePoll } from './MissionsView.tsx';
+
+/**
+ * Lets one call run at a time; a call made while another is in flight is dropped and resolves false.
+ * A ref-backed gate rather than the `busy` state alone: state updates after the click's handler, so
+ * a double click inside one frame reaches the handler twice before any re-render has disabled a button.
+ */
+export function singleFlight(): <T>(fn: () => Promise<T>) => Promise<boolean> {
+  let busy = false;
+  return async (fn) => {
+    if (busy) return false;
+    busy = true;
+    try {
+      await fn();
+      return true;
+    } finally {
+      busy = false;
+    }
+  };
+}
 
 function PendingCard({ d, now, onAnswer, busy }: { d: DecisionRow; now: number; onAnswer: (id: string, choice: string) => void; busy: boolean }) {
   return (
@@ -51,7 +70,7 @@ export function DecisionHistory({ rows, now }: { rows: DecisionRow[]; now: numbe
           {d.status === 'answered' ? (
             <span className="text-live">→ {d.choice}</span>
           ) : (
-            <span className="text-bad" title="The runner stopped waiting before this was answered, so the mission went back to Waiting.">
+            <span className="text-bad" title="The runner stopped waiting before this was answered (it timed out, or the runner itself was stopped).">
               expired
             </span>
           )}
@@ -65,23 +84,25 @@ export function DecisionHistory({ rows, now }: { rows: DecisionRow[]; now: numbe
 export function DecisionsView({ now, onFreshness }: { now: number; onFreshness?: (f: Freshness) => void }) {
   const feed = usePoll<DecisionsPayload>('/api/decisions', 1500);
   useEffect(() => onFreshness?.({ loadedAt: feed.loadedAt, failedAt: feed.failedAt, loading: feed.loadedAt === null && feed.failedAt === null }), [feed.loadedAt, feed.failedAt, onFreshness]);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const gate = useRef(singleFlight()).current;
 
-  const answer = async (id: string, choice: string) => {
-    setErr(null);
-    setBusyId(id);
-    try {
-      const r = await fetch(`/api/decisions/${id}/answer`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ choice }) });
-      const j = await r.json();
-      if (!r.ok) setErr(j.error ?? `HTTP ${r.status}`);
-    } catch (e) {
-      setErr(String(e));
-    } finally {
-      setBusyId(null);
-      feed.refetch();
-    }
-  };
+  const answer = (id: string, choice: string) =>
+    gate(async () => {
+      setErr(null);
+      setBusy(true);
+      try {
+        const r = await fetch(`/api/decisions/${id}/answer`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ choice }) });
+        const j = await r.json();
+        if (!r.ok) setErr(j.error ?? `HTTP ${r.status}`);
+      } catch (e) {
+        setErr(String(e));
+      } finally {
+        setBusy(false);
+        feed.refetch();
+      }
+    });
 
   const pending = feed.data?.pending ?? [];
   const history = feed.data?.answered ?? [];
@@ -110,7 +131,7 @@ export function DecisionsView({ now, onFreshness }: { now: number; onFreshness?:
         )}
         <div className="space-y-3">
           {pending.map((d) => (
-            <PendingCard key={d.id} d={d} now={now} onAnswer={(id, choice) => void answer(id, choice)} busy={busyId === d.id} />
+            <PendingCard key={d.id} d={d} now={now} onAnswer={(id, choice) => void answer(id, choice)} busy={busy} />
           ))}
         </div>
         {history.length > 0 && (

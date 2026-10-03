@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AppBar, VIEWS } from '../client/src/App.tsx';
-import { DecisionHistory } from '../client/src/views/DecisionsView.tsx';
+import { DecisionHistory, singleFlight } from '../client/src/views/DecisionsView.tsx';
 import type { DecisionRow, StreamState } from '../client/src/api.ts';
 
 const NOW = 2_000_000;
@@ -50,5 +50,26 @@ describe('the Decisions tab', () => {
     expect(bar({ decisions: 2 })).toContain('title="2 waiting on you"');
     expect(bar({ decisions: 0 })).not.toContain('waiting on you');
     expect(bar()).not.toContain('waiting on you');
+  });
+});
+
+describe('singleFlight', () => {
+  test('ignores a call made while one is in flight (a double click), and accepts the next once it settles', async () => {
+    const gate = singleFlight();
+    let release!: () => void;
+    let ran = 0;
+    const first = gate(() => new Promise<void>((r) => ((ran++, (release = r)))));
+    const second = gate(async () => void ran++); // the second click, same tick
+    expect(await second).toBe(false);
+    release();
+    expect(await first).toBe(true);
+    expect(ran).toBe(1);
+    expect(await gate(async () => void ran++)).toBe(true);
+    expect(ran).toBe(2);
+  });
+  test('a failing call still releases the gate', async () => {
+    const gate = singleFlight();
+    await gate(async () => { throw new Error('boom'); }).catch(() => {});
+    expect(await gate(async () => {})).toBe(true);
   });
 });

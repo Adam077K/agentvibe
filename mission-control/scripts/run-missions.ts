@@ -27,7 +27,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { appendMissionLine } from '../server/index-cache.ts';
-import { withDecisions } from './decisions.ts';
+import { expireOrphanedDecisions, withDecisions } from './decisions.ts';
 import {
   boardPath,
   eventsPath,
@@ -401,6 +401,8 @@ export async function runMission(m: Mission, deps: RunnerDeps = REAL_DEPS) {
 
 async function main() {
   console.log(`[runner] board ${board()} · workdir ${WORKDIR} · builder ${CLAUDE_MODEL} · referee ${CODEX_MODEL}`);
+  const orphaned = expireOrphanedDecisions();
+  if (orphaned.length) console.log(`[runner] expired ${orphaned.length} decision(s) left pending by a runner that is gone`);
   for (;;) {
     const queued = foldBoard(readBoardLines(board())).filter((m) => m.status === 'queued');
     for (const m of queued) await runMission(m);

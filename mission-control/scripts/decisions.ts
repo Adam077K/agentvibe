@@ -27,7 +27,7 @@ import {
   type DecisionExpired,
   type DecisionNeeded,
 } from '../server/decisions.ts';
-import { boardPath, missionsDir, type MissionLine } from '../server/missions.ts';
+import { boardPath, foldBoard, missionsDir, readBoardLines, type MissionLine } from '../server/missions.ts';
 
 /** The error a timed-out wait leaves on the card, one spelling shared with the tests. */
 export const DECISION_TIMEOUT = 'decision_timeout';
@@ -80,7 +80,9 @@ export function decisionPromptLines(answered: { question: string; choice: string
     ...protocol,
     ``,
     `You paused earlier to ask the founder a question. They answered:`,
-    ...answered.flatMap((a) => [`Question: ${a.question}`, `Answer: ${a.choice}`]),
+    // The question is text the Builder itself wrote, and it went through a file; quote it as data so
+    // it cannot read as an instruction from the founder. The answer is one of the options it offered.
+    ...answered.flatMap((a) => [`Your question, in your own words, quoted: ${JSON.stringify(a.question)}`, `The founder chose the option: ${JSON.stringify(a.choice)}`]),
     `Continue the work using the answer, and finish it. Do not ask the same question again.`,
   ];
 }
@@ -152,11 +154,16 @@ export async function withDecisions<T extends BuilderRound>(
     appendMissionLine(needed, file);
     note(`needs you: ${asked.question} [${asked.options.join(' | ')}]`, { by: 'runner', decisionId: needed.id, awaiting: 'founder' });
 
-    const settled = await waitForAnswer(needed.id, file, { pollMs, timeoutMs, sleep, now });
-    if (settled.status !== 'answered' || settled.choice === undefined) {
+    let settled = await waitForAnswer(needed.id, file, { pollMs, timeoutMs, sleep, now });
+    if (settled?.status !== 'answered') {
       const expired: DecisionExpired = { type: 'decision_expired', id: needed.id, at: now() };
       appendMissionLine(expired, file);
-      // Back to Waiting, the column it was launched from, carrying the reason: the launch route
+      // The founder's POST can land between the last read and the append above. The fold keeps the
+      // first terminal record in file order, so look again and honour whichever one won — an answer
+      // that beat the expiry is resumed with, not discarded.
+      settled = foldDecisions(readDecisionLines(file)).find((x) => x.id === needed.id);
+    }
+    if (settled?.status !== 'answered' || settled.choice === undefined) {      // Back to Waiting, the column it was launched from, carrying the reason: the launch route
       // only accepts `waiting`, so the founder can relaunch it, and the card says why it stopped.
       appendMissionLine({ id: missionId, ts: now(), status: 'waiting', error: DECISION_TIMEOUT, costUsd: round.cost } satisfies MissionLine, boardPath(missionsDir()));
       note(`no answer within ${Math.round(timeoutMs / 1000)}s; decision expired, card not advanced`, { by: 'runner', decisionId: needed.id, expired: true });
@@ -173,17 +180,57 @@ export async function withDecisions<T extends BuilderRound>(
   }
 }
 
-/** Poll the file until `id` is settled or the deadline passes. Reads only — the server writes the answer. */
+/** Poll the file until `id` is settled or the deadline passes (undefined). Reads only — the server writes the answer. */
 async function waitForAnswer(
   id: string,
   file: string,
   t: { pollMs: number; timeoutMs: number; sleep: (ms: number) => Promise<void>; now: () => number },
-): Promise<Decision | { status: 'pending'; choice?: undefined }> {
+): Promise<Decision | undefined> {
   const deadline = t.now() + t.timeoutMs;
   for (;;) {
     const d = foldDecisions(readDecisionLines(file)).find((x) => x.id === id);
     if (d && d.status !== 'pending') return d;
-    if (t.now() >= deadline) return { status: 'pending' };
+    if (t.now() >= deadline) return undefined;
     await t.sleep(t.pollMs);
   }
+}
+
+function pidAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code === 'EPERM'; // exists, owned by someone else
+  }
+}
+
+/**
+ * Expire every pending decision nobody can still answer. A runner killed mid-wait leaves its question
+ * `pending` for ever: the badge never clears and an answer goes into a void. Run once when a runner
+ * starts. A decision is orphaned when its mission is not `working` (the runner claims it as such and
+ * moves it on when it stops), or is `working` under a runnerPid that is no longer alive — a live
+ * runner's pending question is left exactly as it is. Returns the ids it expired.
+ */
+export function expireOrphanedDecisions(
+  opts: { file?: string; boardFile?: string; isAlive?: (pid: number) => boolean; now?: () => number } = {},
+): string[] {
+  const file = opts.file ?? decisionsPath();
+  const lines = readBoardLines(opts.boardFile ?? boardPath(missionsDir()));
+  const isAlive = opts.isAlive ?? pidAlive;
+  const now = opts.now ?? Date.now;
+  const missions = new Map(foldBoard(lines).map((m) => [m.id, m]));
+  // The pid of the LATEST claim: a mission relaunched after a crash carries a new runner's pid.
+  const pids = new Map<string, number>();
+  for (const l of lines) if (typeof l.runnerPid === 'number') pids.set(l.id, l.runnerPid);
+
+  const expired: string[] = [];
+  for (const d of foldDecisions(readDecisionLines(file))) {
+    if (d.status !== 'pending') continue;
+    const pid = pids.get(d.missionId);
+    const listening = missions.get(d.missionId)?.status === 'working' && pid !== undefined && isAlive(pid);
+    if (listening) continue;
+    appendMissionLine({ type: 'decision_expired', id: d.id, at: now() } satisfies DecisionExpired, file);
+    expired.push(d.id);
+  }
+  return expired;
 }

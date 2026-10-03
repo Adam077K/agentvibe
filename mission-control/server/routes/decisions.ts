@@ -85,6 +85,12 @@ export function createDecisionsApi(fileOverride?: string): Hono {
     if (type !== 'application/json') {
       return c.json({ error: 'Content-Type must be application/json' } satisfies DecisionError, 415);
     }
+    // A declared length over the cap is refused before a byte is read. The post-read check below
+    // still stands for a chunked body, which declares nothing.
+    const declared = Number(c.req.header('content-length'));
+    if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
+      return c.json({ error: 'request body too large' } satisfies DecisionError, 413);
+    }
     const text = await c.req.text();
     if (text.length > MAX_BODY_BYTES) return c.json({ error: 'request body too large' } satisfies DecisionError, 413);
     let body: unknown;
@@ -116,6 +122,13 @@ export function createDecisionsApi(fileOverride?: string): Hono {
     if (decision.status === 'expired') {
       return c.json({ error: 'decision expired — the runner stopped waiting for it, so the mission is not listening' } satisfies DecisionError, 409);
     }
+    // The runner claims a mission `working` and only a running runner is polling for the answer.
+    // Any other state means nobody is listening — a runner that was killed mid-wait, a mission that
+    // finished, one that was never launched — and a 200 here would be an answer into a void.
+    const mission = foldBoard(readBoardLines(boardPath(missionsDir()))).find((m) => m.id === decision!.missionId);
+    if (mission?.status !== 'working') {
+      return c.json({ error: `this mission is not being worked (${mission?.status ?? 'not on the board'}), so no runner is waiting for an answer` } satisfies DecisionError, 409);
+    }
     if (!decision.options.includes(choice)) {
       return c.json({ error: 'choice must be one of the decision options' } satisfies DecisionError, 400);
     }
@@ -126,7 +139,21 @@ export function createDecisionsApi(fileOverride?: string): Hono {
     } catch (err) {
       return c.json({ error: `could not write decisions: ${String(err)}` } satisfies DecisionError, 500);
     }
-    return c.json({ ok: true, id, choice });
+    // A 200 is a claim that the row left pending, so check it did. The runner can write `expired`
+    // between the read above and this append, and a torn line can still defeat a write — either way
+    // the fold, not the append call, is what says whether the answer counts.
+    let after: Decision | undefined;
+    try {
+      after = foldDecisions(readDecisionLines(path)).find((d) => d.id === id);
+    } catch (err) {
+      return c.json({ error: `could not confirm the answer: ${String(err)}` } satisfies DecisionError, 500);
+    }
+    if (after?.status === 'answered' && after.choice === choice) return c.json({ ok: true, id, choice });
+    if (after?.status === 'answered') return c.json({ error: 'decision already answered' } satisfies DecisionError, 409);
+    if (after?.status === 'expired') {
+      return c.json({ error: 'decision expired just as it was answered — the runner stopped waiting, so the mission is not listening' } satisfies DecisionError, 409);
+    }
+    return c.json({ error: 'the answer was written but did not take effect' } satisfies DecisionError, 500);
   });
 
   return api;
