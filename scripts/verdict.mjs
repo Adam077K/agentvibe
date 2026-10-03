@@ -14,7 +14,13 @@
 // A gate needs something to check that the author cannot trivially restate. The thing that works
 // is a verdict keyed to the CONTENT of the change:
 //
-//   subject = sha256( git diff <merge-base origin/main REF>..REF -- . ':(exclude,glob).qa/verdicts/*.json' )
+//   subject = sha256( git diff --full-index <merge-base origin/main REF>..REF -- . ':(exclude,glob).qa/verdicts/*.json' )
+//
+// `--full-index` IS LOAD-BEARING. A plain diff abbreviates the blob hashes on its `index` lines to a
+// length set by core.abbrev=auto, which scales with object count: 7 characters on a laptop, 8 on the
+// GitHub runner, more as the repository grows. A verdict recorded locally then failed CI on PR #166
+// (reason=absent) with no byte of the change different. Full-length hashes make the subject a
+// function of content alone. `merge-gate.test.mjs` pins it under core.abbrev=7, 12 and the default.
 //
 // THE ANCHOR, AND WHY THIS ONE
 // PR #77 keyed a verdict to a HEAD SHA. That anchor stops existing the instant the verdict is
@@ -214,7 +220,7 @@ export function mergeBase(repo, ref, base = 'origin/main') {
 /** The content subject. See the header for why this anchor and not a commit SHA. */
 export function computeSubject(repo, ref = 'HEAD') {
   const base = mergeBase(repo, ref);
-  const diff = git(repo, ['diff', `${base}..${ref}`, ...DIFF_PATHSPEC]);
+  const diff = git(repo, ['diff', '--full-index', `${base}..${ref}`, ...DIFF_PATHSPEC]);
   return {
     subject: crypto.createHash('sha256').update(diff).digest('hex'),
     base,

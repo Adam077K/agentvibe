@@ -307,6 +307,33 @@ test('the subject changes when a reviewed byte changes', () => {
   assert.notEqual(after, before, 'the subject did not move when the diff did — the binding is not a binding');
 });
 
+test('the subject does not depend on core.abbrev — a local verdict must hold on the runner', () => {
+  // `git diff` abbreviates the blob hashes on its `index` lines to core.abbrev=auto: 7 characters
+  // locally, 8 on the GitHub runner, more as the repository grows. A verdict recorded locally
+  // failed CI on PR #166 (reason=absent) with no byte of the change different. The subject now
+  // diffs with --full-index.
+  const { proj } = fixture();
+  git(proj, ['switch', '-q', BRANCH]);
+  const subjectAt = (abbrev) => {
+    if (abbrev === null) git(proj, ['config', '--unset-all', 'core.abbrev']);
+    else git(proj, ['config', 'core.abbrev', String(abbrev)]);
+    return verdict(['subject', '--repo', proj, '--ref', BRANCH]).stdout.trim();
+  };
+  const rawDiffAt = (abbrev) => {
+    git(proj, ['config', 'core.abbrev', String(abbrev)]);
+    return git(proj, ['diff', 'main..' + BRANCH]);
+  };
+
+  // The premise: without --full-index these two configurations really do produce different bytes.
+  // If they did not, the equality below would hold of a verdict.mjs that had never been fixed.
+  assert.notEqual(rawDiffAt(7), rawDiffAt(12), 'core.abbrev no longer changes the diff, so this test proves nothing');
+
+  const dflt = subjectAt(null);
+  assert.match(dflt, /^[0-9a-f]{64}$/);
+  assert.equal(subjectAt(7), dflt, 'subject differs under core.abbrev=7');
+  assert.equal(subjectAt(12), dflt, 'subject differs under core.abbrev=12');
+});
+
 test('the tier on a verdict comes from the classifier, not from a merge strategy', () => {
   const { proj } = fixture();
   const rec = recordAndCommit(proj);
