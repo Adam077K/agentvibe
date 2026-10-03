@@ -155,6 +155,9 @@ func (l *fileLog) read() ([]logRecord, string, error) {
 	return recs, prev, nil
 }
 
+// Genesis (B1-08 r7) is the pinned genesis this log was opened against (GenesisReporter).
+func (l *fileLog) Genesis() string { return l.genesis }
+
 // Append verifies the log, then appends r and advances the head.
 func (l *fileLog) Append(r Receipt) error {
 	l.mu.Lock()

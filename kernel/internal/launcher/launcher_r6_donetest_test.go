@@ -141,7 +141,7 @@ func TestB108_R6_StateIsPinned(t *testing.T) {
 	}
 	g := r3Grant()
 	g.State = r.state
-	if _, err := New(g, r.deps()); err != nil {
+	if _, err := New(pinned(g, r.deps())); err != nil { // r7: pinned also supplies the journal and genesis
 		t.Errorf("New on the pinned State: %v", err)
 	}
 }

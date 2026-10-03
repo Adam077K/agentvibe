@@ -79,9 +79,12 @@ func renderJob(job string, tokens []string) []string {
 
 // pinned sets the grant's pinned State location to the one d uses (B1-08 r6: New refuses any
 // other), so every earlier round's launcher is built on its own pinned State.
+//
+// B1-08 r7: it also pins the env, the TMPDIR roots and the receipt log's genesis, and hands d the
+// journal shared by every launcher on the same receipt log (r7Pinned, launcher_r7_donetest_test.go).
 func pinned(g Grant, d Deps) (Grant, Deps) {
 	g.State = d.State
-	return g, d
+	return r7Pinned(g, d)
 }
 
 // render fills a template's slots with slotValues.

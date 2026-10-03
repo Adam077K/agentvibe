@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/Adam077K/agentvibe/kernel/internal/adapter"
+	"github.com/Adam077K/agentvibe/kernel/internal/journal"
 )
 
 // Refusals. Each is returned before Exec.Run is called; a refused launch never execs.
@@ -72,6 +73,19 @@ var (
 
 // Holder is the only principal that may hold the grant (09a §8.5).
 const Holder = "kernel.launcher"
+
+// B1-08 r7 (DR-B1-08-THREAT-MODEL-2026-10-03, item 4): each admitted launch appends one event to
+// Deps.Journal on JournalStream, of type JournalLaunchType, whose Data is the Receipt's JSON.
+const (
+	JournalStream     = "kernel.launcher"
+	JournalLaunchType = "launch"
+)
+
+// GenesisReporter (B1-08 r7, item 3) is how New learns the receipt log's genesis: New refuses a
+// Deps.Receipts that does not implement it, or whose Genesis() is not Grant.ReceiptGenesis.
+type GenesisReporter interface {
+	Genesis() string
+}
 
 // Clock is the launcher's only source of time.
 type Clock interface{ Now() time.Time }
@@ -187,8 +201,16 @@ type Grant struct {
 	// not exactly this clean absolute path. The State dir is flocked across processes at admit.
 	State string
 	// ReceiptGenesis (B1-08 r6) pins the receipt log's genesis hash (CreateReceiptLog or
-	// FounderResetReceiptLog returned it).
+	// FounderResetReceiptLog returned it). B1-08 r7: New checks it against Deps.Receipts'
+	// GenesisReporter and refuses a mismatch (ErrState or ErrGrant).
 	ReceiptGenesis string
+	// EnvPinned (B1-08 r7, item 2) is the only value HOME, CODEX_HOME and PATH may take. A request
+	// passing one of them with any other value, or with no pin, is ErrSpec.
+	EnvPinned map[string]string
+	// TmpRoots (B1-08 r7, item 1) is every TMPDIR root handed to workers. New refuses (ErrGrant) a
+	// State dir equal to, inside, or containing WorktreeRoot, JobRoot, EnvPinned["CODEX_HOME"] or
+	// any TmpRoots entry, each compared after resolving symlinks (of the longest existing prefix).
+	TmpRoots []string
 }
 
 // Prerequisites is per_launch_requires (§8.5).
@@ -235,6 +257,11 @@ type Deps struct {
 	// the consumed leases, keyed by job and fenced lease, read and written under a file lock, so
 	// a second launcher on the same State, or one after a restart, sees them.
 	State string
+	// Journal (B1-08 r7, item 4, required: nil is ErrDeps) is the Kernel's main journal. Before
+	// admitting, the receipts in the trailing hour and the journal's launch records in the
+	// trailing hour must agree in number, or the launch is ErrState; a failed journal append
+	// never execs.
+	Journal journal.Journal
 }
 
 // Launcher spawns workers under a Grant.
