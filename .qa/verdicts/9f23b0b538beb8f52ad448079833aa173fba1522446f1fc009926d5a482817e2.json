@@ -1,0 +1,11 @@
+{
+  "subject": "9f23b0b538beb8f52ad448079833aa173fba1522446f1fc009926d5a482817e2",
+  "base": "f2ed126cfbec8cc60a74ddb48a76be42b7aa4c8d",
+  "tier": "lite",
+  "tier_driver": "build/done-tests/B0-17b.yml",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "B1-08 Opus 5.5 SHIP at 113d31f (single pass, single family): no HIGH, no MED-sec, 1 MED-failsafe, 4 LOW; 12 mutants, 8 killed, 4 survivors judged low-risk; r7 frozen tests by a separate test builder; DR-B1-08-THREAT-MODEL-2026-10-03; follow-ups F1-F8 in HANDOFF-NEXT. Re-recorded at core.abbrev=8 to match the CI runner (same diff as 7bce8c12, which was hashed at abbrev 7)",
+  "recorded_at": "2026-10-03T15:53:02.934Z"
+}
