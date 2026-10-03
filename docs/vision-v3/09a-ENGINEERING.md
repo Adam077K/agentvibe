@@ -377,8 +377,30 @@ Pinned launch lines, updated with SLICE's lessons (forbid nested-agent tools; mo
 claude -p --setting-sources <profile> --settings <job.json> --agents <compiled.json> --agent <record>
        --permission-mode dontAsk --allowedTools <allowed> --disallowedTools <forbidden, incl. Agent,Task>
        --output-format stream-json --verbose --json-schema <f> --max-budget-usd <B> --session-id <uuid>
-codex exec -C <worktree> -s workspace-write -p <generated profile> --json --output-schema <f> -o <result.json> --ephemeral
+codex exec -C <worktree> -s workspace-write --json --output-schema <f> -o <result.json> --ephemeral
+           --ignore-user-config --ignore-rules
+           -c approval_policy="never" -c approvals_reviewer="user" -c sandbox_mode="workspace-write"
+           -c sandbox_workspace_write.network_access=false -c sandbox_workspace_write.writable_roots=[]
+           -c sandbox_workspace_write.exclude_tmpdir_env_var=true -c sandbox_workspace_write.exclude_slash_tmp=true
+           -c shell_environment_policy.inherit="core" -c mcp_servers={} -c web_search="disabled"
+           -c model_provider="openai" -c model_providers={} -c notify=[] -c hooks={}
+           -c tools={} -c projects={}
+           -c features.<name>=<bool> ...   (one per feature, 103 pins)
 ```
+
+The `-c features.<name>=<bool>` tail is one pin per feature that `codex features list` reports with a stage other
+than "removed", in listed order. There are 103 pins, measured on codex-cli 0.154.0. Every feature is off except
+`shell_tool` and `unified_exec`, and `multi_agent` is off. `features={}` measured as a no-op. An unknown name is
+refused by `--strict-config`, so the list doubles as a version tripwire. The list is pinned by B1-07 r5
+(`kernel/internal/adapter/codex_r5_donetest_test.go`) and by the launcher's codex line (B1-08 r6). The worker's
+environment is drawn only from `HOME`, `CODEX_HOME`, `PATH` and `LANG`.
+
+Codex takes no profile. Every launch carries `--ignore-user-config` and `--ignore-rules`, and every locked setting is a
+`-c` on the argv. The launch pins the sha256 of the whole argv template (`init_expect`) and of the codex binary; any
+difference is ErrSpec. A profile honouring the user config could not lock anything: user-config MCP servers survived
+its `mcp_servers = {}`, and a trusted `<worktree>/.codex/config.toml` overrode it. Under the locked line neither MCP
+server starts, the project config is ignored, and auth is still read from `CODEX_HOME` (codex-cli 0.154.0, measured;
+[DR-B1-07-CODEX-RULINGS-2026-10-02](_process/DR-B1-07-CODEX-RULINGS-2026-10-02.md), "Round 4", superseding "Round 2").
 
 Never `--bare` (skips hooks), never `--dangerously-skip-permissions`. The per-job `job.json` sets `sandbox.enabled`,
 `allowUnsandboxedCommands: false`, `denyRead` over every other venture root and `~/.agentvibe/{kernel,gate,obs}`,
