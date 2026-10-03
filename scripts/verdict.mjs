@@ -19,8 +19,15 @@
 // `--full-index` IS LOAD-BEARING. A plain diff abbreviates the blob hashes on its `index` lines to a
 // length set by core.abbrev=auto, which scales with object count: 7 characters on a laptop, 8 on the
 // GitHub runner, more as the repository grows. A verdict recorded locally then failed CI on PR #166
-// (reason=absent) with no byte of the change different. Full-length hashes make the subject a
-// function of content alone. `merge-gate.test.mjs` pins it under core.abbrev=7, 12 and the default.
+// (reason=absent) with no byte of the change different.
+//
+// `--full-index` ALONE DID NOT MAKE THE SUBJECT A FUNCTION OF CONTENT. `git diff` output also depends
+// on user config (color.ui, diff.noprefix, diff.mnemonicPrefix, diff.external, textconv drivers, diff.algorithm,
+// diff.renames, diff.context, ...) and on GIT_DIFF_OPTS / GIT_EXTERNAL_DIFF in the environment. So
+// `computeSubject` pins every output-shaping option on the command line and runs git with an
+// environment stripped of those variables and of global/system config. What remains is the
+// repository's own content plus its committed `.gitattributes`. `merge-gate.test.mjs` executes
+// each pin: remove one and its case fails.
 //
 // THE ANCHOR, AND WHY THIS ONE
 // PR #77 keyed a verdict to a HEAD SHA. That anchor stops existing the instant the verdict is
@@ -58,6 +65,7 @@
 // this block said five flags where the code read seven. usage() is generated from FLAGS.
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -158,7 +166,7 @@ function maxBuffer(env = process.env) {
   return n;
 }
 
-function git(repo, args, env = process.env) {
+function git(repo, args, env = process.env, childEnv = undefined) {
   const limit = maxBuffer(env);
   try {
     return execFileSync('git', args, {
@@ -166,6 +174,7 @@ function git(repo, args, env = process.env) {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
       maxBuffer: limit,
+      ...(childEnv ? { env: childEnv } : {}),
     });
   } catch (e) {
     const cmd = `git ${args.slice(0, 2).join(' ')}`;
@@ -217,10 +226,53 @@ export function mergeBase(repo, ref, base = 'origin/main') {
   return out;
 }
 
+/**
+ * Every option that shapes `git diff` output, pinned on the command line. Command-line flags and
+ * `-c` beat every config file, so a developer's ~/.gitconfig and the repo's .git/config cannot move
+ * the bytes. Each entry is exercised by a case in merge-gate.test.mjs that fails without it.
+ */
+const SUBJECT_DIFF_ARGS = [
+  '-c', 'core.quotePath=true',            // non-ASCII path quoting
+  '-c', 'diff.suppressBlankEmpty=false',  // blank context lines: " " vs ""
+  '-c', 'diff.interHunkContext=0',        // hunk merging
+  'diff',
+  '--full-index',                         // blob hashes at full length, not core.abbrev
+  '--no-ext-diff', '--no-textconv',       // diff.external / diff drivers / textconv
+  '--no-color',                           // color.ui / color.diff
+  '--no-relative',                        // diff.relative
+  '-U3',                                  // diff.context
+  '-O/dev/null',                          // diff.orderFile
+  '--src-prefix=a/', '--dst-prefix=b/',   // diff.noprefix / diff.mnemonicPrefix
+  '--diff-algorithm=myers', '--indent-heuristic', // diff.algorithm / diff.indentHeuristic
+  '--no-renames',                         // diff.renames
+];
+
+/**
+ * The environment git runs in for the subject. GIT_DIFF_OPTS and GIT_EXTERNAL_DIFF change diff
+ * output directly; GIT_CONFIG_* (COUNT/KEY_n/VALUE_n/PARAMETERS/GLOBAL/SYSTEM) inject config that
+ * would otherwise outrank files; and global/user config is pointed at an empty directory so
+ * ~/.gitconfig and $XDG_CONFIG_HOME/git cannot supply an option the command line does not pin
+ * (core.attributesFile, for one). The caller removes `home` afterwards.
+ */
+function subjectEnv(home) {
+  const env = {};
+  for (const [k, v] of Object.entries(process.env)) {
+    if (k === 'GIT_DIFF_OPTS' || k === 'GIT_EXTERNAL_DIFF' || k.startsWith('GIT_CONFIG')) continue;
+    env[k] = v;
+  }
+  return env;
+}
+
 /** The content subject. See the header for why this anchor and not a commit SHA. */
 export function computeSubject(repo, ref = 'HEAD') {
   const base = mergeBase(repo, ref);
-  const diff = git(repo, ['diff', '--full-index', `${base}..${ref}`, ...DIFF_PATHSPEC]);
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'verdict-subject-'));
+  let diff;
+  try {
+    diff = git(repo, [...SUBJECT_DIFF_ARGS, `${base}..${ref}`, ...DIFF_PATHSPEC], process.env, subjectEnv(home));
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
   return {
     subject: crypto.createHash('sha256').update(diff).digest('hex'),
     base,
