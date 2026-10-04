@@ -1,0 +1,102 @@
+# Done-test register, B1-08d: the launcher's real dependencies, the Consume store and GrantStatus
+# (B1-08, docs/vision-v3/14-BUILD-PLAN.md §6 row B1-08; interfaces LeaseVerifier and GrantStatus in
+# kernel/internal/launcher/launcher.go). Canon: 09a §4.2 (leases and authority transitions are
+# canonical in the Journal; a Constitution record's release is journalled as policy.released with
+# its file digest), §6 (the job:// verifier is "the launcher's claim row"), §8.5 (launcher_grant:
+# a Constitution record, revocable instantly; per_launch_requires a fenced lease on job://<id>);
+# docs/vision-v3/_process/DR-B1-08-THREAT-MODEL-2026-10-03.md (consumption is authoritative in the
+# lease store, not in State).
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest -run B1_08d ./internal/lease/ ./internal/launcher/
+#
+# kernel/internal/lease/launch.go and kernel/internal/launcher/grantstatus.go are NOT registered:
+# they are the contract stubs the job implements (the B0-17 pattern). launch.go: ErrConsumed,
+# LaunchVerifier, FencedLease, NewLaunchVerifier. grantstatus.go: GrantStream, ReleaseGrant,
+# RevokeGrant, NewGrantStatus.
+#
+# Round 1, 2026-10-03 (base origin/build/b1-08 @ d715c18): 6 tests, all FAIL against the stubs.
+#   a1 TestB1_08d_ConsumeIsCompareAndSet   a2 TestB1_08d_LeaseMustBeLiveAndFenced
+#   a3 TestB1_08d_ConsumptionSurvivesRestart  a4 TestB1_08d_NeverIssuedRefused
+#   b  TestB1_08d_GrantStatusIsReal         e2e TestB1_08d_ReplayRefusedEndToEnd
+# Reachability NOT yet shown: the reference-implementation run was refused by the permission layer
+# and was not retried. The red-team pass (DR-BUILD-SPEED rule 1) must run one before implementation.
+#
+# RE-FREEZE 2026-10-03: "2026-10-03 orchestrator rulings Q1-Q3" (fail-safe, under the founder's
+# speed delegation). grantstatus_donetest_test.go 02591c66... -> adc28e11...; launch_donetest_test.go
+# unchanged. Stub doc comments (launch.go, grantstatus.go) updated to match.
+#   Q1 Grants expire, and the expiry is pinned: ReleaseGrant with a zero or past until is refused;
+#      Live fails at and after until (already pinned in r1).
+#   Q2 Status lives in GrantStream, signature checked upstream. A revoke is final: re-releasing a
+#      revoked digest is refused, at the head, after a newer grant and after a restart; a replayed
+#      release record after the revoke does not resurrect it; only a new digest is live.
+#   Q3 Only the B1-05 claim on job://<id> admits a launch: a Coordinator wound-wait lease on that
+#      resource, at its own token or token 1, is ErrLease and fails Verify (e2e subtest).
+#   Still red: 6 of 6 against the stubs.
+#
+# RE-FREEZE 2026-10-03: "2026-10-03 red-team r1 gaps + rulings". The red-team on 26000de proved
+# reachability and found 8 of 33 mutants surviving. Its 7 proposed tests are adapted into two NEW
+# files; the r1 files are unchanged (hashes identical). Stub contracts (launch.go, grantstatus.go)
+# updated to state each ruling. Red: 16 of 16 against the stubs (R8 got a positive control so the
+# refuse-everything stub cannot pass it).
+#   launch_r2_donetest_test.go
+#     R1 HIGH canonical encoding "job://<id>#<decimal>": "#01" "#00N" "#+N" "# N" refused before and
+#        after Consume; consumption keyed by the parsed (job, token)   TestB1_08d_R2_CanonicalEncoding
+#     R2 HIGH CAS under a 3 ms Append, 64 goroutines, exactly 1 wins   TestB1_08d_R2_CASUnderSlowAppend
+#     R3 HIGH StateHash changes on Consume; an independent Journal with the same job and token still
+#        consumes (kills a process-global map)                         TestB1_08d_R2_ConsumptionIsInTheJournal
+#     R4 MED Append-only failure fails Consume and consumes nothing   TestB1_08d_R2_AppendOnlyFailureFailsClosed
+#     R5 MED healthy Verify, then a read failure: no last-known-good  TestB1_08d_R2_NoLastKnownGood
+#     Ruling Verify-then-CAS: a deterministic hook (an Append wrapper) releases and re-claims the job
+#        between Consume's read and its write; the stale token must not be consumed, the new one
+#        must be. The CAS is conditioned on the job's current claim.  TestB1_08d_R2_VerifyThenCASIsConditioned
+#     Ruling ErrStaleToken kept, and named in launch.go's contract.
+#   grantstatus_r2_donetest_test.go
+#     R1 HIGH end to end: "#0N" and "#+N" replays are ErrLease, 1 exec  TestB1_08d_R2_NonCanonicalReplayEndToEnd
+#     R6 MED strict over the whole stream: a bad record below a replayed valid release fails Live
+#                                                                      TestB1_08d_R2_StrictOverWholeStream
+#     R7 LOW Release and Revoke refuse malformed digests, write nothing  TestB1_08d_R2_MalformedDigestRefused
+#     G16 ruling: the latest TRANSITION wins; revoke(A) after release(B) leaves nothing live until a
+#        new digest is released                                        TestB1_08d_R2_LatestTransitionWins
+#
+# RE-FREEZE 2026-10-03: "2026-10-03 review r1 gaps". The review of 40ee162 returned SHIP with a test
+# gap. Two NEW files; every earlier file is unchanged (hashes identical). The stub launch.go gains
+# TypeConsumed ("lease.consumed") and the contract of a consumed claim; grantstatus.go's contract
+# gains the clock rule. Red: 21 of 21 against the stubs. Written against the review's description;
+# the implementation was not run here. Per the review, V1-V3 should pass on 40ee162 and V4-V5 fail
+# on it until the implementer's fix lands.
+#   launch_r3_donetest_test.go
+#     V1 ClaimJob while a consumed claim is live is ErrHeld; after Release it claims
+#                                                                     TestB1_08d_R3_ConsumedClaimIsHeld
+#     V2 Check of a consumed, live claim is nil; another token is ErrStaleToken
+#                                                                     TestB1_08d_R3_ConsumedClaimChecks
+#     V3 A forged lease.consumed head (extended expiry, other token, other runner, second
+#        consumption, consumption after release) is ErrCorrupt on Check, Verify and ClaimJob
+#                                                                     TestB1_08d_R3_ForgedConsumptionIsCorrupt
+#     V4 Read window, via a deterministic Read hook firing before the 1st/2nd/3rd Read: never
+#        ErrCorrupt; Check racing the holder's Release is ErrStaleToken (nil also allowed once the
+#        reader has read past the first Read); the losing ClaimJob on an expired consumed claim is
+#        ErrHeld                                                       TestB1_08d_R3_ReadWindowIsNeverCorrupt
+#   grantstatus_r3_donetest_test.go
+#     V5 a zero clock, or one outside the int64 Unix-nanosecond range (year 1, 2262+1ns, 2263,
+#        9999), fails Live                                            TestB1_08d_R3_UnrepresentableClockFailsClosed
+#
+# OPEN (not decided here):
+# 1. Cross-process: journal.Open is single-writer (ErrLocked), so "two store instances on the same
+#    dir" is pinned as two LaunchVerifiers over one Journal handle.
+register: B1-08d
+jobs:
+  - id: B1-08d
+    files:
+      - path: kernel/internal/lease/launch_donetest_test.go
+        sha256: 8c2db9df9ad39d8298c7a7509c151f1f3bd8a033be9f24734d57fa624ddd96e1
+      - path: kernel/internal/launcher/grantstatus_donetest_test.go
+        sha256: adc28e1133e8900102708066d5c2fffa3bab822937e68b25cf64f37ba5d8ca12
+      - path: kernel/internal/lease/launch_r2_donetest_test.go
+        sha256: 5273fbcc1a14de2cb5378a8ef8cd97d84661681e0a38283923e6fe94c28c0861
+      - path: kernel/internal/launcher/grantstatus_r2_donetest_test.go
+        sha256: 4cd423060e333273d25573d14bf130c74946e9e0b99de2ef3a2d50b396d8cc58
+      - path: kernel/internal/lease/launch_r3_donetest_test.go
+        sha256: 03161d5addbeb62c380d80850ab7f1f7a48707ac5d17b095ad15783c8e82323c
+      - path: kernel/internal/launcher/grantstatus_r3_donetest_test.go
+        sha256: 1b9ae21732b9234506b20f4501df5f6606a29baa705871f56a56a134f5739184

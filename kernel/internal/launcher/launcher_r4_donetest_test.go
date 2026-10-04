@@ -89,7 +89,7 @@ func (r *r4Rig) lease(job string, fence int) string {
 func (r *r4Rig) req(job, lease string) Request {
 	q := request(job)
 	q.Requires.FencedLease = lease
-	q.Env = map[string]string{"LANG": "C.UTF-8"} // B1-07 r5: AV_JOB is no longer passed
+	q.Env = map[string]string{"HOME": "/h", "LANG": "C.UTF-8"} // B1-07 r5: AV_JOB is no longer passed; 2026-10-03 re-freeze B1-08h founder ruling: HOME required
 	return q
 }
 
