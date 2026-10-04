@@ -2,7 +2,8 @@
 role: builder
 task: j3-decisions
 tier: full
-qa_verdict: PENDING
+verdict recorded by: j3-reviewer, Opus 5.5, single family (recorded by founder)
+qa_verdict: PASS
 ---
 J3 on build/j3-decisions (from b0-03 @55f2f26): founder answers an agent's question in the UI and the waiting mission continues.
 Store ~/.agentvibe/missions/decisions.jsonl, beside the board (follows MC_MISSIONS_DIR; was a global file, which let a runner on another board expire a live question): decision_needed / decision_answered / decision_expired (mine: a timed-out or orphaned wait must leave pending; a late answer is refused 409).
