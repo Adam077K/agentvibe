@@ -67,9 +67,20 @@
 // as before (R5: Receive judges repo:// only). Hot resources pulled in by AddHot are not re-judged
 // here (R2 judges touched names only; HotSetValidationAndOrder pulls in src/a.ts#b#c).
 //
+// R7 (orchestrator ceo-1, 2026-10-04). Detect's wait-for edges and cycleResources (and so
+// HotCandidates) judge a wait by the same overlap predicate as Acquire, ignoring expired rows and the
+// waiting job's own rows. A cycle that runs only through overlaps is a deadlock, and the waited
+// resources on its edges are counted toward the hot proposal.
+//
+// r7 part 3 (red-team of LC-2, 2026-10-04) pins, besides R7: reclaim on the wound path; the own-job
+// exemption keyed on the exact job id (not Born, not case-folded, not a prefix); overlap waits
+// starve under max_wait; Detect ignoring expired and own overlapping rows; and the canonical check
+// on every requested resource, not only the first.
+//
 // NOT frozen, and why:
-//   - HotCandidates' cycle edges through an overlap (hot.go cycleResources looks up identical names
-//     only). Counting them is the consistent reading, but no ruling covers it.
+//   - That EVERY expired row is reclaimed on any grant (red-team item 7). Not ruled; it stays the
+//     logged follow-up on expired-but-unreclaimed tokens (fence.go). Only an expired row that
+//     overlaps what the grant takes is pinned (O5).
 //   - The error text and sentinel of a non-canonical refusal beyond "not ErrWait, not ErrStaleToken".
 //
 // Every clock is injected; nothing sleeps. Each test names, in its comment, the wrong implementation
@@ -489,11 +500,16 @@ func ovHead(t *testing.T, j journal.Journal) uint64 {
 
 // ovRefused checks that a request naming bad is refused before anything is decided: an error that
 // is neither ErrWait nor ErrStaleToken and names bad, no grant, no event written, no wait recorded,
-// and the request's other resource not held by job.
-func ovRefused(t *testing.T, e ovEnv, job, bad, other string) {
+// and the request's other resource not held by job. badLast puts bad after other in the request
+// (r7 part 3, item 6: every requested resource is judged, not only the first).
+func ovRefused(t *testing.T, e ovEnv, job, bad, other string, badLast bool) {
 	t.Helper()
 	before := ovHead(t, e.j)
-	g, err := e.c.Acquire(context.Background(), b104Req(job, ovYoung, lease.AllOrNothing, bad, other))
+	rs := []string{bad, other}
+	if badLast {
+		rs = []string{other, bad}
+	}
+	g, err := e.c.Acquire(context.Background(), b104Req(job, ovYoung, lease.AllOrNothing, rs...))
 	if err == nil {
 		t.Fatalf("Acquire(%q, %s): granted %v, want refused as non-canonical", bad, other, keys(g.Tokens))
 	}
@@ -526,7 +542,8 @@ func ovRefused(t *testing.T, e ovEnv, job, bad, other string) {
 // the refusal into ErrWait and records a wait); the repository segment left unchecked
 // (repo://../**, repo://a\u009f/...); dot segments matched literally only (%2e%2e, %2E.); the repo
 // grammar applied to every scheme (db://** refused); a bare repository (repo://a) admitted as a
-// file; a refusal reported as a stale token.
+// file; a refusal reported as a stale token; only the first (or only the last) requested resource
+// judged (r7 part 3, item 6: the bad name is tried in both positions).
 func TestB1_04R_AcquireRefusesNonCanonical(t *testing.T) {
 	bad := []string{
 		// no repository, or a non-canonical one (C5, C2 r5, R3, R4)
@@ -579,9 +596,11 @@ func TestB1_04R_AcquireRefusesNonCanonical(t *testing.T) {
 	for i, b := range bad {
 		t.Run(fmt.Sprintf("bad%d", i), func(t *testing.T) {
 			e := ovOpen(t)
-			ovRefused(t, e, "job_x", b, "repo://q/free.ts#f")
+			ovRefused(t, e, "job_x", b, "repo://q/free.ts#f", false)
+			ovRefused(t, e, "job_x", b, "repo://q/free.ts#f", true)
 			mustGrant(t, e.c, b104Req("job_o", ovOld, lease.AllOrNothing, lcCompanion))
-			ovRefused(t, e, "job_x", b, lcCompanion)
+			ovRefused(t, e, "job_x", b, lcCompanion, false)
+			ovRefused(t, e, "job_x", b, lcCompanion, true)
 			if h, _ := holder(t, e.c, lcCompanion); h != "job_o" {
 				t.Fatalf("Holder(%s) = %q after a refused request, want job_o", lcCompanion, h)
 			}
@@ -611,5 +630,149 @@ func TestB1_04R_AcquireRefusesNonCanonical(t *testing.T) {
 			e := ovOpen(t)
 			mustGrant(t, e.c, b104Req("job_g", ovOld, lease.AllOrNothing, r))
 		})
+	}
+}
+
+// TestB1_04R_OverlapReclaimOnWound: O4, O5 on the wound path (r7 part 3, item 1). One WoundWait
+// grant both wounds a younger live holder and takes over an expired holder's coverage: the expired
+// holder's glob token is stale afterwards, as is the wounded holder's.
+//
+// Kills: reclaiming expired overlapping rows only when nothing is wounded; reclaiming only rows of
+// the jobs being wounded.
+func TestB1_04R_OverlapReclaimOnWound(t *testing.T) {
+	e := ovOpen(t)
+	gx := mustGrant(t, e.c, b104Req("job_x", ovMid, lease.AllOrNothing, "repo://a/src/**"))
+	e.clk.Advance(b104TTL + time.Second)
+	gy := mustGrant(t, e.c, b104Req("young", ovYoung, lease.WoundWait, "repo://a/lib/y.ts#g"))
+	gold := mustGrant(t, e.c, b104Req("old", ovOld, lease.WoundWait, "repo://a/**"))
+	ovStale(t, e.v, "job_x", gx.Tokens, "repo://a/src/z.ts#f")
+	ovStale(t, e.v, "young", gy.Tokens, "repo://a/lib/y.ts#g")
+	accept(t, e.v, lease.Push{Job: "old", Tokens: gold.Tokens, Touched: []string{"repo://a/src/z.ts#f", "repo://a/lib/y.ts#g"}})
+}
+
+// TestB1_04R_OverlapOwnJobIsExactID: O3 (r7 part 3, item 2). The own-lease exemption is the exact
+// job id, byte for byte. A job with job_a's Born, JOB_A, and job_ab all wait on job_a's glob.
+//
+// Kills: the exemption keyed on Born (the same-Born job is granted); a case-folded job compare
+// (JOB_A is granted); a prefix compare (job_ab is granted).
+func TestB1_04R_OverlapOwnJobIsExactID(t *testing.T) {
+	const glob, x = "repo://a/src/**", "repo://a/src/x.ts#f"
+	for i, tc := range []struct {
+		job  string
+		born time.Time
+	}{
+		{"job_same_born", ovOld},
+		{"JOB_A", ovYoung},
+		{"job_ab", ovYoung},
+	} {
+		t.Run(fmt.Sprintf("job%d", i), func(t *testing.T) {
+			e := ovOpen(t)
+			mustGrant(t, e.c, b104Req("job_a", ovOld, lease.AllOrNothing, glob))
+			mustWait(t, e.c, b104Req(tc.job, tc.born, lease.AllOrNothing, x))
+			wantWait(t, e.c, tc.job, x)
+		})
+	}
+}
+
+// TestB1_04R_OverlapWaitStarves: O1 (r7 part 3, item 3). An overlap wait is a wait like any other:
+// over its MaxWait, Detect starves it (its wait is dropped), and it is not reported as a break.
+//
+// Kills: a max_wait clock that runs only on resources with an identical holder; an overlap wait
+// recorded without its MaxWait (it would starve only at the 120 s default).
+func TestB1_04R_OverlapWaitStarves(t *testing.T) {
+	e := ovOpen(t)
+	ga := mustGrant(t, e.c, b104Req("job_a", ovOld, lease.AllOrNothing, "repo://a/src/**"))
+	req := b104Req("job_b", ovYoung, lease.AllOrNothing, "repo://a/src/x.ts#f")
+	req.MaxWait = time.Second
+	mustWait(t, e.c, req)
+	e.clk.Advance(2 * time.Second)
+	if b := detect(t, e.c); len(b) != 0 {
+		t.Fatalf("Detect = %+v; a starvation is not a break", b)
+	}
+	wantWait(t, e.c, "job_b")
+	if h, tok := holder(t, e.c, "repo://a/src/**"); h != "job_a" || tok != ga.Tokens["repo://a/src/**"] {
+		t.Fatalf("Holder(repo://a/src/**) = %q token %d; starving job_b touched job_a", h, tok)
+	}
+}
+
+// TestB1_04R_OverlapDetectIgnoresExpired: R7 (r7 part 3, item 4). A two-job cycle whose overlap edge
+// runs through a glob that has since expired is no cycle: Detect breaks nothing and both waits stand.
+//
+// Kills: a wait-for graph that counts an expired overlapping row as a live holder.
+func TestB1_04R_OverlapDetectIgnoresExpired(t *testing.T) {
+	const glob, in, other = "repo://a/src/**", "repo://a/src/y.ts#g", "repo://b/x.ts#f"
+	e := ovOpen(t)
+	mustGrant(t, e.c, b104Req("young", ovYoung, lease.AllOrNothing, glob)) // expires at 90 s
+	e.clk.Advance(60 * time.Second)
+	mustGrant(t, e.c, b104Req("old", ovOld, lease.AllOrNothing, other)) // expires at 150 s
+	mustWait(t, e.c, b104Req("young", ovYoung, lease.AllOrNothing, other))
+	mustWait(t, e.c, b104Req("old", ovOld, lease.AllOrNothing, in))
+	e.clk.Advance(40 * time.Second) // 100 s: the glob is expired, other is live, no wait is over 120 s
+	if b := detect(t, e.c); len(b) != 0 {
+		t.Fatalf("Detect = %+v; the overlap edge runs through an expired glob, so there is no cycle", b)
+	}
+	wantWait(t, e.c, "young", other)
+	wantWait(t, e.c, "old", in)
+	if h, _ := holder(t, e.c, other); h != "old" {
+		t.Fatalf("Holder(%s) = %q after Detect, want old", other, h)
+	}
+}
+
+// TestB1_04R_OverlapDetectIgnoresOwn: R7 (r7 part 3, item 5). A job waiting on a symbol under its own
+// glob has no edge to itself: Detect breaks nothing.
+//
+// Kills: a wait-for graph that counts the waiter's own overlapping row (a self-loop, broken as a
+// one-job cycle).
+func TestB1_04R_OverlapDetectIgnoresOwn(t *testing.T) {
+	const glob, x, other = "repo://a/src/**", "repo://a/src/x.ts#f", "repo://b/x.ts#f"
+	e := ovOpen(t)
+	ga := mustGrant(t, e.c, b104Req("job_a", ovYoung, lease.AllOrNothing, glob))
+	mustGrant(t, e.c, b104Req("job_b", ovOld, lease.AllOrNothing, other))
+	mustWait(t, e.c, b104Req("job_a", ovYoung, lease.AllOrNothing, x, other))
+	if b := detect(t, e.c); len(b) != 0 {
+		t.Fatalf("Detect = %+v; job_a's own glob is not an edge", b)
+	}
+	wantWait(t, e.c, "job_a", x, other)
+	if h, tok := holder(t, e.c, glob); h != "job_a" || tok != ga.Tokens[glob] {
+		t.Fatalf("Holder(%s) = %q token %d after Detect, want job_a token %d", glob, h, tok, ga.Tokens[glob])
+	}
+}
+
+// TestB1_04R_OverlapCycleCountsTowardHot: R7. A cycle that runs only through overlaps (no identical
+// names) is broken at the youngest, and the waited resources on its edges are what it counts toward
+// HotCandidates. Three such cycles propose exactly those two resources. A resource the waiter also
+// waits on, overlapped only by the next job's EXPIRED row, is not on an edge and is not proposed.
+//
+// Kills: cycleResources looking up identical names only (nothing proposed); cycleResources counting
+// an expired overlapping row (c/z.ts#f proposed); counting only one direction of the overlap.
+func TestB1_04R_OverlapCycleCountsTowardHot(t *testing.T) {
+	ctx := context.Background()
+	const (
+		youngGlob, oldGlob, oldExpired = "repo://a/src/**", "repo://b/lib/**", "repo://c/**"
+		youngWants, oldWants, stale    = "repo://b/lib/q.ts#h", "repo://a/src/y.ts#g", "repo://c/z.ts#f"
+	)
+	e := ovOpen(t)
+	for round := 0; round < lease.HotCycleThreshold; round++ {
+		short := b104Req("old", ovOld, lease.AllOrNothing, oldExpired)
+		short.TTL = time.Second
+		mustGrant(t, e.c, short)
+		e.clk.Advance(2 * time.Second)
+		mustGrant(t, e.c, b104Req("young", ovYoung, lease.AllOrNothing, youngGlob))
+		mustGrant(t, e.c, b104Req("old", ovOld, lease.AllOrNothing, oldGlob))
+		mustWait(t, e.c, b104Req("young", ovYoung, lease.AllOrNothing, youngWants, stale))
+		mustWait(t, e.c, b104Req("old", ovOld, lease.AllOrNothing, oldWants))
+		b := detect(t, e.c)
+		if len(b) != 1 || b[0].Victim != "young" || len(b[0].Cycle) != 2 {
+			t.Fatalf("round %d: Detect = %+v; want one break of the overlap-only cycle at young", round, b)
+		}
+		for _, j := range []string{"old", "young"} {
+			if err := e.c.Release(ctx, j); err != nil {
+				t.Fatalf("round %d: Release(%s): %v", round, j, err)
+			}
+		}
+		e.clk.Advance(time.Minute)
+	}
+	if got, want := r04Candidates(t, e.c), r04Sorted(oldWants, youngWants); !r04Same(got, want) {
+		t.Fatalf("HotCandidates = %v after %d overlap-only cycles; want exactly %v", got, lease.HotCycleThreshold, want)
 	}
 }
