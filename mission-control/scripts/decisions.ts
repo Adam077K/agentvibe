@@ -27,6 +27,7 @@ import {
   type DecisionExpired,
   type DecisionNeeded,
 } from '../server/decisions.ts';
+import { pidAlive } from './pid-alive.ts';
 import { boardPath, foldBoard, missionsDir, readBoardLines, type MissionLine } from '../server/missions.ts';
 
 /** The error a timed-out wait leaves on the card, one spelling shared with the tests. */
@@ -207,15 +208,6 @@ async function waitForAnswer(
     if (t.interrupted()) return 'interrupted';
     if (t.now() >= deadline) return undefined;
     await t.sleep(t.pollMs);
-  }
-}
-
-function pidAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (e) {
-    return (e as NodeJS.ErrnoException).code === 'EPERM'; // exists, owned by someone else
   }
 }
 

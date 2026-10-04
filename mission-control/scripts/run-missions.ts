@@ -28,6 +28,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { appendMissionLine } from '../server/index-cache.ts';
 import { expireOrphanedDecisions, withDecisions } from './decisions.ts';
+import { pidAlive } from './pid-alive.ts';
 import {
   boardPath,
   eventsPath,
@@ -790,15 +791,6 @@ async function settleIfStopped(m: Mission, stop: StopWatch, emit: ReturnType<typ
 // the same append-only, file-per-fact style as the board, with no server in the path. Winning the
 // lock is not enough: the board is re-read under it, because another runner may have run the
 // mission to its end and released the lock between our fold and our claim.
-
-function pidAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (e) {
-    return (e as NodeJS.ErrnoException).code !== 'ESRCH'; // EPERM: it exists, it is just not ours
-  }
-}
 
 const lockPath = (id: string, dir: string) => path.join(path.dirname(eventsPath(id, dir)), 'runner.lock');
 
