@@ -11,8 +11,12 @@
 // accept; the runner imports it to decide whether its question was answered. Two folds would
 // disagree the first time a record type was added to one.
 //
-// File (overridable by MC_DECISIONS_FILE, so a test never touches the real one):
-//   ~/.agentvibe/decisions.jsonl     append-only, one record per line, three record types:
+// File — BESIDE THE BOARD IT BELONGS TO, so MC_MISSIONS_DIR moves both and a test never touches the real one:
+//   ~/.agentvibe/missions/decisions.jsonl     append-only, one record per line, three record types:
+// It used to be a single global ~/.agentvibe/decisions.jsonl. Boards follow MC_MISSIONS_DIR and the file
+// did not, so a runner on another board saw a decision whose mission was not on ITS board, judged it
+// orphaned, and expired a live runner's question. One resolution, from missionsDir(), for the server
+// and the runner alike: a decision is only ever visible to the board whose mission it names.
 //     decision_needed   { type, id, mission_id, question, options[], created_at }   runner writes
 //     decision_answered { type, id, choice, by: 'founder', at }                      server writes
 //     decision_expired  { type, id, at }                                             runner writes
@@ -23,12 +27,11 @@
 // an expired decision is refused — the founder is told, instead of clicking into a void.
 
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
-import { MISSION_ID } from './missions.ts';
+import { MISSION_ID, missionsDir } from './missions.ts';
 
 export function decisionsPath(): string {
-  return process.env.MC_DECISIONS_FILE ?? path.join(os.homedir(), '.agentvibe', 'decisions.jsonl');
+  return path.join(missionsDir(), 'decisions.jsonl');
 }
 
 /** A decision id is a UUID the runner mints. Anything else never reaches a comparison. */

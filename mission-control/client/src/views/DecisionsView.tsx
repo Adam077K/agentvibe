@@ -1,7 +1,7 @@
 // client/src/views/DecisionsView.tsx — v3 thin slice: questions agents are waiting on you for.
 //
 // A Builder that cannot continue without a choice ends its reply with a DECISION line; the runner
-// writes it to ~/.agentvibe/decisions.jsonl and waits. This view lists what is pending as buttons,
+// writes it to decisions.jsonl beside the board (~/.agentvibe/missions/) and waits. This view lists what is pending as buttons,
 // one per option. Pressing one POSTs the choice; the server appends one line and the runner, which
 // is polling that file, resumes the mission. Nothing here launches anything.
 //

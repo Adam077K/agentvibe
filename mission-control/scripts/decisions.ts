@@ -97,7 +97,7 @@ export interface BuilderRound {
 }
 
 export interface DecisionOptions {
-  /** Overrides MC_DECISIONS_FILE / ~/.agentvibe/decisions.jsonl. */
+  /** Overrides the default, decisions.jsonl beside the board (see server/decisions.ts). */
   file?: string;
   pollMs?: number;
   timeoutMs?: number;
@@ -163,7 +163,8 @@ export async function withDecisions<T extends BuilderRound>(
       // that beat the expiry is resumed with, not discarded.
       settled = foldDecisions(readDecisionLines(file)).find((x) => x.id === needed.id);
     }
-    if (settled?.status !== 'answered' || settled.choice === undefined) {      // Back to Waiting, the column it was launched from, carrying the reason: the launch route
+    if (settled?.status !== 'answered' || settled.choice === undefined) {
+      // Back to Waiting, the column it was launched from, carrying the reason: the launch route
       // only accepts `waiting`, so the founder can relaunch it, and the card says why it stopped.
       appendMissionLine({ id: missionId, ts: now(), status: 'waiting', error: DECISION_TIMEOUT, costUsd: round.cost } satisfies MissionLine, boardPath(missionsDir()));
       note(`no answer within ${Math.round(timeoutMs / 1000)}s; decision expired, card not advanced`, { by: 'runner', decisionId: needed.id, expired: true });
@@ -210,6 +211,14 @@ function pidAlive(pid: number): boolean {
  * starts. A decision is orphaned when its mission is not `working` (the runner claims it as such and
  * moves it on when it stops), or is `working` under a runnerPid that is no longer alive — a live
  * runner's pending question is left exactly as it is. Returns the ids it expired.
+ *
+ * Both files come from the same MC_MISSIONS_DIR, so "mission not on this board" cannot mean "on another
+ * board": the decisions in this file are, by construction, this board's.
+ *
+ * KNOWN LIMIT. This runs only when a runner STARTS. A runner killed mid-wait and never restarted leaves
+ * its card `working` and its question pending, and the answer route (which refuses a mission that is
+ * not `working`) will accept an answer nobody reads. Nothing here notices a runner dying while others
+ * live; restarting `bun run missions` is what clears it.
  */
 export function expireOrphanedDecisions(
   opts: { file?: string; boardFile?: string; isAlive?: (pid: number) => boolean; now?: () => number } = {},

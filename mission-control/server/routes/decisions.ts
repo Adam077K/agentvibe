@@ -29,7 +29,7 @@ import {
   type Decision,
   type DecisionAnswered,
 } from '../decisions.ts';
-import { boardPath, foldBoard, missionsDir, readBoardLines } from '../missions.ts';
+import { boardPath, foldBoard, missionsDir, readBoardLines, type Mission } from '../missions.ts';
 
 export const RECENT_ANSWERED = 20;
 /** An answer is `{"choice": "<≤120 chars>"}`; 2 KiB is generous and still a hard ceiling. */
@@ -48,7 +48,26 @@ export interface DecisionError {
 }
 export type { Decision };
 
-/** `file` is resolved per request so MC_DECISIONS_FILE set by a test after import still binds. */
+/** The request body as text, or null once it has passed `max` bytes (the rest is never read). */
+async function readCapped(req: Request, max: number): Promise<string | null> {
+  if (!req.body) return '';
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > max) {
+      await reader.cancel().catch(() => {});
+      return null;
+    }
+    chunks.push(value);
+  }
+  return new TextDecoder().decode(Buffer.concat(chunks));
+}
+
+/** `file` is resolved per request so MC_MISSIONS_DIR set by a test after import still binds. */
 export function createDecisionsApi(fileOverride?: string): Hono {
   const api = new Hono();
   const file = () => fileOverride ?? decisionsPath();
@@ -85,14 +104,15 @@ export function createDecisionsApi(fileOverride?: string): Hono {
     if (type !== 'application/json') {
       return c.json({ error: 'Content-Type must be application/json' } satisfies DecisionError, 415);
     }
-    // A declared length over the cap is refused before a byte is read. The post-read check below
-    // still stands for a chunked body, which declares nothing.
+    // A declared length over the cap is refused before a byte is read.
     const declared = Number(c.req.header('content-length'));
     if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
       return c.json({ error: 'request body too large' } satisfies DecisionError, 413);
     }
-    const text = await c.req.text();
-    if (text.length > MAX_BODY_BYTES) return c.json({ error: 'request body too large' } satisfies DecisionError, 413);
+    // A chunked body declares no length, so the stream is read under a running cap and abandoned the
+    // moment it passes it, rather than buffered whole and measured afterwards.
+    const text = await readCapped(c.req.raw, MAX_BODY_BYTES);
+    if (text === null) return c.json({ error: 'request body too large' } satisfies DecisionError, 413);
     let body: unknown;
     try {
       body = JSON.parse(text);
@@ -125,7 +145,12 @@ export function createDecisionsApi(fileOverride?: string): Hono {
     // The runner claims a mission `working` and only a running runner is polling for the answer.
     // Any other state means nobody is listening — a runner that was killed mid-wait, a mission that
     // finished, one that was never launched — and a 200 here would be an answer into a void.
-    const mission = foldBoard(readBoardLines(boardPath(missionsDir()))).find((m) => m.id === decision!.missionId);
+    let mission: Mission | undefined;
+    try {
+      mission = foldBoard(readBoardLines(boardPath(missionsDir()))).find((m) => m.id === decision!.missionId);
+    } catch (err) {
+      return c.json({ error: `could not read board: ${String(err)}` } satisfies DecisionError, 500);
+    }
     if (mission?.status !== 'working') {
       return c.json({ error: `this mission is not being worked (${mission?.status ?? 'not on the board'}), so no runner is waiting for an answer` } satisfies DecisionError, 409);
     }

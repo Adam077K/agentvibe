@@ -1,7 +1,7 @@
 // test/decisions.test.ts — v3 slice: Decisions. The fold, the two routes (and their guards), and the
 // runner's wait-and-resume loop.
 //
-// Every test uses a temp MC_DECISIONS_FILE / MC_MISSIONS_DIR; nothing here touches ~/.agentvibe, and
+// Every test uses a temp MC_MISSIONS_DIR (the decisions file lives inside it); nothing here touches ~/.agentvibe, and
 // nothing launches `claude` or `codex` — withDecisions() takes the Builder run as a function.
 
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
@@ -13,6 +13,7 @@ import { createApp } from '../server/app.ts';
 import { createDecisionsApi } from '../server/routes/decisions.ts';
 import { appendMissionLine } from '../server/index-cache.ts';
 import {
+  decisionsPath,
   foldDecisions,
   readDecisionLines,
   type DecisionLine,
@@ -31,20 +32,18 @@ import {
 
 let dir: string;
 let file: string;
-let prev: Record<string, string | undefined>;
+let prevMissionsDir: string | undefined;
 beforeEach(() => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-decisions-'));
-  file = path.join(dir, 'decisions.jsonl');
-  prev = { f: process.env.MC_DECISIONS_FILE, m: process.env.MC_MISSIONS_DIR };
-  process.env.MC_DECISIONS_FILE = file;
+  prevMissionsDir = process.env.MC_MISSIONS_DIR;
   process.env.MC_MISSIONS_DIR = path.join(dir, 'missions');
+  // The store lives beside the board it belongs to; there is no second knob to point it elsewhere.
+  file = decisionsPath();
   seedMission(MISSION, 'working'); // the mission the route tests' decisions belong to is being run
 });
 afterEach(() => {
-  for (const [k, v] of [['MC_DECISIONS_FILE', prev.f], ['MC_MISSIONS_DIR', prev.m]] as const) {
-    if (v === undefined) delete process.env[k];
-    else process.env[k] = v;
-  }
+  if (prevMissionsDir === undefined) delete process.env.MC_MISSIONS_DIR;
+  else process.env.MC_MISSIONS_DIR = prevMissionsDir;
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -265,6 +264,40 @@ describe('/api/decisions — orphans, torn tails, body size', () => {
     expect(foldDecisions(readDecisionLines(file))[0]!.status).toBe('expired');
   });
 
+  test('a chunked body with no Content-Length is cut off at the cap (413): the stream is not read to the end', async () => {
+    const n = needed();
+    seed(n);
+    let pulled = 0;
+    const chunk = new TextEncoder().encode('x'.repeat(1024));
+    const body = new ReadableStream<Uint8Array>({
+      pull(ctl) {
+        pulled++;
+        ctl.enqueue(chunk); // never closes: an unbounded body
+      },
+    });
+    const r = await createDecisionsApi().request(`/${n.id}/answer`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body,
+      duplex: 'half',
+    } as RequestInit);
+    expect(r.status).toBe(413);
+    expect(pulled).toBeLessThan(20); // 2 KiB cap; a few chunks of read-ahead is the stream's own buffering
+    expect(readDecisionLines(file)).toHaveLength(1);
+  });
+
+  test('an unreadable board is a clear 500, not an unhandled throw, and appends nothing', async () => {
+    const n = needed();
+    seed(n);
+    const before = fs.readFileSync(file, 'utf8');
+    fs.rmSync(boardFile());
+    fs.mkdirSync(boardFile()); // board.jsonl is a directory: readFileSync throws EISDIR, not ENOENT
+    const r = await answer(createDecisionsApi(), n.id, { choice: 'MIT' });
+    expect(r.status).toBe(500);
+    expect(((await r.json()) as { error: string }).error).toContain('could not read board');
+    expect(fs.readFileSync(file, 'utf8')).toBe(before);
+  });
+
   test('a declared Content-Length over the cap is refused (413) before the body is read', async () => {
     const n = needed();
     seed(n);
@@ -275,6 +308,32 @@ describe('/api/decisions — orphans, torn tails, body size', () => {
     });
     expect(r.status).toBe(413);
     expect(readDecisionLines(file)).toHaveLength(1);
+  });
+});
+
+describe('the store is per board', () => {
+  test('decisions.jsonl lives beside board.jsonl and follows MC_MISSIONS_DIR', () => {
+    expect(decisionsPath()).toBe(path.join(process.env.MC_MISSIONS_DIR!, 'decisions.jsonl'));
+    expect(path.dirname(decisionsPath())).toBe(path.dirname(boardFile()));
+  });
+
+  test('a runner on another board neither sees, expires nor answers this board\'s decisions', async () => {
+    const boardA = process.env.MC_MISSIONS_DIR!;
+    const n = needed(); // MISSION is `working` under THIS process's pid on board A
+    seed(n);
+    const boardB = path.join(dir, 'other-missions');
+    process.env.MC_MISSIONS_DIR = boardB;
+    try {
+      // Runner start on board B: nothing of board A's is its to expire.
+      expect(expireOrphanedDecisions({ isAlive: () => false })).toEqual([]);
+      const seen = await (await createDecisionsApi().request('/')).json();
+      expect(seen).toEqual({ pending: [], answered: [] });
+      // And B's server does not know A's decision id.
+      expect((await answer(createDecisionsApi(), n.id, { choice: 'MIT' })).status).toBe(404);
+    } finally {
+      process.env.MC_MISSIONS_DIR = boardA;
+    }
+    expect(foldDecisions(readDecisionLines(file))[0]!.status).toBe('pending');
   });
 });
 
