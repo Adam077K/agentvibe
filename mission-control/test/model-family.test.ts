@@ -42,7 +42,9 @@ async function launch(models: RunnerDeps['models']) {
   const out = path.join(dir, 'out.md');
   fs.writeFileSync(out, 'hello\n');
   const claude = [
-    { type: 'assistant', message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: out } }] } },
+    { type: 'assistant', parent_tool_use_id: null, message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: out } }] } },
+    // A write counts only on its successful tool_result (see createWriteTracker).
+    { type: 'user', parent_tool_use_id: null, message: { content: [{ type: 'tool_result', tool_use_id: 't1', is_error: false, content: 'ok' }] } },
     { type: 'result', subtype: 'success', is_error: false, num_turns: 1, total_cost_usd: 0.01, result: 'done' },
   ];
   const codex = [{ type: 'item.completed', item: { type: 'agent_message', text: 'VERDICT: {"verdict":"PASS","reasons":["ok"]}' } }];
