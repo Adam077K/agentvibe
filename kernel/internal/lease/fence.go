@@ -84,9 +84,14 @@ const TypeDeadlockBroken = "lease.deadlock_broken"
 // Event types of FenceStream besides TypeDeadlockBroken. They are distinct from the job:// claim's
 // TypeClaimed and TypeReleased, which live in other streams and mean other things.
 const (
-	TypeGranted     = "lease.granted"      // one whole Grant, wounds included
-	TypeWaited      = "lease.waited"       // a job's outstanding wait, replacing any earlier one
-	TypeJobReleased = "lease.job_released" // Release: every lease row of the job, and its wait
+	TypeGranted = "lease.granted" // one whole Grant, wounds included
+	// TypeGrantedDisplacing is a Grant that also deletes rows of other jobs under other names: a
+	// wounded holder's overlapping lease, or an expired one it reclaims. It is a distinct type, and
+	// Displaced is refused on any other, so a fold that predates it stops at "unknown event type"
+	// instead of ignoring the field and bringing the rows back.
+	TypeGrantedDisplacing = "lease.granted_displacing"
+	TypeWaited            = "lease.waited"       // a job's outstanding wait, replacing any earlier one
+	TypeJobReleased       = "lease.job_released" // Release: every lease row of the job, and its wait
 )
 
 // FenceStream is the one Journal stream holding every multi-resource lease, wait and break.
@@ -245,7 +250,7 @@ type grantedData struct {
 	Wounded   []held   `json:"wounded,omitempty"`
 	// Displaced is every row of another job that overlaps the grant and that its Resources do not
 	// overwrite: a wounded holder's overlapping lease, or an expired one the grant takes the coverage
-	// over from. The fold deletes exactly these.
+	// over from. The fold deletes exactly these, and only under TypeGrantedDisplacing.
 	Displaced []held `json:"displaced,omitempty"`
 }
 
@@ -339,7 +344,7 @@ func corrupt(ev journal.Event, format string, a ...any) error {
 // this package did not write fails closed instead of being half-applied.
 func (st *fstate) apply(ev journal.Event) error {
 	switch ev.Type {
-	case TypeGranted:
+	case TypeGranted, TypeGrantedDisplacing:
 		var d grantedData
 		if err := json.Unmarshal(ev.Data, &d); err != nil {
 			return corrupt(ev, "%v", err)
@@ -347,10 +352,16 @@ func (st *fstate) apply(ev journal.Event) error {
 		if d.Job == "" || len(d.Resources) == 0 || d.Token != ev.Seq {
 			return corrupt(ev, "job %q, %d resources, token %d", d.Job, len(d.Resources), d.Token)
 		}
+		if (ev.Type == TypeGrantedDisplacing) != (len(d.Displaced) > 0) {
+			return corrupt(ev, "%d displaced rows under this event type", len(d.Displaced))
+		}
 		for _, h := range d.Displaced {
 			cur, ok := st.leases[h.Resource]
 			if !ok || h.Job == d.Job || cur.Job != h.Job || cur.Token != h.Token {
 				return corrupt(ev, "displaces %s token %d of %q, which storage does not record", h.Resource, h.Token, h.Job)
+			}
+			if !overlapsAny(h.Resource, d.Resources) {
+				return corrupt(ev, "displaces %s, which overlaps nothing the grant takes", h.Resource)
 			}
 			delete(st.leases, h.Resource)
 		}
@@ -609,7 +620,11 @@ func (c *coordinator) Acquire(ctx context.Context, req Request) (Grant, error) {
 				displaced = append(displaced, h)
 			}
 		}
-		ev, err := c.append(ctx, TypeGranted, grantedData{Job: req.Job, Born: born, Policy: req.Policy,
+		typ := TypeGranted
+		if len(displaced) > 0 {
+			typ = TypeGrantedDisplacing
+		}
+		ev, err := c.append(ctx, typ, grantedData{Job: req.Job, Born: born, Policy: req.Policy,
 			Resources: resources, ExpiresAt: exp, Token: tok, Wounded: busy, Displaced: displaced})
 		if errors.Is(err, journal.ErrSeqConflict) {
 			continue
@@ -873,6 +888,15 @@ func overlaps(a, b string) bool {
 	fa, anchorA, foundA := strings.Cut(a, "#")
 	fb, anchorB, foundB := strings.Cut(b, "#")
 	return fa == fb && (!foundA || !foundB || anchorA == "*" || anchorB == "*")
+}
+
+func overlapsAny(row string, resources []string) bool {
+	for _, r := range resources {
+		if overlaps(row, r) {
+			return true
+		}
+	}
+	return false
 }
 
 // canonicalRequested reports whether a requested resource may be granted. Only repo:// is judged: it
