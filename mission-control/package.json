@@ -10,7 +10,8 @@
     "trust": "bun run scripts/trust.ts",
     "missions": "bun run scripts/run-missions.ts",
     "dev": "vite --config client/vite.config.ts",
-    "build": "vite build --config client/vite.config.ts"
+    "build": "vite build --config client/vite.config.ts",
+    "start": "bun run build && bun run server"
   },
   "dependencies": {
     "hono": "^4.6.14",
