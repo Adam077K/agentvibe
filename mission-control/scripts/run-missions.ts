@@ -135,10 +135,11 @@ const run: RunFn = (bin, args, cwd, onLine, ctx) => {
     // detached: the child leads its own process group (pgid === pid), so a stop can signal the
     // child AND everything it forked with one kill(-pgid). See "Stopping a mission" below.
     const child = spawn(bin, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'], detached: true });
-    const group: TrackedGroup | null = child.pid === undefined ? null : { pgid: child.pid, identity: processIdentity(child.pid), leaderExited: false };
+    const group: TrackedGroup | null = child.pid === undefined ? null : { pgid: child.pid, identity: processIdentity(child.pid), kind: 'live', leaderExited: false, pinned: false };
     if (group) {
       liveGroups.set(group.pgid, group);
-      if (ctx) recordChild(ctx.missionId, { pgid: group.pgid, identity: group.identity, role: ctx.role, runner: process.pid });
+      // No identity (the child was already gone when `ps` looked) means a record nothing could ever act on.
+      if (ctx && group.identity !== null) recordChild(ctx.missionId, { pgid: group.pgid, identity: group.identity, role: ctx.role, runner: process.pid });
     }
     let buf = '';
     let stderr = '';
@@ -155,7 +156,9 @@ const run: RunFn = (bin, args, cwd, onLine, ctx) => {
       stderr = (stderr + d.toString('utf8')).slice(-4000);
     });
     child.on('exit', () => {
-      if (group) group.leaderExited = true;
+      if (!group) return;
+      group.leaderExited = true;
+      group.pinned = groupAlive(group.pgid); // see TrackedGroup: a member now is what keeps the number ours
     });
     child.on('error', (err) => resolve({ code: -1, stderr: String(err) }));
     child.on('close', (code) => {
@@ -423,15 +426,16 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
 // reaches them by itself; main() installs SIGINT/SIGTERM/SIGHUP handlers that stop the loop, block
 // new spawns, terminate the live groups, settle the mission in flight as `stopped` and exit.
 //
-// Two things make a bare pgid unsafe to signal, and both are handled: a group can outlive its leader
-// (a forked worker keeps running after the child exits), so a group is forgotten only when EMPTY,
-// not when the leader's pipes close; and a pgid is just a number the OS may hand to something else
-// once the group is empty, so after the leader exits it is signalled only while the leader's recorded
-// identity (pid + start time) still holds. The same record, `<id>/children.jsonl`, lets the next
-// runner reap the groups of one that was SIGKILLed.
+// A bare pgid is unsafe to signal: a group can outlive its leader (so a group is forgotten only when
+// EMPTY, not when the leader's pipes close), and the OS reuses the number once nothing holds it. So
+// a signal needs evidence the number is still ours (see TrackedGroup). For a child this process
+// holds: the leader unreaped, or a member seen in the group when the leader exited. For a line read
+// from `<id>/children.jsonl` by the next runner (to reap a SIGKILLed one): a validated record whose
+// leader is ALIVE and started when the record says. A file is never trusted further than that.
 //
-// KNOWN LIMIT: a child that calls setsid/setpgid leaves the group and escapes the kill. The kernel
-// runner (B1-09a) is the real fix; here the group is the best containment a plain spawn offers.
+// KNOWN LIMITS: a child that calls setsid/setpgid leaves the group and escapes the kill; and a
+// recorded group whose leader is already dead is not reaped (nothing left to check the record
+// against). The kernel runner (B1-09a) is the real fix; the group is the best a plain spawn offers.
 //
 // Order: SIGTERM to the group, then SIGKILL to whatever is still in it after STOP_GRACE_MS. The
 // runner then waits for the group to be EMPTY before it writes `stopped` and releases the lock,
@@ -450,15 +454,28 @@ const stopGraceMs = () => {
 const STOP_POLL_MS = 250;
 
 /**
- * A child's process group and what identifies its leader. `identity` is the leader's start time
- * from `ps`, recorded at spawn: a pid can be reused after its process is gone, a (pid, start time)
- * pair cannot. `leaderExited` flips on the child's `exit`, from which point the pgid is a bare
- * number and may only be signalled while the identity still holds.
+ * A process group the runner may signal, and the evidence that it is still the group it means.
+ * A pgid is only a number; the OS hands numbers out again once nothing holds them. Two sources:
+ *
+ * - `live`: a child this process spawned and still holds the handle of. While the leader is
+ *   unreaped its pid cannot be reused. When it exits, `pinned` records whether the group still had
+ *   a member at that instant: a group with members keeps its number reserved (the kernel will not
+ *   allocate a pid that is a live pgid), so the number is ours for exactly as long as every later
+ *   look still finds a member. The first empty look un-pins it for good. "No process holds that
+ *   pid" is NOT evidence, and nothing reads it as such.
+ * - `recorded`: a line read back from children.jsonl, written by a runner that is gone. A file is
+ *   not evidence. It is signalled only while its LEADER is alive and started when the record says
+ *   (pid + `ps` start time). A leaderless group, a null identity, a different process on that pid:
+ *   not signalled. Leaderless orphan groups are a documented limit.
  */
 export interface TrackedGroup {
   pgid: number;
   identity: string | null;
+  kind: 'live' | 'recorded';
+  /** live only: the leader has exited. */
   leaderExited: boolean;
+  /** live only: the group still had a member when the leader exited, and no look since has found it empty. */
+  pinned: boolean;
 }
 
 /** Process groups of the children currently running (pgid === the child's pid). */
@@ -472,21 +489,46 @@ export const isShuttingDown = () => shuttingDown;
 
 /** The leader's start time ("Sat Oct  4 10:00:00 2026"), or null when no such process exists. */
 export function processIdentity(pid: number): string | null {
+  if (!Number.isSafeInteger(pid) || pid <= 1) return null; // `ps -p -N` is an error, not "nothing": never ask it
   const r = spawnSync('ps', ['-o', 'lstart=', '-p', String(pid)], { encoding: 'utf8', env: { ...process.env, LC_ALL: 'C' } });
   const text = r.status === 0 && typeof r.stdout === 'string' ? r.stdout.trim() : '';
   return text || null;
 }
 
+/** The process group `pid` is in, or null. */
+function processGroupOf(pid: number): number | null {
+  if (!Number.isSafeInteger(pid) || pid <= 1) return null;
+  const r = spawnSync('ps', ['-o', 'pgid=', '-p', String(pid)], { encoding: 'utf8', env: { ...process.env, LC_ALL: 'C' } });
+  const n = r.status === 0 && typeof r.stdout === 'string' ? Number(r.stdout.trim()) : NaN;
+  return Number.isSafeInteger(n) ? n : null;
+}
+
 /**
- * May `kill(-pgid)` be sent? While the leader is unreaped, its pid cannot have been reused. After
- * it, pid==pgid is safe to signal only if no process now holds that pid (the group's survivors keep
- * the number reserved) or the one that does started when the recorded leader did. A DIFFERENT
- * process on that pid means the pgid was reused, and what it leads is not ours.
+ * A children.jsonl start record is signalled only if every field is what a spawn would have
+ * written: pgid a safe integer above 1 (0 is "my own group", negatives turn kill(-pgid) into
+ * kill(pid), 1 is init) that is neither the reaper's own pid nor its own group, and a non-empty
+ * string identity. Anything else is forged or damaged and is never signalled.
  */
-function isOurs(g: TrackedGroup): boolean {
+export function validChildRecord(rec: { pgid?: unknown; identity?: unknown }, ownPid: number = process.pid, ownGroup: number | null = processGroupOf(process.pid)): boolean {
+  const { pgid, identity } = rec;
+  if (typeof pgid !== 'number' || !Number.isSafeInteger(pgid) || pgid <= 1) return false;
+  if (pgid === ownPid || pgid === ownGroup) return false;
+  return typeof identity === 'string' && identity.trim() !== '';
+}
+
+export function isOurs(g: TrackedGroup): boolean {
+  if (g.kind === 'recorded') {
+    // The leader must be alive, be a group leader, and be the process the record names.
+    if (g.identity === null || processIdentity(g.pgid) !== g.identity) return false;
+    return processGroupOf(g.pgid) === g.pgid;
+  }
   if (!g.leaderExited) return true;
-  const now = processIdentity(g.pgid);
-  return now === null || (g.identity !== null && now === g.identity);
+  if (!g.pinned) return false;
+  if (!groupAlive(g.pgid)) {
+    g.pinned = false;
+    return false;
+  }
+  return true;
 }
 
 function groupAlive(pgid: number): boolean {
@@ -510,7 +552,8 @@ function signalGroup(g: TrackedGroup, sig: NodeJS.Signals): void {
 /**
  * SIGTERM the whole group, SIGKILL what is left after `graceMs`. Resolves once the group is empty
  * (or, defensively, 2s after the SIGKILL, so a process stuck in the kernel cannot hang the runner).
- * A group that is no longer ours (see isOurs) is not signalled and resolves at once.
+ * A group that is not ours (see isOurs) is never signalled; it resolves at once, or at the grace if the
+ * leader of a `recorded` group dies from the TERM and nothing can vouch for the number any more.
  * Idempotent per group: a second call returns the first call's promise.
  */
 export function terminateGroup(g: TrackedGroup, graceMs: number = stopGraceMs()): Promise<void> {
@@ -545,7 +588,6 @@ export function terminateLiveGroups(): Promise<void> {
 /** After a child's pipes close: end whatever it left in its group, then forget the group. */
 async function finishGroup(g: TrackedGroup | null, ctx: RunCtx | undefined): Promise<void> {
   if (!g) return;
-  g.leaderExited = true;
   await terminateGroup(g);
   liveGroups.delete(g.pgid);
   if (ctx) recordChild(ctx.missionId, { pgid: g.pgid, ended: true });
@@ -569,21 +611,22 @@ function recordChild(id: string, rec: Record<string, unknown>, dir: string = mis
   }
 }
 
-function openChildren(id: string, dir: string): { pgid: number; identity: string | null; runner?: number }[] {
+/** Start records not yet followed by an `ended`, fields UNTRUSTED: validChildRecord decides what may be acted on. */
+function openChildren(id: string, dir: string): { pgid?: unknown; identity?: unknown; runner?: unknown }[] {
   let text = '';
   try {
     text = fs.readFileSync(childrenPath(id, dir), 'utf8');
   } catch {
     return [];
   }
-  const open = new Map<number, { pgid: number; identity: string | null; runner?: number }>();
+  const open = new Map<unknown, { pgid?: unknown; identity?: unknown; runner?: unknown }>();
   for (const raw of text.split('\n')) {
     if (!raw.trim()) continue;
     try {
       const r = JSON.parse(raw);
-      if (typeof r.pgid !== 'number') continue;
+      if (r === null || typeof r !== 'object') continue;
       if (r.ended) open.delete(r.pgid);
-      else open.set(r.pgid, { pgid: r.pgid, identity: typeof r.identity === 'string' ? r.identity : null, runner: r.runner });
+      else open.set(r.pgid, { pgid: r.pgid, identity: r.identity, runner: r.runner });
     } catch {
       /* torn line */
     }
@@ -592,20 +635,34 @@ function openChildren(id: string, dir: string): { pgid: number; identity: string
 }
 
 /**
- * Kill the groups a DEAD runner recorded for `id` and never saw end. Each is signalled only while
- * its leader identity still holds (isOurs), so a pgid the OS has since handed to something else is
- * left alone. Returns the pgids actually terminated. Call after reconcileWorking(), before relaunch.
+ * Kill the groups a DEAD runner recorded for `id` and never saw end. Each record is validated
+ * (validChildRecord) and then signalled only while its leader is alive and is the recorded process
+ * (isOurs, kind `recorded`). Everything else is dropped with a warning and never signalled.
+ * Returns the pgids actually terminated. Call after reconcileWorking(), before relaunch.
+ *
+ * KNOWN LIMIT: a group whose leader is already dead is not reaped, and neither are survivors of a
+ * leader that died from the TERM. With no leader there is nothing to check the record against, and a
+ * pgid read from a file is not worth a guess. They are logged, not signalled.
  */
 export async function reapOrphanGroups(id: string, dir: string = missionsDir()): Promise<number[]> {
   const reaped: number[] = [];
+  const ownGroup = processGroupOf(process.pid);
   for (const rec of openChildren(id, dir)) {
+    if (!validChildRecord(rec, process.pid, ownGroup)) {
+      console.log(`[runner] mission ${id} — ignoring invalid child record ${JSON.stringify(rec).slice(0, 120)}; not signalled`);
+      continue;
+    }
     if (rec.runner === process.pid) continue; // our own live children are not orphans
-    const g: TrackedGroup = { pgid: rec.pgid, identity: rec.identity, leaderExited: true };
-    if (groupAlive(g.pgid) && isOurs(g)) {
+    const g: TrackedGroup = { pgid: rec.pgid as number, identity: rec.identity as string, kind: 'recorded', leaderExited: false, pinned: false };
+    let handled = false;
+    if (isOurs(g)) {
       await terminateGroup(g);
       reaped.push(g.pgid);
-    }
-    recordChild(id, { pgid: g.pgid, ended: true, reaped: reaped.includes(g.pgid) }, dir);
+      handled = true;
+    } else if (groupAlive(g.pgid)) {
+      console.log(`[runner] mission ${id} — group ${g.pgid} has no verifiable leader; left running, not signalled`);
+    } else handled = true; // empty: nothing left of it
+    if (handled) recordChild(id, { pgid: g.pgid, ended: true, reaped: reaped.includes(g.pgid) }, dir);
   }
   return reaped;
 }
