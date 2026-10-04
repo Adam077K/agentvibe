@@ -215,24 +215,20 @@ func (r *Runner) Run(ctx context.Context, job Job) error {
 	if err := r.write(rec); err != nil {
 		return err
 	}
-	var werr error
-	lctx := withStart(WithLimits(ctx, job.Limits), func(pid int) {
+	lctx := withStart(WithLimits(ctx, job.Limits), func(pid int) error {
 		rec.PID = pid
 		if idn, err := r.identify(pid); err == nil && idn.PID == pid {
 			rec.Start = idn.Start.UnixMicro()
 		}
-		werr = r.write(rec) // a zero Start reads, to Reconcile, as an identity it cannot confirm
+		return r.write(rec) // a zero Start reads, to Reconcile, as an identity it cannot judge; a failed write kills the worker
 	})
 	_, err := r.cfg.Launcher.Launch(lctx, job.Req)
 	rec.Status = StatusExited
 	if errors.Is(err, ErrWall) || errors.Is(err, ErrIdle) || (ctx.Err() != nil && errors.Is(err, ctx.Err())) {
 		rec.Status = StatusKilled
 	}
-	if e := r.write(rec); e != nil {
-		werr = e
-	}
-	if err == nil {
-		err = werr
+	if e := r.write(rec); err == nil {
+		err = e
 	}
 	return err
 }
@@ -274,21 +270,27 @@ func (r *Runner) Reconcile(ctx context.Context) error {
 	return nil
 }
 
-// interrupt kills rec's tree, ends its launch, and records it interrupted.
+// interrupt kills rec's tree, ends its launch, and records it interrupted. It records nothing, and
+// ends nothing, for a tree it could not judge (an identity it cannot confirm, a failed scan) or could
+// not kill: the job stays running and the next Reconcile retries it.
 func (r *Runner) interrupt(ctx context.Context, rec record) error {
 	if rec.PID > 1 {
 		id, err := r.identify(rec.PID)
+		var t *tree
 		switch {
-		case errors.Is(err, syscall.ESRCH), // the leader is gone; its group and descendants may not be
-			err == nil && id.PID == rec.PID && id.Start.UnixMicro() == rec.Start:
-			t := newTree(rec.PID, func(p procInfo) bool { // each process must still be the one the table shows
-				i, err := r.identify(p.pid)
-				return err == nil && i.PID == p.pid && i.Start.Equal(p.start)
-			})
-			t.kill()
-		case err == nil: // the pid is another process now: nothing is signalled through it
-		default:
+		case errors.Is(err, syscall.ESRCH): // the leader is gone; its group and descendants may not be
+			t = r.tree(rec.PID)
+		case err != nil:
 			return fmt.Errorf("%w: job %q: cannot identify pid %d: %v", ErrState, rec.Job, rec.PID, err)
+		case id.PID != rec.PID || rec.Start == 0:
+			return fmt.Errorf("%w: job %q: pid %d is alive and its recorded identity is unknown", ErrState, rec.Job, rec.PID)
+		case id.Start.UnixMicro() == rec.Start: // the leader: found by identity, wherever its group is
+			t = r.tree(rec.PID)
+			t.known[rec.PID] = procInfo{pid: rec.PID, start: id.Start}
+		default: // the pid is another process now: nothing is signalled through it
+		}
+		if t != nil && !t.kill() {
+			return fmt.Errorf("%w: job %q: its process tree could not be confirmed dead", ErrState, rec.Job)
 		}
 	}
 	if err := r.cfg.Launcher.End(ctx, rec.Job, rec.Lease); err != nil && !errors.Is(err, launcher.ErrLease) {
@@ -296,6 +298,14 @@ func (r *Runner) interrupt(ctx context.Context, rec record) error {
 	}
 	rec.Status = StatusInterrupted
 	return r.write(rec)
+}
+
+// tree is pgid's process tree, each member vetted against Identify before it is touched.
+func (r *Runner) tree(pgid int) *tree {
+	return newTree(pgid, func(p procInfo) bool {
+		i, err := r.identify(p.pid)
+		return err == nil && i.PID == p.pid && i.Start.Equal(p.start)
+	})
 }
 
 // Status reports jobID's recorded status.

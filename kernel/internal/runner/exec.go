@@ -31,12 +31,15 @@ func WithLimits(ctx context.Context, l Limits) context.Context {
 }
 
 // withStart returns ctx carrying f, which Exec.Run calls with the leader's pid as soon as it exists:
-// how the Runner learns, through the frozen launcher.Exec signature, whom to record.
-func withStart(ctx context.Context, f func(pid int)) context.Context {
+// how the Runner learns, through the frozen launcher.Exec signature, whom to record. An error from f
+// kills the worker's tree and fails the Run: a worker that cannot be recorded must not outlive the daemon.
+func withStart(ctx context.Context, f func(pid int) error) context.Context {
 	return context.WithValue(ctx, startKey{}, f)
 }
 
 var digestRe = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
+
+var errSurvivors = errors.New("runner: part of the worker tree survived SIGKILL")
 
 const pollEvery = 50 * time.Millisecond // how often a running tree is scanned for descendants
 
@@ -71,33 +74,46 @@ func NewExec(cfg ExecConfig) (launcher.Exec, error) {
 	return &execer{uid: cfg.WorkerUID, gids: slices.Clone(cfg.WorkerGIDs), roots: slices.Clone(cfg.WorkerRoots)}, nil
 }
 
-// inPlace reports whether real (symlinks resolved) may be exec'd where it is: it and every ancestor lie
-// outside all worker roots and are not writable by the worker, by owner, group and other mode bits, and
-// by ACL, failing closed. Anything else is copied, and the copy's bytes are the bytes that were hashed.
-func (e *execer) inPlace(real string) bool {
-	for _, r := range e.roots {
-		for _, root := range []string{r, resolved(r)} {
-			if real == root || strings.HasPrefix(real, root+"/") {
-				return false
-			}
-		}
-	}
+// writable reports whether p or any ancestor is writable by the worker: by owner, group and other mode
+// bits, then by ACL, failing closed. It also returns p's own stat. With sticky set, a sticky ancestor
+// (/tmp) does not count for its group and other bits: only an entry's owner may replace it there, and
+// the copy's directory is the daemon's own. The check of a binary run in place never sets it.
+func (e *execer) writable(p string, sticky bool) (bool, syscall.Stat_t) {
+	var self syscall.Stat_t
 	var chain []string
-	for p := real; ; p = filepath.Dir(p) {
+	for q := p; ; q = filepath.Dir(q) {
 		var st syscall.Stat_t
-		if err := syscall.Stat(p, &st); err != nil {
-			return false
+		if err := syscall.Stat(q, &st); err != nil {
+			return true, self
+		}
+		if q == p {
+			self = st
 		}
 		m := st.Mode & 0o777
-		if int(st.Uid) == e.uid || m&0o002 != 0 || (m&0o020 != 0 && slices.Contains(e.gids, int(st.Gid))) {
-			return false
+		if sticky && q != p && st.Mode&syscall.S_ISVTX != 0 {
+			m &^= 0o022
 		}
-		chain = append(chain, p)
-		if p == "/" {
+		if int(st.Uid) == e.uid || m&0o002 != 0 || (m&0o020 != 0 && slices.Contains(e.gids, int(st.Gid))) {
+			return true, self
+		}
+		chain = append(chain, q)
+		if q == "/" {
 			break
 		}
 	}
-	return !aclWritable(chain)
+	return aclWritable(chain), self
+}
+
+// inRoot reports whether p lies in a worker root, as given or with symlinks resolved.
+func (e *execer) inRoot(p string) bool {
+	for _, r := range e.roots {
+		for _, root := range []string{r, resolved(r)} {
+			if p == root || strings.HasPrefix(p, root+"/") {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func resolved(p string) string {
@@ -107,19 +123,26 @@ func resolved(p string) string {
 	return p
 }
 
-// prepare returns the path to exec for path, after checking its bytes against digest, and a cleanup.
+// prepare returns the path to exec for path, after checking its bytes against digest, and a cleanup. It
+// execs in place only when the resolved binary and every ancestor lie outside all worker roots and are
+// not worker-writable, and the file opened is the file checked; else it copies the bytes it hashed.
 func (e *execer) prepare(path, digest string) (string, func(), error) {
 	real, err := filepath.EvalSymlinks(path)
 	if err != nil {
 		return "", nil, err
 	}
+	w, checked := e.writable(real, false)
+	inPlace := !w && !e.inRoot(real)
 	src, err := os.Open(real)
 	if err != nil {
 		return "", nil, err
 	}
 	defer src.Close()
+	if fi, err := src.Stat(); inPlace && (err != nil || fi.Sys().(*syscall.Stat_t).Dev != checked.Dev || fi.Sys().(*syscall.Stat_t).Ino != checked.Ino) {
+		inPlace = false // swapped between the check and the open: the check judged another file
+	}
 	h := sha256.New()
-	if e.inPlace(real) { // not writable by the worker: hashing the path and exec'ing it cannot be swapped
+	if inPlace { // not writable by the worker: hashing the path and exec'ing it cannot be swapped
 		if _, err := io.Copy(h, src); err != nil {
 			return "", nil, err
 		}
@@ -133,6 +156,14 @@ func (e *execer) prepare(path, digest string) (string, func(), error) {
 		return "", nil, err
 	}
 	cleanup := func() { os.RemoveAll(dir) }
+	// A worker that is not the daemon's uid must not be able to write the copy's directory or replace
+	// it (a writable ancestor, or an inherited ACL). The same uid could write anything the daemon can.
+	if d := resolved(dir); e.uid != os.Getuid() {
+		if dw, _ := e.writable(d, true); dw || e.inRoot(d) {
+			cleanup()
+			return "", nil, fmt.Errorf("runner: private copy dir %s is writable by the worker", d)
+		}
+	}
 	dst, err := os.OpenFile(filepath.Join(dir, filepath.Base(real)), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o700)
 	if err == nil {
 		_, err = io.Copy(io.MultiWriter(h, dst), src) // one read: the bytes hashed are the bytes copied
@@ -197,10 +228,25 @@ func (e *execer) Run(ctx context.Context, path, digest string, argv, env []strin
 		return err
 	}
 	pid := cmd.Process.Pid
-	if f, ok := ctx.Value(startKey{}).(func(int)); ok {
-		f(pid)
-	}
 	tr := newTree(pid, nil)
+	if p, err := lookupProc(pid); err == nil {
+		tr.known[pid] = p // a leader that leaves its group is still found, by its identity
+	}
+	waitCh := make(chan error, 1)
+	go func() { waitCh <- cmd.Wait() }()
+	if f, ok := ctx.Value(startKey{}).(func(int) error); ok {
+		if err := f(pid); err != nil {
+			dead := tr.kill()
+			select {
+			case <-waitCh:
+			case <-time.After(5 * time.Second):
+			}
+			if !dead {
+				err = errors.Join(err, errSurvivors)
+			}
+			return fmt.Errorf("runner: worker %d could not be recorded, killed: %w", pid, err)
+		}
+	}
 
 	activity := make(chan struct{}, 1)
 	readDone := make(chan struct{})
@@ -221,8 +267,6 @@ func (e *execer) Run(ctx context.Context, path, digest string, argv, env []strin
 			}
 		}
 	}()
-	waitCh := make(chan error, 1)
-	go func() { waitCh <- cmd.Wait() }()
 
 	sigint, sigkill, idle := time.NewTimer(lim.Wall/10*9), time.NewTimer(lim.Wall), time.NewTimer(lim.Idle)
 	poll := time.NewTicker(pollEvery)
@@ -257,7 +301,9 @@ loop:
 			tr.scan()
 		}
 	}
-	tr.kill() // the leader's end does not end its tree
+	if !tr.kill() { // the leader's end does not end its tree
+		result = errors.Join(result, errSurvivors)
+	}
 	if !waited {
 		select {
 		case <-waitCh:
@@ -268,7 +314,10 @@ loop:
 	case <-readDone: // EOF: every holder of the pipe is dead
 	case <-time.After(time.Second): // an escapee outside the tree holds it (a known gap until B1-10)
 		pr.Close()
-		<-readDone
+		select {
+		case <-readDone:
+		case <-time.After(time.Second): // a Stdout that never returns: Run does not wait on it, and it keeps the reader
+		}
 	}
 	return result
 }

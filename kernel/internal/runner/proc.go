@@ -71,9 +71,10 @@ func (t *tree) scan() (map[int]procInfo, error) {
 	return live, nil
 }
 
-// kill ends the tree and returns when no process of it lives. It freezes first (SIGSTOP until a scan
+// kill ends the tree and reports whether it confirmed that no process of it lives (false: a scan failed
+// or something survived SIGKILL for 3s). It freezes first (SIGSTOP until a scan
 // finds nothing new, so nothing forks past the walk), then SIGKILLs the group and every process found.
-func (t *tree) kill() {
+func (t *tree) kill() bool {
 	stopped := map[int]bool{}
 	for round := 0; round < 10; round++ {
 		if t.pgid > 1 {
@@ -99,8 +100,12 @@ func (t *tree) kill() {
 		for pid := range live {
 			syscall.Kill(pid, syscall.SIGKILL)
 		}
-		if len(live) == 0 || err != nil {
-			return
+		if err != nil {
+			return false
+		}
+		if len(live) == 0 {
+			return true
 		}
 	}
+	return false
 }

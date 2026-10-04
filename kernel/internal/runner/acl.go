@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"os/exec"
@@ -25,8 +26,10 @@ func aclWritable(paths []string) bool {
 	defer cancel()
 	c := exec.CommandContext(ctx, "/bin/ls", append([]string{"-led", "--"}, paths...)...)
 	c.Env = []string{"LC_ALL=C"}
+	var stderr bytes.Buffer
+	c.Stderr = &stderr
 	out, err := c.Output()
-	if err != nil {
+	if err != nil || stderr.Len() > 0 { // any complaint, for any path, and the answer is not trustworthy
 		return true
 	}
 	exempt := map[string]bool{"user:root": true}
