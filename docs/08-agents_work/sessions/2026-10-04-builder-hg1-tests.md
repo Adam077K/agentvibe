@@ -1,0 +1,16 @@
+---
+date: 2026-10-04
+role: builder
+task: hg1-tests
+branch: build/mc-host-guard-tests
+qa_verdict: PENDING
+tier: full
+---
+HG-1 frozen: `mission-control/test/host-guard.test.ts` (132 tests), seam `server/routes/host-guard.ts` (`allowedHosts`, `hostVerdict`, `hostGuard`), mounted FIRST in `server/app.ts`. Stub allows everything: 108 red, 24 green (controls and value pins).
+Status **421**, not 403: it means "not this server's name", and it can be told apart from guard.ts's 403, so a test can prove the host guard ran first. Body is one constant text/plain string, never route data or the Host.
+Allowed: `localhost`, `127.0.0.1`, `[::1]`, each bare, `:PORT` or `:CLIENT_PORT`. Matching is exact and case-insensitive, so `LOCALHOST` is accepted. `:4301` is allowed because Vite's proxy (changeOrigin:false) forwards the browser's Host; measured on vite 7.3.6. Any other port is refused (`localhost:9999`, `:80`). No normalisation, and no env allowlist.
+The Host header is checked when present (an empty value counts as present), and so is the URL authority; both must be allowed. With no Host header the URL decides, per Fetch semantics, which is why existing tests stay green. On the wire, Bun returns 400 for HTTP/1.1 with no Host, and HTTP/1.0 with no Host arrives with no authority, so it is refused. XFH/Forwarded are never read.
+Reachability on the stub, over a real socket: a forged-Host GET of /api/* and static paths returns 200 with data, and /events streams. A rebinding POST is already refused (403) by guard.ts's Origin check; the test checks that directly.
+Reference impl in $TMPDIR only: 132/132. Full suite on the reference: 815 pass, 2 fail. Full suite on the stub: 707 pass, 110 fail (108 new + the same 2). The 2 fail identically on main@c367d15: the perf wall-clock test and the ledger crosscheck's 120s timeout.
+29 mutants across 6 acceptance items, all killed (substring/startsWith/endsWith, ignored port, GET-only, mounted after static/routes/crossSite, next()-then-replace, /events exempt, XFH/Forwarded trusted, URL-only, header-only, empty-as-absent, URL-normalised, among others).
+The socket half is skipped when loopback bind() is refused, and logs a loud NOT VERIFIED when it does. In this session bind succeeded even sandboxed, so the skip branch never ran.
