@@ -1,7 +1,8 @@
 // client/src/views/MissionsView.tsx — v3 thin slice: the Missions board and the live team.
 //
 // Waiting / Working / Done. Create a card; drag it from Waiting to Working (or press Launch) and
-// the server appends `queued` to the board file — nothing more. The founder-run runner
+// the server appends `queued` to the board file — nothing more. Stop on a Working card is the same
+// shape: the server appends `stop_requested`, the runner terminates the team and writes `stopped`. The founder-run runner
 // (scripts/run-missions.ts) does the launching. This view polls the folded board and, for the
 // selected mission, the folded team (each agent by title + model, status, latest events).
 //
@@ -65,15 +66,33 @@ function usePoll<T>(url: string | null, ms: number): { data: T | null; error: st
 }
 
 function StatusPill({ m }: { m: Mission }) {
+  if (m.stopRequested && (m.status === 'queued' || m.status === 'working')) return <span className="fig text-[11px] text-warn">stopping…</span>;
   if (m.status === 'done' && m.verdict) {
     const pass = m.verdict === 'PASS';
     return <span className={`fig text-[11px] ${pass ? 'text-live' : 'text-bad'}`}>Referee {m.verdict}</span>;
   }
-  const tone = m.status === 'failed' ? 'text-bad' : m.status === 'waiting' ? 'text-dim' : 'text-warn';
+  const tone = m.status === 'failed' ? 'text-bad' : m.status === 'waiting' || m.status === 'stopped' ? 'text-dim' : 'text-warn';
   return <span className={`fig text-[11px] ${tone}`}>{m.status}</span>;
 }
 
-function Card({ m, now, selected, onSelect, onLaunch }: { m: Mission; now: number; selected: boolean; onSelect: () => void; onLaunch: () => void }) {
+export function Card({
+  m,
+  now,
+  selected,
+  stopping,
+  onSelect,
+  onLaunch,
+  onStop,
+}: {
+  m: Mission;
+  now: number;
+  selected: boolean;
+  /** A stop request for this card is in flight from this page. */
+  stopping: boolean;
+  onSelect: () => void;
+  onLaunch: () => void;
+  onStop: () => void;
+}) {
   const onDragStart = (e: DragEvent) => e.dataTransfer.setData('text/mission-id', m.id);
   return (
     <div
@@ -103,6 +122,19 @@ function Card({ m, now, selected, onSelect, onLaunch }: { m: Mission; now: numbe
             }}
           >
             Launch
+          </button>
+        )}
+        {(m.status === 'queued' || m.status === 'working') && (
+          <button
+            type="button"
+            className="rounded border border-line-strong px-2 py-0.5 text-text hover:border-bad disabled:opacity-50"
+            disabled={stopping || m.stopRequested === true}
+            onClick={(e) => {
+              e.stopPropagation();
+              onStop();
+            }}
+          >
+            {stopping || m.stopRequested ? 'Stopping…' : 'Stop'}
           </button>
         )}
       </div>
@@ -139,7 +171,7 @@ function TeamPanel({ mission, now }: { mission: Mission; now: number }) {
               <span className="text-[13px] text-text">
                 {a.title} <span className="fig text-muted">· {a.model}</span> <span className="text-dim">({a.family})</span>
               </span>
-              <span className={`fig text-[11px] ${a.status === 'failed' ? 'text-bad' : a.status === 'finished' ? 'text-live' : 'text-warn'}`}>
+              <span className={`fig text-[11px] ${a.status === 'failed' ? 'text-bad' : a.status === 'finished' ? 'text-live' : a.status === 'stopped' ? 'text-dim' : 'text-warn'}`}>
                 {a.status}
               </span>
             </div>
@@ -180,6 +212,7 @@ export function MissionsView({ now, onFreshness }: { now: number; onFreshness?: 
   const [title, setTitle] = useState('');
   const [goal, setGoal] = useState('');
   const [err, setErr] = useState<string | null>(null);
+  const [stopping, setStopping] = useState<ReadonlySet<string>>(new Set());
 
   const missions = board.data?.missions ?? [];
   const sel = missions.find((m) => m.id === selected) ?? null;
@@ -203,6 +236,26 @@ export function MissionsView({ now, onFreshness }: { now: number; onFreshness?: 
     if (!r.ok) setErr(j.error);
     setSelected(id);
     board.refetch();
+  };
+
+  const stop = async (id: string) => {
+    setErr(null);
+    setStopping((s) => new Set(s).add(id));
+    try {
+      const r = await fetch(`/api/missions/${id}/stop`, { method: 'POST' });
+      const j = await r.json();
+      if (!r.ok) setErr(j.error);
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      // The board poll carries `stopRequested` from here on, which keeps the button disabled.
+      setStopping((s) => {
+        const next = new Set(s);
+        next.delete(id);
+        return next;
+      });
+      board.refetch();
+    }
   };
 
   const onDrop = (col: Column) => (e: DragEvent) => {
@@ -235,7 +288,16 @@ export function MissionsView({ now, onFreshness }: { now: number; onFreshness?: 
               {missions
                 .filter((m) => columnOf(m) === col)
                 .map((m) => (
-                  <Card key={m.id} m={m} now={now} selected={m.id === selected} onSelect={() => setSelected(m.id)} onLaunch={() => void launch(m.id)} />
+                  <Card
+                    key={m.id}
+                    m={m}
+                    now={now}
+                    selected={m.id === selected}
+                    stopping={stopping.has(m.id)}
+                    onSelect={() => setSelected(m.id)}
+                    onLaunch={() => void launch(m.id)}
+                    onStop={() => void stop(m.id)}
+                  />
                 ))}
             </div>
           </div>

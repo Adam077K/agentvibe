@@ -3,10 +3,13 @@
 //   GET  /api/missions                 the board, folded: { missions: Mission[] }
 //   POST /api/missions                 { title, goal } → a new card in Waiting
 //   POST /api/missions/:id/launch      Waiting → queued. The runner does the rest.
+//   POST /api/missions/:id/stop        working|queued → a stop request. The runner does the stopping.
 //   GET  /api/missions/:id/team        the live team, folded from the runner's events JSONL
 //
-// The server launches nothing. `launch` appends one line; scripts/run-missions.ts, run by the
-// founder, is what spawns workers. The team route is polled (1s) rather than pushed over SSE:
+// The server launches nothing and signals nothing. `launch` appends one line; scripts/run-missions.ts,
+// run by the founder, is what spawns workers. `stop` is the same shape in reverse: it appends one
+// `stop_requested` line and answers 202 (accepted, not done) -- the processes belong to the runner,
+// which sees the line, terminates its children and writes `stopped`. The team route is polled (1s) rather than pushed over SSE:
 // the existing /events stream is a fleet-wide diff channel with its own hashing contract, and
 // a per-mission tail is a different shape. Polling a folded view of a small file is the least
 // machinery that is honestly "live" at human speed — see SLICE-board-to-team.md §what it taught.
@@ -16,6 +19,7 @@ import { Hono } from 'hono';
 import { appendMissionLine } from '../index-cache.ts';
 import {
   MISSION_ID,
+  STOP_REQUESTED,
   boardPath,
   foldBoard,
   foldTeam,
@@ -95,6 +99,28 @@ export function createMissionsApi(dirOverride?: string): Hono {
       return c.json({ error: `could not write board: ${String(err)}` } satisfies MissionError, 500);
     }
     return c.json({ ok: true, id, status: 'queued' });
+  });
+
+  api.post('/:id/stop', (c) => {
+    const id = c.req.param('id');
+    if (!MISSION_ID.test(id)) return c.json({ error: 'invalid mission id' } satisfies MissionError, 400);
+    const file = boardPath(dir());
+    const mission = foldBoard(readBoardLines(file)).find((m) => m.id === id);
+    if (!mission) return c.json({ error: 'unknown mission' } satisfies MissionError, 404);
+    // Only a live mission can be stopped. A finished one has nothing running, and `stopped` is not
+    // a state the server may write -- it is the runner's report that the processes are gone.
+    if (mission.status !== 'working' && mission.status !== 'queued') {
+      return c.json({ error: `mission is ${mission.status}, not working or queued` } satisfies MissionError, 409);
+    }
+    // A second click while the runner is still terminating asks for what is already asked.
+    if (mission.stopRequested) return c.json({ ok: true, id, status: mission.status, stopRequested: true, alreadyRequested: true }, 202);
+    const line: MissionLine = { id, ts: Date.now(), status: STOP_REQUESTED };
+    try {
+      appendMissionLine(line, file);
+    } catch (err) {
+      return c.json({ error: `could not write board: ${String(err)}` } satisfies MissionError, 500);
+    }
+    return c.json({ ok: true, id, status: mission.status, stopRequested: true }, 202);
   });
 
   api.get('/:id/team', (c) => {

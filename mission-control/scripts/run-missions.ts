@@ -123,7 +123,11 @@ function logLaunch(row: { worker: string; model: string; mission: string; second
 /** Spawn with an args array (no shell), feed each stdout line to `onLine`, resolve with the exit code. */
 const run: RunFn = (bin, args, cwd, onLine) => {
   return new Promise((resolve) => {
-    const child = spawn(bin, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
+    // detached: the child leads its own process group (pgid === pid), so a stop can signal the
+    // child AND everything it forked with one kill(-pgid). See "Stopping a mission" below.
+    const child = spawn(bin, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'], detached: true });
+    const group = child.pid;
+    if (group !== undefined) liveGroups.add(group);
     let buf = '';
     let stderr = '';
     child.stdout.on('data', (d: Buffer) => {
@@ -138,8 +142,12 @@ const run: RunFn = (bin, args, cwd, onLine) => {
     child.stderr.on('data', (d: Buffer) => {
       stderr = (stderr + d.toString('utf8')).slice(-4000);
     });
-    child.on('error', (err) => resolve({ code: -1, stderr: String(err) }));
+    child.on('error', (err) => {
+      if (group !== undefined) liveGroups.delete(group);
+      resolve({ code: -1, stderr: String(err) });
+    });
     child.on('close', (code) => {
+      if (group !== undefined) liveGroups.delete(group);
       if (buf.trim()) onLine(buf.trim());
       resolve({ code, stderr });
     });
@@ -390,6 +398,137 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
   return { code, verdict };
 }
 
+// ── Stopping a mission ───────────────────────────────────────────────────────────────────────
+//
+// The server never signals anything: it appends `stop_requested` and stops (server/routes/
+// missions.ts). Only this process owns the children, so only this process kills them.
+//
+// Each child is spawned `detached`, which makes it the leader of its own process group, so
+// kill(-pgid) reaches the child AND every grandchild it forked. Signalling just the child's pid
+// would leave a forked worker running with nothing left to read its output. Because detached
+// children leave this process's group, a Ctrl-C at the runner's terminal no longer reaches them
+// by itself; main() installs SIGINT/SIGTERM handlers that terminate the live groups.
+//
+// Order: SIGTERM to the group, then SIGKILL to whatever is still in it after STOP_GRACE_MS. The
+// runner then waits for the group to be EMPTY before it writes `stopped` and releases the lock,
+// so `stopped` on the board means the processes are gone, not that a signal was sent.
+//
+// One mission runs at a time (main() awaits each), so every live group belongs to the mission
+// being run; if that ever becomes concurrent, liveGroups must be keyed by mission id.
+
+/** Grace between SIGTERM and SIGKILL. 5s lets a CLI flush its last write; MC_STOP_GRACE_MS overrides (tests). */
+export const STOP_GRACE_MS_DEFAULT = 5000;
+const stopGraceMs = () => {
+  const raw = process.env.MC_STOP_GRACE_MS;
+  return raw !== undefined && raw !== '' && Number(raw) >= 0 ? Number(raw) : STOP_GRACE_MS_DEFAULT;
+};
+/** How often a running mission re-reads the board for `stop_requested`. */
+const STOP_POLL_MS = 250;
+
+/** Process groups of the children currently running (pgid === the child's pid). */
+const liveGroups = new Set<number>();
+const terminations = new Map<number, Promise<void>>();
+
+function groupAlive(pgid: number): boolean {
+  try {
+    process.kill(-pgid, 0);
+    return true;
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code !== 'ESRCH';
+  }
+}
+
+function signalGroup(pgid: number, sig: NodeJS.Signals): void {
+  try {
+    process.kill(-pgid, sig);
+  } catch {
+    /* ESRCH: already gone. Nothing else is actionable from here. */
+  }
+}
+
+/**
+ * SIGTERM the whole group, SIGKILL what is left after `graceMs`. Resolves once the group is empty
+ * (or, defensively, 2s after the SIGKILL, so a process stuck in the kernel cannot hang the runner).
+ * Idempotent per group: a second call returns the first call's promise.
+ */
+export function terminateGroup(pgid: number, graceMs: number = stopGraceMs()): Promise<void> {
+  const prior = terminations.get(pgid);
+  if (prior) return prior;
+  signalGroup(pgid, 'SIGTERM');
+  const started = Date.now();
+  const done = new Promise<void>((resolve) => {
+    let killedAt: number | null = null;
+    const tick = () => {
+      if (!groupAlive(pgid)) return resolve();
+      const now = Date.now();
+      if (killedAt === null && now - started >= graceMs) {
+        killedAt = now;
+        signalGroup(pgid, 'SIGKILL');
+      } else if (killedAt !== null && now - killedAt > 2000) return resolve();
+      setTimeout(tick, 20);
+    };
+    tick();
+  }).finally(() => terminations.delete(pgid));
+  terminations.set(pgid, done);
+  return done;
+}
+
+/** Terminate every live child group. Used by the stop watcher and by the runner's own shutdown. */
+export function terminateLiveGroups(): Promise<void> {
+  return Promise.all([...liveGroups].map((g) => terminateGroup(g))).then(() => undefined);
+}
+
+export interface StopWatch {
+  /** Fresh read of the board: has the founder asked to stop this mission? */
+  requested(): boolean;
+  /** True once the watcher actually signalled a running child. */
+  signalled(): boolean;
+  /** Resolves when every group the watcher terminated is empty. */
+  drain(): Promise<void>;
+  close(): void;
+}
+
+/**
+ * Poll the board for `stop_requested` on `id` while it runs. On sight, terminate every live group;
+ * keep checking, so a child spawned in the gap between two ticks is still caught on the next.
+ */
+export function watchForStop(id: string, dir: string = missionsDir(), pollMs: number = STOP_POLL_MS): StopWatch {
+  let signalled = false;
+  const requested = () => {
+    try {
+      return foldBoard(readBoardLines(boardPath(dir))).find((m) => m.id === id)?.stopRequested === true;
+    } catch {
+      return false; // an unreadable board is not a stop request; the next tick reads again
+    }
+  };
+  const timer = setInterval(() => {
+    if (liveGroups.size === 0 || !requested()) return;
+    signalled = true;
+    void terminateLiveGroups();
+  }, pollMs);
+  return {
+    requested,
+    signalled: () => signalled,
+    drain: () => Promise.all([...terminations.values()]).then(() => undefined),
+    close: () => clearInterval(timer),
+  };
+}
+
+/**
+ * If this mission was asked to stop, settle the card as `stopped` and return true: the caller
+ * returns without launching anything further (in particular, no Referee). `interrupted` names the
+ * agents whose process was actually killed, so their cards read `stopped` rather than `working`.
+ */
+async function settleIfStopped(m: Mission, stop: StopWatch, emit: ReturnType<typeof emitter>, interrupted: Who[]): Promise<boolean> {
+  if (!stop.signalled() && !stop.requested()) return false;
+  await stop.drain();
+  for (const who of stop.signalled() ? interrupted : []) emit(who, { kind: 'status', status: 'stopped', text: 'terminated: stop requested' });
+  emit(RUNNER, { kind: 'status', text: `stopped on request${stop.signalled() ? '; worker process groups terminated' : '; nothing was running'}` });
+  appendMissionLine({ id: m.id, ts: Date.now(), status: 'stopped' } satisfies MissionLine, board());
+  console.log(`[runner] mission ${m.id} → stopped`);
+  return true;
+}
+
 // ── Mission loop ─────────────────────────────────────────────────────────────────────────────
 
 // One runner per mission. The lock is an O_EXCL file, `<id>/runner.lock`, holding the owner's pid —
@@ -524,11 +663,13 @@ export function reconcileWorking(dir: string = missionsDir()): string[] {
   for (const m of foldBoard(lines)) {
     const pid = pidOf.get(m.id);
     if (m.status !== 'working' || pid === undefined || pid === process.pid || pidAlive(pid)) continue;
-    appendMissionLine({ id: m.id, ts: Date.now(), status: 'waiting' } satisfies MissionLine, boardPath(dir));
+    // A card the founder had asked to stop is not handed back to Waiting to be launched again.
+    const to = m.stopRequested ? 'stopped' : 'waiting';
+    appendMissionLine({ id: m.id, ts: Date.now(), status: to } satisfies MissionLine, boardPath(dir));
     releaseMission(m.id, dir);
     const file = eventsPath(m.id, dir);
     fs.mkdirSync(path.dirname(file), { recursive: true });
-    const ev: TeamEvent = { ts: Date.now(), agent: RUNNER.agent, title: RUNNER.title, model: RUNNER.model, family: RUNNER.family, kind: 'status', text: `reconciled: runner pid ${pid} is gone; mission returned to waiting` };
+    const ev: TeamEvent = { ts: Date.now(), agent: RUNNER.agent, title: RUNNER.title, model: RUNNER.model, family: RUNNER.family, kind: 'status', text: `reconciled: runner pid ${pid} is gone; mission ${m.stopRequested ? 'stopped (stop was requested)' : 'returned to waiting'}` };
     fs.appendFileSync(file, JSON.stringify(ev) + '\n');
     reset.push(m.id);
   }
@@ -540,18 +681,23 @@ export async function runMission(m: Mission, deps: RunnerDeps = REAL_DEPS) {
     console.log(`[runner] mission ${m.id} — not claimed (another runner holds it, or it is no longer queued)`);
     return;
   }
+  const stop = watchForStop(m.id);
   try {
-    await runClaimed(m, deps);
+    await runClaimed(m, deps, stop);
   } finally {
+    stop.close();
     releaseMission(m.id);
   }
 }
 
-async function runClaimed(m: Mission, deps: RunnerDeps) {
+async function runClaimed(m: Mission, deps: RunnerDeps, stop: StopWatch) {
   const emit = emitter(m.id);
   emit(RUNNER, { kind: 'status', text: `claimed by runner pid ${process.pid}; workdir ${WORKDIR}` });
+  // Asked to stop while still queued (or between claim and launch): nothing is ever launched.
+  if (await settleIfStopped(m, stop, emit, [])) return;
   console.log(`[runner] mission ${m.id} "${m.title}" — builder starting`);
   const built = await runBuilder(m, emit, deps);
+  if (await settleIfStopped(m, stop, emit, [BUILDER])) return;
   if (built.refused) {
     // Not a generic failure, and not a Done card. The Builder broke the one-process rule, so its
     // output is not the Builder's alone and the Referee is not asked to judge it. The card goes
@@ -569,6 +715,7 @@ async function runClaimed(m: Mission, deps: RunnerDeps) {
   }
   console.log(`[runner] mission ${m.id} — referee starting`);
   const ref = await runReferee(m, built, emit, deps);
+  if (stop.signalled() && (await settleIfStopped(m, stop, emit, [REFEREE]))) return;
   const line: MissionLine = ref.verdict
     ? { id: m.id, ts: Date.now(), status: 'done', verdict: ref.verdict.verdict, verdictReasons: ref.verdict.reasons, costUsd: built.cost }
     : { id: m.id, ts: Date.now(), status: 'failed', error: 'referee returned no verdict', costUsd: built.cost };
@@ -578,6 +725,13 @@ async function runClaimed(m: Mission, deps: RunnerDeps) {
 
 async function main() {
   console.log(`[runner] board ${board()} · workdir ${WORKDIR} · builder ${CLAUDE_MODEL} · referee ${CODEX_MODEL}`);
+  // Children are detached (own process group), so the terminal's Ctrl-C no longer reaches them.
+  for (const sig of ['SIGINT', 'SIGTERM'] as const) {
+    process.on(sig, () => {
+      console.log(`[runner] ${sig} — terminating worker process groups`);
+      void terminateLiveGroups().then(() => process.exit(sig === 'SIGINT' ? 130 : 143));
+    });
+  }
   for (const id of reconcileWorking()) console.log(`[runner] mission ${id} — previous runner is gone; back to waiting`);
   for (;;) {
     const queued = foldBoard(readBoardLines(board())).filter((m) => m.status === 'queued');

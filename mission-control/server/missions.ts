@@ -39,12 +39,23 @@ export function eventsPath(id: string, dir: string = missionsDir()): string {
  * waiting — on the board, not launched. queued — launch requested (server wrote it).
  * working — a runner claimed it. done — the team finished and the Referee returned a verdict.
  * failed  — the team could not finish (a worker exited non-zero, or no verdict was parsed).
+ * stopped — the founder stopped it and the runner terminated the team. Terminal, and neither a
+ *           failure (nothing went wrong) nor a verdict (no Referee ran): its own state.
  *
  * `done` carries the Referee's verdict, which may be FAIL. "The team finished" and "the work is
  * good" are different facts, and the card shows both.
  */
-export type MissionStatus = 'waiting' | 'queued' | 'working' | 'done' | 'failed';
-export const MISSION_STATUSES: readonly MissionStatus[] = ['waiting', 'queued', 'working', 'done', 'failed'];
+export type MissionStatus = 'waiting' | 'queued' | 'working' | 'done' | 'failed' | 'stopped';
+export const MISSION_STATUSES: readonly MissionStatus[] = ['waiting', 'queued', 'working', 'done', 'failed', 'stopped'];
+
+/**
+ * A request, not a state: the server appends a `stop_requested` line and the runner -- the only
+ * party that owns the processes -- acts on it and then writes `stopped`. It rides in the status
+ * slot of a board line but never replaces the mission's status: a stop request that raced a runner's
+ * `done` must not drag the card back to `working`.
+ */
+export const STOP_REQUESTED = 'stop_requested';
+export type BoardLineStatus = MissionStatus | typeof STOP_REQUESTED;
 
 export type Verdict = 'PASS' | 'FAIL';
 
@@ -52,7 +63,7 @@ export type Verdict = 'PASS' | 'FAIL';
 export interface MissionLine {
   id: string;
   ts: number;
-  status: MissionStatus;
+  status: BoardLineStatus;
   title?: string;
   goal?: string;
   verdict?: Verdict;
@@ -73,6 +84,8 @@ export interface Mission {
   verdictReasons?: string[];
   costUsd?: number;
   error?: string;
+  /** True from a `stop_requested` line until the mission leaves queued/working. */
+  stopRequested?: boolean;
 }
 
 export type BoardColumn = 'Waiting' | 'Working' | 'Done';
@@ -96,7 +109,7 @@ export function readBoardLines(file: string = boardPath()): MissionLine[] {
     if (!raw.trim()) continue;
     try {
       const p = JSON.parse(raw) as MissionLine;
-      if (typeof p.id === 'string' && typeof p.ts === 'number' && MISSION_STATUSES.includes(p.status)) out.push(p);
+      if (typeof p.id === 'string' && typeof p.ts === 'number' && (MISSION_STATUSES as readonly string[]).includes(p.status) || p.status === STOP_REQUESTED) out.push(p);
     } catch {
       // A torn final line from a crashed writer: skip, never half-parse.
     }
@@ -114,8 +127,18 @@ export function foldBoard(lines: MissionLine[]): Mission[] {
       byId.set(l.id, { id: l.id, title: l.title, goal: l.goal, status: 'waiting', createdAt: l.ts, updatedAt: l.ts });
       continue;
     }
+    if (l.status === STOP_REQUESTED) {
+      // Only a live mission can be asked to stop; a request landing on a finished one is noise.
+      if (cur.status === 'queued' || cur.status === 'working') {
+        cur.stopRequested = true;
+        cur.updatedAt = l.ts;
+      }
+      continue;
+    }
     cur.status = l.status;
     cur.updatedAt = l.ts;
+    // The request outlives the claim (queued -> working) and ends with the mission's run.
+    if (l.status !== 'queued' && l.status !== 'working') delete cur.stopRequested;
     if (l.verdict) cur.verdict = l.verdict;
     if (l.verdictReasons) cur.verdictReasons = l.verdictReasons;
     if (typeof l.costUsd === 'number') cur.costUsd = l.costUsd;
@@ -126,7 +149,7 @@ export function foldBoard(lines: MissionLine[]): Mission[] {
 
 // ── Team events ─────────────────────────────────────────────────────────────────────────────
 
-export type AgentStatus = 'starting' | 'working' | 'finished' | 'failed';
+export type AgentStatus = 'starting' | 'working' | 'finished' | 'failed' | 'stopped';
 
 /** One line of <id>/events.jsonl. `agent` is a stable key; `title` and `model` are what we draw. */
 export interface TeamEvent {
