@@ -17,8 +17,9 @@ import { createStream } from './routes/stream.ts';
 import { crossSiteGuard } from './routes/guard.ts';
 import { createMissionsApi } from './routes/missions.ts';
 import { createDecisionsApi } from './routes/decisions.ts';
+import { DEFAULT_CLIENT_DIST, mountClient } from './routes/static.ts';
 
-export function createApp(state: LiveState = live): Hono {
+export function createApp(state: LiveState = live, clientDist: string = DEFAULT_CLIENT_DIST): Hono {
   const app = new Hono();
 
   // Blocks CROSS-SITE BROWSER REQUESTS. Not "drive-by" — same-site is allowed, so any other
@@ -32,6 +33,10 @@ export function createApp(state: LiveState = live): Hono {
   app.route('/api/decisions', createDecisionsApi());
   app.route('/api', createApi(state));
   app.route('/', createStream(state));
+
+  // LAST, so no file or SPA fallback can shadow an API route. Serves client/dist on this same
+  // port; `bun run dev` (Vite on 4301, proxying here) is unaffected. See routes/static.ts.
+  mountClient(app, clientDist);
 
   return app;
 }
