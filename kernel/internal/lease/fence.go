@@ -788,10 +788,15 @@ const repoScheme = "repo://"
 // covers reports whether presented resource p covers touched resource t: p is t, or p is a glob
 // "<dir>/**" over a canonical repository directory and t lies strictly below it. Nothing else is a
 // glob, so repo://**, repo://a**, repo://a/* and repo://a/**/ are exact names and cover only
-// themselves. Receive and the hot-set expansion (hot.go touches) both use it.
+// themselves; a glob over any other scheme keeps its plain prefix meaning. Receive and the hot-set
+// expansion (hot.go touches) both use it.
 func covers(p, t string) bool {
 	if p == t {
 		return true
+	}
+	if !strings.HasPrefix(p, repoScheme) {
+		// Not repo://: the canonical predicate does not apply, and a glob keeps its original meaning.
+		return strings.HasSuffix(p, "/**") && strings.HasPrefix(t, strings.TrimSuffix(p, "**"))
 	}
 	pre, ok := globPrefix(p)
 	return ok && below(pre, t, false)
@@ -819,12 +824,12 @@ func below(pre, t string, canon bool) bool {
 }
 
 // canonSegs reports whether s is a "/"-joined run of canonical segments: each non-empty, not a dot
-// segment (literally or with a dot spelled %2e in any case), and free of '*', '\\' and an encoded
-// separator (%2f, %5c in any case). Other percent-encodings are literal bytes.
+// segment (literally or with a dot spelled %2e in any case), and free of controls, '*', a backslash
+// and an encoded separator (%2f, %5c in any case). Other percent-encodings are literal bytes.
 func canonSegs(s string) bool {
 	for _, seg := range strings.Split(s, "/") {
 		low := strings.ToLower(seg)
-		if seg == "" || strings.ContainsAny(seg, "*\\") || strings.Contains(low, "%2f") || strings.Contains(low, "%5c") {
+		if seg == "" || hasControl(seg) || strings.ContainsAny(seg, "*\\") || strings.Contains(low, "%2f") || strings.Contains(low, "%5c") {
 			return false
 		}
 		if dots := strings.ReplaceAll(low, "%2e", "."); dots == "." || dots == ".." {
@@ -847,23 +852,23 @@ func canonicalTouched(t string) bool {
 	if !found || !ok || anchor == "" || !strings.Contains(rest, "/") || !canonSegs(rest) {
 		return false
 	}
-	for _, c := range file {
-		if c < 0x20 || c == 0x7f {
-			return false
-		}
-	}
 	if anchor == "*" {
 		return true
 	}
 	if strings.ContainsAny(anchor, "*/\\#%") || strings.Contains(anchor, "..") {
 		return false
 	}
-	for _, c := range anchor {
+	return !hasControl(anchor)
+}
+
+// hasControl reports a C0 control, DEL or a C1 control (U+0080-U+009F) in s.
+func hasControl(s string) bool {
+	for _, c := range s {
 		if c < 0x20 || (c >= 0x7f && c <= 0x9f) {
-			return false
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 func (v *repoVerifier) Receive(ctx context.Context, p Push) error {
