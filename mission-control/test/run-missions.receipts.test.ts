@@ -1,4 +1,4 @@
-// test/run-missions.test.ts — B0-03: runner receipts, refused_subagent, and child jobs keyed by
+// test/run-missions.receipts.test.ts — B0-03: runner receipts, refused_subagent, and child jobs keyed by
 // parent_tool_use_id.
 //
 // Nothing here launches `claude -p` or `codex exec`. runMission() takes its spawn as a dependency;
@@ -59,12 +59,12 @@ function fakeDeps(script: Record<'claude' | 'codex', unknown[]>) {
   return { deps, launched };
 }
 
-const init = { type: 'system', subtype: 'init', session_id: 's-1', model: 'claude-sonnet-5' };
-const result = { type: 'result', subtype: 'success', is_error: false, num_turns: 3, total_cost_usd: 0.01, result: 'done' };
+const init = { type: 'system', subtype: 'init', session_id: 's-1', model: 'claude-sonnet-5', parent_tool_use_id: null };
+const result = { type: 'result', subtype: 'success', parent_tool_use_id: null, is_error: false, num_turns: 3, total_cost_usd: 0.01, result: 'done' };
 const passVerdict = [{ type: 'item.completed', item: { type: 'agent_message', text: 'ok\nVERDICT: {"verdict":"PASS","reasons":["fine"]}' } }];
-const writeOk = (id: string) => ({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: id, is_error: false, content: 'ok' }] } });
-const writeRefused = (id: string) => ({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: id, is_error: true, content: 'permission denied' }] } });
-const agentCall = (name: string, id: string) => ({ type: 'assistant', message: { content: [{ type: 'tool_use', id, name, input: { prompt: 'help' } }] } });
+const writeOk = (id: string) => ({ type: 'user', parent_tool_use_id: null, message: { content: [{ type: 'tool_result', tool_use_id: id, is_error: false, content: 'ok' }] } });
+const writeRefused = (id: string) => ({ type: 'user', parent_tool_use_id: null, message: { content: [{ type: 'tool_result', tool_use_id: id, is_error: true, content: 'permission denied' }] } });
+const agentCall = (name: string, id: string) => ({ type: 'assistant', parent_tool_use_id: null, message: { content: [{ type: 'tool_use', id, name, input: { prompt: 'help' } }] } });
 
 function events(id: string): TeamEvent[] {
   return fs.readFileSync(eventsPath(id, dir), 'utf8').trim().split('\n').map((l) => JSON.parse(l) as TeamEvent);
@@ -88,7 +88,7 @@ describe('run-missions: receipts', () => {
     const m = seedMission();
     const out = path.join(dir, 'out.md');
     fs.writeFileSync(out, 'hello\n');
-    const write = { type: 'assistant', message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: out } }] } };
+    const write = { type: 'assistant', parent_tool_use_id: null, message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: out } }] } };
     const { deps, launched } = fakeDeps({ claude: [init, write, writeOk('t1'), result], codex: passVerdict });
     await runMission(m, deps);
 
@@ -140,7 +140,7 @@ describe('run-missions: receipts', () => {
     const m = seedMission();
     const out = path.join(dir, 'out.md');
     fs.writeFileSync(out, 'hello\n');
-    const write = { type: 'assistant', message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: out } }] } };
+    const write = { type: 'assistant', parent_tool_use_id: null, message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: out } }] } };
     const { deps } = fakeDeps({ claude: [init, 'not json', write, writeOk('t1'), '{torn', result], codex: ['garbage', ...passVerdict] });
     await runMission(m, deps);
     const receipts = readLaunchReceipts(m.id, dir);
@@ -151,7 +151,7 @@ describe('run-missions: receipts', () => {
     const m = seedMission();
     const out = path.join(dir, 'out.md');
     fs.writeFileSync(out, 'pre-existing\n');
-    const write = { type: 'assistant', message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: out } }] } };
+    const write = { type: 'assistant', parent_tool_use_id: null, message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: out } }] } };
     const { deps, launched } = fakeDeps({ claude: [init, write, writeRefused('t1'), result], codex: passVerdict });
     await runMission(m, deps);
     expect(events(m.id).filter((e) => e.kind === 'receipt' && (e.data as any)?.file)).toEqual([]);
@@ -165,12 +165,36 @@ describe('run-missions: receipts', () => {
     const b = path.join(dir, 'b.md');
     fs.writeFileSync(a, 'a\n');
     fs.writeFileSync(b, 'b\n');
-    const w = (id: string, f: string) => ({ type: 'assistant', message: { content: [{ type: 'tool_use', id, name: 'Write', input: { file_path: f } }] } });
+    const w = (id: string, f: string) => ({ type: 'assistant', parent_tool_use_id: null, message: { content: [{ type: 'tool_use', id, name: 'Write', input: { file_path: f } }] } });
     const { deps } = fakeDeps({ claude: [init, w('ta', a), w('tb', b), writeOk('tb'), result], codex: passVerdict });
     await runMission(m, deps);
     const files = events(m.id).filter((e) => e.kind === 'receipt' && (e.data as any)?.file).map((e) => (e.data as any).file);
     expect(files).toHaveLength(1);
     expect(String(files[0])).toEndWith('/b.md');
+  });
+
+  // Every line of a real stream carries `parent_tool_use_id` -- null at the top level. A
+  // reader that treats the key's presence (or null) as "child" would refuse every run.
+  const REAL = path.resolve(import.meta.dir, '..', '..', 'kernel', 'internal', 'adapter', 'testdata', 'claude');
+  const replay = (name: string) => fs.readFileSync(path.join(REAL, name), 'utf8').split('\n').filter(Boolean);
+
+  test('a real top-level stream (success.jsonl, parent_tool_use_id: null everywhere) is NOT a refusal', async () => {
+    const lines = replay('success.jsonl');
+    expect(lines.filter((l) => l.includes('"parent_tool_use_id":null')).length).toBeGreaterThan(0); // the fixture is what it claims
+    const m = seedMission();
+    const { deps } = fakeDeps({ claude: lines, codex: passVerdict });
+    await runMission(m, deps);
+    const after = foldBoard(readBoardLines(boardPath(dir))).find((x) => x.id === m.id)!;
+    expect(after.error).not.toBe(REFUSED_SUBAGENT); // it wrote nothing, so it fails -- for that reason only
+    expect(after.error).toBe('builder reported no files written');
+    expect(readLaunchReceipts(m.id, dir).map((r) => r.role)).toEqual(['builder']);
+  });
+
+  test('positive control: a real stream with nested children (children.jsonl) IS a refusal', async () => {
+    const m = seedMission();
+    const { deps } = fakeDeps({ claude: replay('children.jsonl'), codex: passVerdict });
+    await runMission(m, deps);
+    expect(foldBoard(readBoardLines(boardPath(dir))).find((x) => x.id === m.id)!.error).toBe(REFUSED_SUBAGENT);
   });
 
   test('Task is refused the same way as Agent', async () => {

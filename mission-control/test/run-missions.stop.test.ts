@@ -499,6 +499,21 @@ describe('reconcile and fold', () => {
     expect(mission(ID).stopRequested).toBeUndefined();
   });
 
+  test('the error-clear on a new attempt and the stop request coexist: a relaunched card keeps stopRequested, loses the old error, and ends stopped with none', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'waiting', error: 'refused_subagent' });
+    put({ id: ID, ts: 3, status: 'queued' });
+    expect(mission(ID).error).toBeUndefined();
+    requestStop(ID);
+    put({ id: ID, ts: 5, status: 'working', runnerPid: 1 });
+    expect(mission(ID)).toMatchObject({ status: 'working', stopRequested: true });
+    expect(mission(ID).error).toBeUndefined();
+    put({ id: ID, ts: 6, status: 'stopped' });
+    expect(mission(ID)).toMatchObject({ status: 'stopped' });
+    expect(mission(ID).error).toBeUndefined();
+    expect(mission(ID).stopRequested).toBeUndefined();
+  });
+
   test('a stop request never moves the status: one landing after `done` leaves it done', () => {
     put(waiting(ID));
     put({ id: ID, ts: 2, status: 'working' });

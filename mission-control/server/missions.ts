@@ -139,6 +139,9 @@ export function foldBoard(lines: MissionLine[]): Mission[] {
     cur.updatedAt = l.ts;
     // The request outlives the claim (queued -> working) and ends with the mission's run.
     if (l.status !== 'queued' && l.status !== 'working') delete cur.stopRequested;
+    // A launch starts a new attempt: the reason the last one did not advance (refused_subagent)
+    // must not ride along onto a card that then finishes.
+    if (l.status === 'queued' || l.status === 'working') delete cur.error;
     if (l.verdict) cur.verdict = l.verdict;
     if (l.verdictReasons) cur.verdictReasons = l.verdictReasons;
     if (typeof l.costUsd === 'number') cur.costUsd = l.costUsd;
