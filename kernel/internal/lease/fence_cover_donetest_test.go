@@ -323,6 +323,9 @@ func TestB1_04R_CoverExactNonCanonicalRefused(t *testing.T) {
 		"repo://*/x.ts#f",
 		"repo://a#f",
 		"repo://a\\b/x.ts#f",
+		// r6: R3 in the repository segment
+		"repo://a%2fb/x.ts#f",
+		"repo://a%5Cb/x.ts#f",
 		// R4: a C1 control in the repository segment
 		"repo://a\u0085/x.ts#f",
 		"repo://a\u009f/x.ts#f",
@@ -413,7 +416,33 @@ func TestB1_04R_CoverGlobSpelling(t *testing.T) {
 	}
 }
 
-// TestB1_04R_CoverHotUsesSameRule: ruling R1. Acquire adds a hot resource when a requested glob
+// TestB1_04R_CoverStarAnchorIsLiteral: ruling r6. "#*" names the whole-file resource of a file
+// leased whole; it is not a wildcard over the file's symbols. Source: SP2's lib.mjs ("everything
+// else is leased whole-file (#*)"; touchedResources emits file#* or file#<symbol>), and SP2's
+// fence-hook.mjs and fence.go's covers() both match a non-glob resource exactly. Nothing in
+// B1-04r, B1-14a, hot.go or the tests treats "#*" as covering "#f". So a holder of x.ts#* pushing
+// x.ts#f, or a holder of y.ts#f pushing y.ts#*, is refused as undeclared.
+//
+// Kills: "#*" read as a wildcard over the file's symbols (by file compare, or as a "#"-prefix);
+// a symbol lease read as covering its whole file.
+func TestB1_04R_CoverStarAnchorIsLiteral(t *testing.T) {
+	j, _ := b104Open(t)
+	c := b104Coord(t, j, &b104Clock{t: b104Epoch})
+	v := b104Verifier(t, j)
+	g := mustGrant(t, c, b104Req("job_s", b104Epoch, lease.AllOrNothing, "repo://a/x.ts#*", "repo://a/y.ts#f"))
+	accept(t, v, lease.Push{Job: "job_s", Tokens: g.Tokens, Touched: []string{"repo://a/x.ts#*", "repo://a/y.ts#f"}})
+	for _, r := range []string{"repo://a/x.ts#f", "repo://a/x.ts#<header>", "repo://a/y.ts#*"} {
+		refuse(t, v, lease.Push{Job: "job_s", Tokens: g.Tokens, Touched: []string{r}}, []error{lease.ErrUndeclared}, []string{r})
+	}
+}
+
+// TestB1_04R_CoverHotUsesSameRule: rulings R1 and R5. R5 (orchestrator ceo-1, 2026-10-04): R1
+// binds repo:// names only; a glob of any other scheme keeps the pre-LC-1 rule ("/**" covers what
+// starts with everything before the "**"), so db://x/** still pulls db://x/t#<header> in, as it
+// does on c367d15. Pulling a hot resource in is the conservative direction, and Receive judges
+// repo:// only.
+//
+// R1. Acquire adds a hot resource when a requested glob
 // covers its file, and "covers" is the predicate Receive uses. A glob that covers nothing in Receive
 // (repo://**, repo:///**, repo://x**, repo://../**, repo://*/**) pulls in no hot resource, and a
 // glob does not cover its own root (repo://x/src/** does not pull repo://x/src#h). repo://x/** and
@@ -439,6 +468,9 @@ func TestB1_04R_CoverHotUsesSameRule(t *testing.T) {
 		{"repo://x/**", "repo://x#h", false},
 		{"repo://../**", "repo://../x.ts#h", false},
 		{"repo://*/**", "repo://*/x.ts#h", false},
+		{"repo://../**", "repo://../src/config.ts#<header>", false}, // r6: R1 asymmetry
+		{"db://x/**", "db://xx/t#<header>", false},                  // R5: pre-LC-1 rule, not a bare prefix
+		{"db://x/**", "db://x/t#<header>", true},                    // R5: non-repo globs keep pulling
 		{"repo://x/**", hdr, true},
 		{"repo://x/src/**", hdr, true},
 		{"repo://x/**", "repo://x/src#h", true},
@@ -501,6 +533,9 @@ func TestB1_04R_CoverByteExact(t *testing.T) {
 		"repo://a/srcx/y.ts#f",
 		"repo://a/src.ts#f",
 		"repo://ab/src/x.ts#f",
+		// r6: a percent-encoding is byte-literal, never decoded before the compare
+		"repo://a/lib/%43onfig.ts#f", // %43 is 'C': not the held Config.ts#f
+		"repo://a/sr%63/x.ts#f",      // %63 is 'c': not under the held src/**
 	} {
 		refuse(t, v, lease.Push{Job: "job_c", Tokens: g.Tokens, Touched: []string{r}}, []error{lease.ErrUndeclared}, []string{r})
 	}
