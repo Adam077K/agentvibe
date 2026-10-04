@@ -55,6 +55,11 @@ type ExecConfig struct {
 	WorkerUID   int      // the worker's uid; 0 (root, or unset) is ErrSpec
 	WorkerGIDs  []int    // the worker's groups
 	WorkerRoots []string // every root a worker may write (worktrees, job dirs, TMPDIRs); >= 1, clean, absolute, not "/"
+	// ACLWritable is the ACL half of the writability check (r4, a seam for the fail-closed ruling);
+	// nil means the platform's ACL reader. Exec asks it about the resolved binary and each resolved
+	// ancestor up to "/" until one is writable. (true, nil) makes that path writable, and so does ANY
+	// error: an ACL it cannot read is writable. Only (false, nil) for every path allows in place.
+	ACLWritable func(path string) (bool, error)
 }
 
 // NewExec returns the real launcher.Exec, or ErrSpec for a malformed cfg. Run executes only bytes
@@ -73,6 +78,12 @@ type ExecConfig struct {
 // whole process group. ctx cancellation kills the tree and returns ctx.Err(). A worker that exits
 // non-zero, or dies by a signal that no backstop and no ctx sent, is reported as an error wrapping
 // its *exec.ExitError (r3).
+// r4: "the tree" is the leader itself, its process group, and every descendant of either, so a
+// leader that leaves its group (setpgid into another) is still killed, with its descendants. While
+// the tree runs, Exec rescans it at least every 250ms, so a descendant that left the group is killed
+// even when its parent exited 250ms or more before the kill. A leader that exits after the 90%
+// SIGINT was ended by the wall: Run returns ErrWall. When Run returns, the leader has been reaped
+// (waited for), not left a zombie.
 func NewExec(cfg ExecConfig) (launcher.Exec, error) { return stubExec{}, nil }
 
 type stubExec struct{}
@@ -137,13 +148,19 @@ func New(cfg Config) (*Runner, error) { return nil, ErrNotImplemented }
 // launches it under job.Limits (every one of Wall, Idle, Stdout and Dir) and returns the Launch error
 // once the whole tree is dead. It then records the job StatusKilled when that error is ErrWall,
 // ErrIdle or ctx's error, and StatusExited otherwise (r3); a restart's Reconcile leaves either alone.
+// A job id runs once (r4, from ruling Q3): an id State already records, in any status, is ErrSpec,
+// refused before Launch.
 func (r *Runner) Run(ctx context.Context, job Job) error { return ErrNotImplemented }
 
 // Reconcile runs after a restart: for every job State records as running, it kills the surviving
 // process group and every descendant (guarding against pid reuse), marks the job
 // StatusInterrupted and calls Launcher.End for its lease. Interrupted is terminal: no Runner ever
 // relaunches or re-ends it (r2, ruling Q3). A second Reconcile is a no-op. It must complete before
-// Run admits anything (Q4).
+// Run admits anything (Q4). A recorded leader whose identity still matches is killed itself, with
+// its descendants, even if it left its process group (r4). "Cannot judge" is not "interrupted" (r4):
+// when Identify fails with anything but syscall.ESRCH, nothing is signalled through that pid, and
+// when Launcher.End fails, the job stays running; either way Reconcile returns the error, Run stays
+// refused (ErrState), and the next Reconcile retries the job.
 func (r *Runner) Reconcile(ctx context.Context) error { return ErrNotImplemented }
 
 // Status reports jobID's recorded status.

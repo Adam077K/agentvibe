@@ -13,6 +13,10 @@
 // each with a test that fails it, and adds the pid-reuse seam (runner.Identity, ProcIdentity,
 // Config.Identify). Orchestrator ruling (ceo-1, 2026-10-04): "not worker-writable" includes ACLs and
 // fails closed.
+// RE-FREEZE r4 2026-10-04: the implementation's independent review found a leader that leaves its
+// process group surviving every kill, an idle test that flaked under load, and eight mutants the r3
+// tests let through. r4 pins each, and adds the ExecConfig.ACLWritable seam for the fail-closed half
+// of the ACL ruling.
 // Canon: 09a §8.2 ("own process group"; "wall-clock (SIGINT 90%, SIGKILL pgid 100%) and 5-minute
 // idle backstops"), §15 ("orphan processes 2 min after kill: 0"). Measured first, on this machine,
 // with no model turn and no network: docs/vision-v3/_process/DR-B1-09a-MEASURE-2026-10-03.md.
@@ -37,14 +41,18 @@
 //	                            r2: 0 means 4, above 12 is refused, Run before Reconcile is refused
 //	WallBackstopKillsTree       SIGINT the GROUP at 90% (r3: in [85%, 95%); 60ms after it the group
 //	                            member that does not trap it is dead, the leader that does is alive);
-//	                            SIGKILL the whole tree at 100% (r3: Run returns within wall + 1s)
-//	IdleBackstopKillsTree       no stdout byte for Idle kills the whole tree; output resets it
+//	                            SIGKILL the whole tree at 100% (r3: Run returns within wall + 1s);
+//	                            r4: the leader is reaped when Run returns
+//	IdleBackstopKillsTree       no stdout byte for Idle kills the whole tree; output resets it.
+//	                            r4: judged from the leader's first byte (a "ready" handshake); an
+//	                            attempt where exec outlasted Idle measured nothing and is retried (3)
 //	CtxCancelKillsTree          ctx cancellation kills the whole tree (r3: within 1s of the cancel)
 //	LeaderExitKillsTree         r3: a leader that exits 0 or 3 leaves a group member and a setsid
 //	                            grandchild; Run kills both before it returns, and reports exit 3 as
 //	                            an *exec.ExitError
 //	RunnerAppliesLimits         r3: the Runner launches under job.Limits (Stdout, Dir, Wall, Idle)
-//	                            and records exited or killed, which a restart leaves alone
+//	                            and records exited or killed, which a restart leaves alone; r4: a
+//	                            job id runs once (ErrSpec), here and after DaemonKilledMidJob
 //	DaemonKilledMidJob          the acceptance: SIGKILL the daemon, restart, Reconcile: no orphan,
 //	                            the job is interrupted, its launch is ended once; r2: Run before
 //	                            Reconcile is refused; a later restart leaves it interrupted, unlaunched
@@ -53,6 +61,17 @@
 //	ProcIdentity                r3: pid + kernel start time; a dead pid is ESRCH
 //	ReconcileGuardsPidReuse     r3: when Config.Identify reports another start time for every
 //	                            recorded pid, Reconcile signals nothing, and still ends the launch
+//	LeaderLeavesGroup           r4: a leader that setpgid()s into its parent's group is dead after
+//	                            Run (Exec in a host process) and after Reconcile
+//	WallAfterGracefulExit       r4: a leader that exits 0 on the 90% SIGINT is ErrWall
+//	KillFreezesBreeder          r4: a leader spawning setsid children through the kill leaves none
+//	OrphanAfterScanKilled       r4: a setsid child orphaned 600ms in is still killed (rescans)
+//	ReconcileCannotJudge...     r4: an Identify error (not ESRCH) leaves the job running, untouched,
+//	                            unended, Run refused; a Reconcile that can judge interrupts it
+//	ReconcileEndFails...        r4: a failed End leaves the job running and Run refused; the retry
+//	                            interrupts it and ends it once
+//	ExecACLSeam                 r4: through ExecConfig.ACLWritable, every path is asked; an
+//	                            unreadable ACL anywhere in the chain, or a writable one, is a copy
 //	ExecACLWritable             r3, the ACL ruling: an allow entry granting a write-class right on
 //	                            the binary, its dir, or an ancestor takes the copy path. GATED: it
 //	                            runs only with AGENTVIBE_ACL_TESTS=1 and otherwise SKIPs, naming the
@@ -184,6 +203,52 @@ func helper(mode string) {
 			fmt.Println("x")
 			time.Sleep(100 * time.Millisecond)
 		}
+	case "joinparent": // r4: leaves its own process group for its parent's, then spawns a child there
+		if pg, err := syscall.Getpgid(os.Getppid()); err != nil || syscall.Setpgid(0, pg) != nil {
+			os.Exit(9)
+		}
+		appendLine(os.Getenv("B1_09A_PIDS"), strconv.Itoa(os.Getpid()))
+		spawnSelf("sleep")
+		sleepForever()
+	case "graceful": // r4: on SIGINT, logs it and exits 0
+		ch := make(chan os.Signal, 1)
+		signal.Notify(ch, syscall.SIGINT)
+		appendLine(os.Getenv("B1_09A_PIDS"), strconv.Itoa(os.Getpid()))
+		<-ch
+		appendLine(os.Getenv("B1_09A_INT"), strconv.FormatInt(time.Now().UnixNano(), 10))
+		os.Exit(0)
+	case "breeder": // r4: spawns setsid children back to back (at most 150) and never stops
+		appendLine(os.Getenv("B1_09A_PIDS"), strconv.Itoa(os.Getpid()))
+		for i := 0; i < 150; i++ {
+			// perl, in place and quick to start, calls setsid within milliseconds of its fork: a
+			// copied Go child takes ~200ms, long enough for any scan to see it in the group first.
+			c := exec.Command("/usr/bin/perl", "-e", perlSetsid)
+			c.Env = os.Environ()
+			if c.Start() != nil {
+				os.Exit(4)
+			}
+			time.Sleep(3 * time.Millisecond)
+		}
+		sleepForever()
+	case "orphaner": // r4: spawns midexit, which spawns a setsid child and exits 600ms later
+		spawnSelf("midexit")
+		appendLine(os.Getenv("B1_09A_PIDS"), strconv.Itoa(os.Getpid()))
+		sleepForever()
+	case "midexit":
+		spawnSelf("setsid")
+		appendLine(os.Getenv("B1_09A_PIDS"), strconv.Itoa(os.Getpid()))
+		time.Sleep(600 * time.Millisecond)
+		os.Exit(0)
+	case "exechost": // r4: runs perlJoin through a fresh Exec in this process, prints Run's error
+		wall, _ := time.ParseDuration(os.Getenv("B1_09A_WALL"))
+		self := os.Getenv("B1_09A_SELF")
+		e, err := runner.NewExec(workerConfig())
+		if err == nil {
+			err = e.Run(runner.WithLimits(context.Background(), runner.Limits{Wall: wall, Idle: time.Minute, Stdout: io.Discard}),
+				"/usr/bin/perl", fileDigest("/usr/bin/perl"), []string{"-e", perlJoin},
+				[]string{"B1_09A_SELF=" + self, "B1_09A_PIDS=" + os.Getenv("B1_09A_PIDS")})
+		}
+		fmt.Print(err)
 	case "pwd":
 		wd, err := os.Getwd()
 		if err != nil {
@@ -198,6 +263,36 @@ func helper(mode string) {
 		os.Exit(6)
 	}
 }
+
+// perlJoin is a leader that leaves its own process group for its parent's within milliseconds of
+// starting (perl is protected, so it runs in place, uncopied), before any scan can see it in its
+// group; it then becomes the joinparent helper, which spawns a child there.
+const perlJoin = `setpgrp(0, getpgrp(getppid())) or exit 9; exec($ENV{B1_09A_SELF}, "` + helperPrefix + `joinparent") or exit 10;`
+
+// perlSetsid is a child that leaves its parent's session at once, records its pid, and lives 10
+// minutes (bounded, should a broken kill leave it).
+const perlSetsid = `use POSIX (); POSIX::setsid() or exit 5; open(my $f, ">>", $ENV{B1_09A_PIDS}) or exit 6; print $f "$$\n"; close $f; sleep 600;`
+
+// perlTree is the tree with a perl leader (r4): it does what the "tree" helper's leader does (logs
+// when it began, traps SIGINT and logs it, forks mid, which spawns the setsid grandchild) and, with
+// B1_09A_READY set, first writes "ready". perl is protected, so Exec runs it in place, uncopied: under
+// 4x parallel load a freshly copied 10MB Go leader measured over 700ms (and once 1.6s) to exec, which
+// is the timing tests measuring exec. mid and the grandchild are this binary, uncopied.
+const perlTree = `use Time::HiRes ();
+sub logto { my ($f, $l) = @_; return unless $f; open(my $h, ">>", $f) or return; print $h "$l\n"; close $h }
+sub now { sprintf("%.0f", Time::HiRes::time() * 1e9) }
+logto($ENV{B1_09A_T}, now());
+$SIG{INT} = sub { logto($ENV{B1_09A_INT}, now()) };
+$| = 1;
+print "ready\n" if $ENV{B1_09A_READY};
+my $pid = fork();
+exit 4 unless defined $pid;
+if ($pid == 0) { exec($ENV{B1_09A_SELF}, "` + helperPrefix + `mid"); exit 4 }
+logto($ENV{B1_09A_PIDS}, $$);
+sleep 1 while 1;`
+
+// perlChatty writes one line every 100ms, B1_09A_N times, then exits 0.
+const perlChatty = `$| = 1; for (1 .. $ENV{B1_09A_N}) { print "x\n"; select(undef, undef, undef, 0.1) }`
 
 // daemon is a runner process the test SIGKILLs mid-job.
 func daemon() {
@@ -217,7 +312,7 @@ func daemon() {
 		os.Exit(1)
 	}
 	job := runner.Job{
-		Req:    request("job-d", self, []string{helperPrefix + "tree"}, map[string]string{"B1_09A_SELF": self, "B1_09A_PIDS": os.Getenv("B1_09A_PIDS")}),
+		Req:    request("job-d", self, []string{helperPrefix + os.Getenv("B1_09A_MODE")}, map[string]string{"B1_09A_SELF": self, "B1_09A_PIDS": os.Getenv("B1_09A_PIDS")}),
 		Limits: runner.Limits{Wall: 5 * time.Minute, Idle: 5 * time.Minute, Stdout: io.Discard},
 	}
 	err = r.Run(context.Background(), job)
@@ -368,7 +463,9 @@ type fakeLauncher struct {
 	exec     launcher.Exec
 	mu       sync.Mutex
 	launches int
-	ends     []string
+	ends     []string // successful End calls
+	endErr   error    // r4: End fails with this while it is set
+	endTries int
 }
 
 func (f *fakeLauncher) Launch(ctx context.Context, req launcher.Request) (launcher.Receipt, error) {
@@ -383,9 +480,17 @@ func (f *fakeLauncher) Launch(ctx context.Context, req launcher.Request) (launch
 func (f *fakeLauncher) End(_ context.Context, job, l string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	f.endTries++
+	if f.endErr != nil {
+		return f.endErr
+	}
 	f.ends = append(f.ends, job+" "+l)
 	return nil
 }
+
+func (f *fakeLauncher) setEndErr(err error) { f.mu.Lock(); defer f.mu.Unlock(); f.endErr = err }
+
+func (f *fakeLauncher) tries() int { f.mu.Lock(); defer f.mu.Unlock(); return f.endTries }
 
 func (f *fakeLauncher) count() int { f.mu.Lock(); defer f.mu.Unlock(); return f.launches }
 
@@ -537,10 +642,11 @@ func runExec(t *testing.T, ctx context.Context, path, digest string, argv, env [
 
 func exists(p string) bool { _, err := os.Stat(p); return err == nil }
 
-// daemonMidJob starts the daemon helper on state, waits for its job's three-process tree, SIGKILLs
-// the daemon alone (its own process group; the worker is in another), and returns with the tree
-// orphaned. The daemon gets this test's TMPDIR: its Exec copies the test binary somewhere private.
-func daemonMidJob(t *testing.T, state, pids string) {
+// daemonMidJob starts the daemon helper on state with a job running helper mode, waits for n worker
+// pids, SIGKILLs the daemon alone (by pid, not group: r4's leader joins the daemon's group), and
+// returns with the worker orphaned. The daemon gets this test's TMPDIR: its Exec copies the test
+// binary somewhere private.
+func daemonMidJob(t *testing.T, state, pids, mode string, n int) {
 	t.Helper()
 	bin := self(t)
 	reap(t, pids)
@@ -551,7 +657,7 @@ func daemonMidJob(t *testing.T, state, pids string) {
 	}
 	defer log.Close()
 	d := exec.Command(bin, helperPrefix+"daemon")
-	d.Env = []string{"B1_09A_SELF=" + bin, "B1_09A_STATE=" + state, "B1_09A_PIDS=" + pids, "TMPDIR=" + os.TempDir()}
+	d.Env = []string{"B1_09A_SELF=" + bin, "B1_09A_STATE=" + state, "B1_09A_PIDS=" + pids, "B1_09A_MODE=" + mode, "TMPDIR=" + os.TempDir()}
 	d.Stderr = log
 	d.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	if err := d.Start(); err != nil {
@@ -566,7 +672,7 @@ func daemonMidJob(t *testing.T, state, pids string) {
 	stderr := func() string { b, _ := os.ReadFile(logf); return string(b) }
 
 	deadline := time.Now().Add(10 * time.Second)
-	for len(readPids(pids)) < 3 {
+	for len(readPids(pids)) < n {
 		select {
 		case <-exited:
 			t.Fatalf("the daemon exited before its job started: %s", stderr())
@@ -577,7 +683,7 @@ func daemonMidJob(t *testing.T, state, pids string) {
 		}
 		time.Sleep(20 * time.Millisecond)
 	}
-	syscall.Kill(-d.Process.Pid, syscall.SIGKILL)
+	syscall.Kill(d.Process.Pid, syscall.SIGKILL)
 	<-exited
 	survivors := 0
 	for _, p := range readPids(pids) {
@@ -585,7 +691,7 @@ func daemonMidJob(t *testing.T, state, pids string) {
 			survivors++
 		}
 	}
-	t.Logf("after the daemon's SIGKILL, %d of 3 worker pids survive (measured: all 3)", survivors)
+	t.Logf("after the daemon's SIGKILL, %d of %d worker pids survive", survivors, n)
 }
 
 // privateRoot is a fixture root no worker but this uid can write: under $HOME/.agentvibe, never
@@ -905,15 +1011,14 @@ func capacityRound(t *testing.T, cfgCap, capN int) {
 
 func TestB1_09a_WallBackstopKillsTree(t *testing.T) {
 	env, pids, ints, starts := treeEnv(t, t.TempDir())
-	bin := self(t)
 	const wall = 2 * time.Second
 	e := mustExec(t, workerConfig())
-	d := fileDigest(bin)
+	d := fileDigest("/usr/bin/perl")
 	done := make(chan error, 1)
 	t0 := time.Now()
 	go func() {
 		done <- e.Run(runner.WithLimits(context.Background(), runner.Limits{Wall: wall, Idle: 30 * time.Second, Stdout: io.Discard}),
-			bin, d, []string{helperPrefix + "tree"}, env)
+			"/usr/bin/perl", d, []string{"-e", perlTree}, env)
 	}()
 	waitPids(t, pids, 3, wall*80/100)
 	leader, mid, _ := treeRoles(t, pids)
@@ -944,6 +1049,10 @@ func TestB1_09a_WallBackstopKillsTree(t *testing.T) {
 		}
 	}
 	end := time.Now()
+	// r4: Run returns with its leader reaped, not a zombie its caller still sees as a live pid.
+	if kerr := syscall.Kill(leader, 0); kerr != syscall.ESRCH {
+		t.Fatalf("when Run returned, its leader %d was not reaped (kill 0: %v)", leader, kerr)
+	}
 	ran := leaderRan(t, starts)
 	if !errors.Is(err, runner.ErrWall) {
 		t.Fatalf("err %v, want ErrWall", err)
@@ -973,32 +1082,78 @@ func TestB1_09a_WallBackstopKillsTree(t *testing.T) {
 	}
 }
 
-func TestB1_09a_IdleBackstopKillsTree(t *testing.T) {
-	env, pids, _, starts := treeEnv(t, t.TempDir())
-	bin := self(t)
-	const idle = 700 * time.Millisecond
-	err, took := runExec(t, context.Background(), bin, fileDigest(bin), []string{helperPrefix + "tree"}, env,
-		runner.Limits{Wall: 30 * time.Second, Idle: idle, Stdout: io.Discard})
-	end := time.Now()
-	if !errors.Is(err, runner.ErrIdle) {
-		t.Fatalf("silent tree: err %v, want ErrIdle", err)
-	}
-	if ran := leaderRan(t, starts); took < idle-50*time.Millisecond || end.Sub(ran) > idle+time.Second {
-		t.Fatalf("silent tree: Run returned %v after it was called and %v after the leader began; idle is %v", took, end.Sub(ran), idle)
-	}
-	assertDead(t, pids, "idle backstop")
+// stampWriter keeps what it is given and when the first byte came.
+type stampWriter struct {
+	mu    sync.Mutex
+	first time.Time
+	b     bytes.Buffer
+}
 
-	// Control: a worker that writes every 100ms for 2.5s outlives an idle of 1.5s. (The idle here is
-	// longer than the silent tree's: the first byte waits on exec, and measured, exec alone has
-	// exceeded 700ms under load.)
-	var out bytes.Buffer
-	err, took = runExec(t, context.Background(), bin, fileDigest(bin), []string{helperPrefix + "chatty"},
-		[]string{"B1_09A_N=25"}, runner.Limits{Wall: 30 * time.Second, Idle: 1500 * time.Millisecond, Stdout: &out})
-	if err != nil || took < 2400*time.Millisecond {
-		t.Fatalf("chatty worker: err %v after %v; output must reset the idle timer", err, took)
+func (w *stampWriter) Write(p []byte) (int, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if w.first.IsZero() && len(p) > 0 {
+		w.first = time.Now()
 	}
-	if out.String() != strings.Repeat("x\n", 25) {
-		t.Fatalf("chatty worker: stdout %q, want 25 lines delivered to Limits.Stdout", out.String())
+	return w.b.Write(p)
+}
+
+func (w *stampWriter) First() time.Time { w.mu.Lock(); defer w.mu.Unlock(); return w.first }
+func (w *stampWriter) String() string   { w.mu.Lock(); defer w.mu.Unlock(); return w.b.String() }
+
+// r4: the idle clock is judged from the worker's first byte, a handshake: the tree's perl leader
+// writes "ready" the moment it runs, then nothing. perl runs in place, so exec is not what is timed
+// (a copied Go leader measured over 700ms to exec under 4x parallel load). An attempt where exec
+// still outlasted Idle ends in ErrIdle with no byte at all: it measured nothing about output and is
+// retried, at most three times. Idle is not widened.
+func TestB1_09a_IdleBackstopKillsTree(t *testing.T) {
+	const idle = 700 * time.Millisecond
+	perl := fileDigest("/usr/bin/perl")
+	for attempt := 1; ; attempt++ {
+		env, pids, _, _ := treeEnv(t, t.TempDir())
+		var w stampWriter
+		err, _ := runExec(t, context.Background(), "/usr/bin/perl", perl, []string{"-e", perlTree}, append(env, "B1_09A_READY=1"),
+			runner.Limits{Wall: 30 * time.Second, Idle: idle, Stdout: &w})
+		end := time.Now()
+		if !errors.Is(err, runner.ErrIdle) {
+			t.Fatalf("silent tree: err %v, want ErrIdle", err)
+		}
+		assertDead(t, pids, "idle backstop")
+		first := w.First()
+		if first.IsZero() {
+			if attempt == 3 {
+				t.Fatalf("silent tree: in 3 attempts exec outlasted the idle of %v every time; nothing was measured", idle)
+			}
+			t.Logf("silent tree, attempt %d: ErrIdle before the leader's first byte (exec outlasted idle); retrying", attempt)
+			continue
+		}
+		if w.String() != "ready\n" {
+			t.Fatalf("silent tree: stdout %q, want %q", w.String(), "ready\n")
+		}
+		if d := end.Sub(first); d < idle-50*time.Millisecond || d > idle+time.Second {
+			t.Fatalf("silent tree: Run returned %v after the leader's only byte; idle is %v", d, idle)
+		}
+		break
+	}
+
+	// Control: a worker that writes every 100ms for 1.5s outlives an idle of 700ms, and every byte
+	// reaches Limits.Stdout. An attempt with no byte before ErrIdle is retried the same way.
+	for attempt := 1; ; attempt++ {
+		var w stampWriter
+		err, _ := runExec(t, context.Background(), "/usr/bin/perl", perl, []string{"-e", perlChatty},
+			[]string{"B1_09A_N=15"}, runner.Limits{Wall: 30 * time.Second, Idle: idle, Stdout: &w})
+		end := time.Now()
+		if errors.Is(err, runner.ErrIdle) && w.First().IsZero() && attempt < 3 {
+			t.Logf("chatty worker, attempt %d: ErrIdle before its first byte (exec outlasted idle); retrying", attempt)
+			continue
+		}
+		if err != nil || w.First().IsZero() || end.Sub(w.First()) < 1300*time.Millisecond {
+			t.Fatalf("chatty worker: err %v, first byte at %v, returned %v after it; output must reset the idle timer", err, w.First(), end.Sub(w.First()))
+		}
+		if w.String() != strings.Repeat("x\n", 15) {
+			t.Fatalf("chatty worker: stdout %q, want 15 lines delivered to Limits.Stdout", w.String())
+		}
+		break
 	}
 }
 
@@ -1110,6 +1265,11 @@ func TestB1_09a_RunnerAppliesLimits(t *testing.T) {
 		t.Errorf("job-ok: err %v, stdout %q; want nil and every byte at job.Limits.Stdout", err, out.String())
 	}
 	status("job-ok", runner.StatusExited)
+	// r4: a job id runs once. job-ok again is ErrSpec, before Launch, and its record is unchanged.
+	if err, _ := run(context.Background(), job("job-ok", "chatty", map[string]string{"B1_09A_N": "1"}, long), 10*time.Second); !errors.Is(err, runner.ErrSpec) || fl.count() != 1 {
+		t.Errorf("job-ok run again: err %v, Launch calls %d; want ErrSpec and still 1", err, fl.count())
+	}
+	status("job-ok", runner.StatusExited)
 
 	wd := t.TempDir()
 	wantWd, _ := filepath.EvalSymlinks(wd)
@@ -1172,7 +1332,7 @@ func TestB1_09a_DaemonKilledMidJob(t *testing.T) {
 	bin := self(t)
 	state := t.TempDir()
 	pids := filepath.Join(t.TempDir(), "pids")
-	daemonMidJob(t, state, pids)
+	daemonMidJob(t, state, pids, "tree", 3)
 
 	fl := &fakeLauncher{exec: mustExec(t, workerConfig())}
 	r, err := runner.New(runner.Config{State: state, Capacity: 2, Launcher: fl})
@@ -1207,6 +1367,11 @@ func TestB1_09a_DaemonKilledMidJob(t *testing.T) {
 	if fl.count() != 0 {
 		t.Fatalf("Reconcile relaunched the job (%d launches); it must only kill and record", fl.count())
 	}
+	// r4: the interrupted job id cannot be run again, on this Runner or any other (Q3).
+	if err := r.Run(context.Background(), runner.Job{Req: request("job-d", bin, []string{helperPrefix + "sleep"}, map[string]string{}),
+		Limits: runner.Limits{Wall: 30 * time.Second, Idle: 30 * time.Second, Stdout: io.Discard}}); !errors.Is(err, runner.ErrSpec) || fl.count() != 0 {
+		t.Fatalf("job-d run again after Reconcile: err %v, Launch calls %d; want ErrSpec and none", err, fl.count())
+	}
 	// Q3: interrupted is terminal. Another restart neither requeues nor ends it again.
 	fl3 := &fakeLauncher{exec: mustExec(t, workerConfig())}
 	r3, err := runner.New(runner.Config{State: state, Capacity: 2, Launcher: fl3})
@@ -1226,7 +1391,7 @@ func TestB1_09a_DaemonKilledMidJob(t *testing.T) {
 func TestB1_09a_ReconcileAfterLeaderDied(t *testing.T) {
 	state := t.TempDir()
 	pids := filepath.Join(t.TempDir(), "pids")
-	daemonMidJob(t, state, pids)
+	daemonMidJob(t, state, pids, "tree", 3)
 	leader, mid, gc := treeRoles(t, pids)
 	syscall.Kill(leader, syscall.SIGKILL)
 	for end := time.Now().Add(2 * time.Second); running(leader) && time.Now().Before(end); {
@@ -1304,7 +1469,7 @@ func TestB1_09a_ProcIdentity(t *testing.T) {
 func TestB1_09a_ReconcileGuardsPidReuse(t *testing.T) {
 	state := t.TempDir()
 	pids := filepath.Join(t.TempDir(), "pids")
-	daemonMidJob(t, state, pids)
+	daemonMidJob(t, state, pids, "tree", 3)
 	reused := func(pid int) (runner.Identity, error) {
 		id, err := runner.ProcIdentity(pid)
 		if err == nil {
@@ -1481,6 +1646,316 @@ func TestB1_09a_ExecInPlaceOrCopy(t *testing.T) {
 		t.Fatal(err)
 	}
 	copied("a path through a symlink into a group-writable dir", mustExec(t, other), filepath.Join(root, "pub", "lnk", "w"))
+	// 6e. r4: the world-write bit alone, two levels up (mode 0757: the group bits grant nothing).
+	mk("o", 0o757)
+	copied("a world-writable ancestor", mustExec(t, other), put(mk("o/x", 0o755)))
+}
+
+// r4 (HIGH, found by review): a leader that calls setpgid(0, getpgid(getppid())) leaves its own
+// process group before any scan, and with it every group-based walk. It is still the tree: dead, with
+// its child, when Run returns, and after Reconcile when its recorded identity matches. Exec runs in a
+// host process here, so the group the leader joins is the host's, never this test's.
+func TestB1_09a_LeaderLeavesGroup(t *testing.T) {
+	bin := self(t)
+	pids := filepath.Join(t.TempDir(), "pids")
+	reap(t, pids)
+	h := exec.Command(bin, helperPrefix+"exechost")
+	h.Env = []string{"B1_09A_SELF=" + bin, "B1_09A_PIDS=" + pids, "B1_09A_MODE=joinparent", "B1_09A_WALL=1s", "TMPDIR=" + os.TempDir()}
+	h.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	var out bytes.Buffer
+	h.Stdout = &out
+	if err := h.Start(); err != nil {
+		t.Fatal(err)
+	}
+	hpid := filepath.Join(t.TempDir(), "host.pid")
+	appendLine(hpid, strconv.Itoa(h.Process.Pid))
+	reap(t, hpid)
+	done := make(chan error, 1)
+	go func() { done <- h.Wait() }()
+	select {
+	case <-done:
+	case <-time.After(15 * time.Second):
+		t.Fatal("Exec, leader left its group: Run has not returned in 15s (wall 1s)")
+	}
+	if n := len(readPids(pids)); n != 2 {
+		t.Fatalf("Exec, leader left its group: %d of 2 pids recorded; Run returned %q", n, out.String())
+	}
+	if !strings.Contains(out.String(), runner.ErrWall.Error()) {
+		t.Errorf("Exec, leader left its group: Run returned %q, want ErrWall", out.String())
+	}
+	assertDead(t, pids, "Exec, the leader left its group")
+
+	state := t.TempDir()
+	pids2 := filepath.Join(t.TempDir(), "pids")
+	daemonMidJob(t, state, pids2, "joinparent", 2)
+	leader := readPids(pids2)[0]
+	if k, ok := kinfo(leader); !ok || k.pgid == leader {
+		t.Fatalf("precondition: leader %d is still the leader of its own group (%+v, %v)", leader, k, ok)
+	}
+	fl := &fakeLauncher{exec: mustExec(t, workerConfig())}
+	r, err := runner.New(runner.Config{State: state, Capacity: 2, Launcher: fl})
+	if err != nil {
+		t.Fatalf("restart: %v", err)
+	}
+	if err := r.Reconcile(context.Background()); err != nil {
+		t.Fatalf("Reconcile: %v", err)
+	}
+	assertDead(t, pids2, "Reconcile, the leader left its group")
+	if st, err := r.Status("job-d"); err != nil || st != runner.StatusInterrupted {
+		t.Fatalf("after Reconcile job-d is %q (%v), want interrupted", st, err)
+	}
+}
+
+// r4: a leader that exits 0 when the 90% SIGINT reaches it was ended by the wall: ErrWall, not nil.
+func TestB1_09a_WallAfterGracefulExit(t *testing.T) {
+	bin := self(t)
+	dir := t.TempDir()
+	pids, ints := filepath.Join(dir, "pids"), filepath.Join(dir, "int")
+	reap(t, pids)
+	const wall = 2 * time.Second
+	err, took := runExec(t, context.Background(), bin, fileDigest(bin), []string{helperPrefix + "graceful"},
+		[]string{"B1_09A_PIDS=" + pids, "B1_09A_INT=" + ints}, runner.Limits{Wall: wall, Idle: 30 * time.Second, Stdout: io.Discard})
+	if len(readPids(ints)) == 0 {
+		t.Fatalf("the leader never received the 90%% SIGINT (err %v after %v)", err, took)
+	}
+	if !errors.Is(err, runner.ErrWall) {
+		t.Fatalf("a leader that exited 0 on the 90%% SIGINT: err %v, want ErrWall (the wall ended it)", err)
+	}
+	if took > wall+time.Second {
+		t.Fatalf("Run returned %v after it was called; the wall is %v", took, wall)
+	}
+	assertDead(t, pids, "graceful exit at the SIGINT")
+}
+
+// r4: a leader that keeps spawning setsid children while it is killed. A kill that does not freeze
+// the tree first loses each child forked after its last scan: the parent dies, launchd adopts the
+// child, and it is in no group the walk knows. Every child recorded must be dead.
+func TestB1_09a_KillFreezesBreeder(t *testing.T) {
+	bin := self(t)
+	pids := filepath.Join(t.TempDir(), "pids")
+	reap(t, pids)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func() {
+		for end := time.Now().Add(10 * time.Second); len(readPids(pids)) < 20 && time.Now().Before(end); {
+			time.Sleep(5 * time.Millisecond)
+		}
+		cancel()
+	}()
+	err, _ := runExec(t, ctx, bin, fileDigest(bin), []string{helperPrefix + "breeder"},
+		[]string{"B1_09A_SELF=" + bin, "B1_09A_PIDS=" + pids}, runner.Limits{Wall: 30 * time.Second, Idle: 30 * time.Second, Stdout: io.Discard})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("err %v, want context.Canceled", err)
+	}
+	if n := len(readPids(pids)); n < 20 {
+		t.Fatalf("only %d pids recorded; the breeder never got going", n)
+	}
+	assertDead(t, pids, "a breeding tree")
+}
+
+// r4: mid spawns a setsid child and exits 600ms later, leaving the child with ppid 1 and its own
+// group. Exec rescans a running tree at least every 250ms, so it saw the child while mid lived; the
+// cancel, well after mid exited, must kill it.
+func TestB1_09a_OrphanAfterScanKilled(t *testing.T) {
+	bin := self(t)
+	pids := filepath.Join(t.TempDir(), "pids")
+	reap(t, pids)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	orphaned := make(chan bool, 1)
+	go func() {
+		defer cancel()
+		for end := time.Now().Add(10 * time.Second); len(readPids(pids)) < 3 && time.Now().Before(end); {
+			time.Sleep(10 * time.Millisecond)
+		}
+		for end := time.Now().Add(3 * time.Second); time.Now().Before(end); time.Sleep(20 * time.Millisecond) {
+			for _, p := range readPids(pids) {
+				if k, ok := kinfo(p); ok && !k.zombie && k.ppid == 1 {
+					time.Sleep(300 * time.Millisecond)
+					orphaned <- true
+					return
+				}
+			}
+		}
+		orphaned <- false
+	}()
+	err, _ := runExec(t, ctx, bin, fileDigest(bin), []string{helperPrefix + "orphaner"},
+		[]string{"B1_09A_SELF=" + bin, "B1_09A_PIDS=" + pids}, runner.Limits{Wall: 30 * time.Second, Idle: 30 * time.Second, Stdout: io.Discard})
+	if !<-orphaned {
+		t.Fatalf("precondition: the setsid child was never orphaned (pids %v, err %v)", readPids(pids), err)
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("err %v, want context.Canceled", err)
+	}
+	assertDead(t, pids, "a descendant orphaned after a scan")
+}
+
+// r4: "cannot judge" is not "interrupted". When Identify fails with anything but ESRCH, Reconcile
+// signals nothing, ends nothing, leaves the job running, returns the error, and Run stays refused. A
+// later Reconcile that can judge interrupts it.
+func TestB1_09a_ReconcileCannotJudgeStaysRunning(t *testing.T) {
+	bin := self(t)
+	state := t.TempDir()
+	pids := filepath.Join(t.TempDir(), "pids")
+	daemonMidJob(t, state, pids, "tree", 3)
+	blind := func(int) (runner.Identity, error) { return runner.Identity{}, errors.New("b109a: identity unreadable") }
+	fl := &fakeLauncher{exec: mustExec(t, workerConfig())}
+	r, err := runner.New(runner.Config{State: state, Capacity: 2, Launcher: fl, Identify: blind})
+	if err != nil {
+		t.Fatalf("restart: %v", err)
+	}
+	if err := r.Reconcile(context.Background()); err == nil {
+		t.Fatal("Reconcile could not judge job-d's leader and returned nil")
+	}
+	time.Sleep(300 * time.Millisecond)
+	for _, p := range readPids(pids) {
+		if !running(p) {
+			t.Errorf("Reconcile signalled pid %d although it could not identify the leader", p)
+		}
+	}
+	if st, err := r.Status("job-d"); err != nil || st != runner.StatusRunning {
+		t.Errorf("job-d is %q (%v) after an unjudgeable Reconcile, want running", st, err)
+	}
+	if fl.tries() != 0 {
+		t.Errorf("Launcher.End was called %d times for a job Reconcile could not judge", fl.tries())
+	}
+	other := runner.Job{Req: request("job-e", bin, []string{helperPrefix + "sleep"}, map[string]string{}),
+		Limits: runner.Limits{Wall: 30 * time.Second, Idle: 30 * time.Second, Stdout: io.Discard}}
+	if err := r.Run(context.Background(), other); !errors.Is(err, runner.ErrState) || fl.count() != 0 {
+		t.Errorf("Run after a failed Reconcile: err %v, Launch calls %d; want ErrState and none", err, fl.count())
+	}
+	fl2 := &fakeLauncher{exec: mustExec(t, workerConfig())}
+	r2, err := runner.New(runner.Config{State: state, Capacity: 2, Launcher: fl2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := r2.Reconcile(context.Background()); err != nil {
+		t.Fatalf("Reconcile that can judge: %v", err)
+	}
+	assertDead(t, pids, "the Reconcile that could judge")
+	if st, err := r2.Status("job-d"); err != nil || st != runner.StatusInterrupted || len(fl2.endCalls()) != 1 {
+		t.Fatalf("job-d is %q (%v), ends %q; want interrupted and ended once", st, err, fl2.endCalls())
+	}
+}
+
+// r4: when Launcher.End fails, the job stays running, Reconcile returns the error and Run stays
+// refused; the next Reconcile retries it and, End now succeeding, interrupts it.
+func TestB1_09a_ReconcileEndFailsStaysRunning(t *testing.T) {
+	bin := self(t)
+	state := t.TempDir()
+	pids := filepath.Join(t.TempDir(), "pids")
+	daemonMidJob(t, state, pids, "tree", 3)
+	fl := &fakeLauncher{exec: mustExec(t, workerConfig()), endErr: errors.New("b109a: launcher unavailable")}
+	r, err := runner.New(runner.Config{State: state, Capacity: 2, Launcher: fl})
+	if err != nil {
+		t.Fatalf("restart: %v", err)
+	}
+	if err := r.Reconcile(context.Background()); err == nil {
+		t.Fatal("Launcher.End failed and Reconcile returned nil")
+	}
+	if st, err := r.Status("job-d"); err != nil || st != runner.StatusRunning {
+		t.Errorf("job-d is %q (%v) after End failed, want running", st, err)
+	}
+	other := runner.Job{Req: request("job-e", bin, []string{helperPrefix + "sleep"}, map[string]string{}),
+		Limits: runner.Limits{Wall: 30 * time.Second, Idle: 30 * time.Second, Stdout: io.Discard}}
+	if err := r.Run(context.Background(), other); !errors.Is(err, runner.ErrState) || fl.count() != 0 {
+		t.Errorf("Run after a failed Reconcile: err %v, Launch calls %d; want ErrState and none", err, fl.count())
+	}
+	fl.setEndErr(nil)
+	if err := r.Reconcile(context.Background()); err != nil {
+		t.Fatalf("Reconcile retried with End working: %v", err)
+	}
+	assertDead(t, pids, "the retried Reconcile")
+	if st, err := r.Status("job-d"); err != nil || st != runner.StatusInterrupted {
+		t.Fatalf("job-d is %q (%v) after the retry, want interrupted", st, err)
+	}
+	if want := []string{"job-d " + lease("job-d")}; !slices.Equal(fl.endCalls(), want) {
+		t.Fatalf("successful Launcher.End calls %q, want %q", fl.endCalls(), want)
+	}
+}
+
+// r4: the fail-closed half of the ACL ruling, through the ExecConfig.ACLWritable seam (no ACL is
+// written). For uid 4242 a script under the private root runs in place when every path answers
+// (false, nil), and Exec asked about every one of them; one unreadable ACL anywhere in the resolved
+// chain, or one writable, takes the copy path.
+func TestB1_09a_ExecACLSeam(t *testing.T) {
+	other := runner.ExecConfig{WorkerUID: 4242, WorkerRoots: []string{"/nonexistent-b109a-root"}}
+	var hst syscall.Stat_t
+	home, _ := os.UserHomeDir()
+	if err := syscall.Stat(home, &hst); err != nil {
+		t.Fatal(err)
+	}
+	other.WorkerGIDs = []int{int(hst.Gid)}
+	root := privateRoot(t, other)
+	dir := filepath.Join(root, "p", "q")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, d := range []string{dir, filepath.Dir(dir)} {
+		if err := os.Chmod(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	bin := filepath.Join(dir, "w")
+	if err := os.WriteFile(bin, []byte("#!/bin/sh\nprintf %s \"$0\"\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(bin, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	var chain []string
+	for p := bin; ; p = filepath.Dir(p) {
+		chain = append(chain, p)
+		if p == "/" {
+			break
+		}
+	}
+	type verdict struct {
+		writable bool
+		err      error
+	}
+	run := func(at map[string]verdict) (string, []string, error) {
+		var mu sync.Mutex
+		var asked []string
+		c := other
+		c.ACLWritable = func(p string) (bool, error) {
+			mu.Lock()
+			asked = append(asked, p)
+			mu.Unlock()
+			v := at[p]
+			return v.writable, v.err
+		}
+		var out bytes.Buffer
+		err := mustExec(t, c).Run(runner.WithLimits(context.Background(), runner.Limits{Wall: 20 * time.Second, Idle: 20 * time.Second, Stdout: &out}),
+			bin, fileDigest(bin), nil, []string{})
+		mu.Lock()
+		defer mu.Unlock()
+		return strings.TrimSpace(out.String()), slices.Clone(asked), err
+	}
+	got, asked, err := run(nil)
+	if err != nil || got != bin {
+		t.Fatalf("control, every ACL readable and granting nothing: ran as %q (err %v), want in place as %q", got, err, bin)
+	}
+	for _, p := range chain {
+		if !slices.Contains(asked, p) {
+			t.Errorf("control: Exec never asked ACLWritable about %s (asked %q)", p, asked)
+		}
+	}
+	unreadable := errors.New("b109a: ACL unreadable")
+	for _, c := range []struct {
+		name string
+		at   map[string]verdict
+	}{
+		{"unreadable ACL on the binary", map[string]verdict{bin: {false, unreadable}}},
+		{"unreadable ACL on its dir", map[string]verdict{dir: {false, unreadable}}},
+		{"unreadable ACL on /", map[string]verdict{"/": {false, unreadable}}},
+		{"unreadable ACL that also claims writable=false", map[string]verdict{root: {false, unreadable}}},
+		{"a writable ACL three levels up", map[string]verdict{root: {true, nil}}},
+	} {
+		if got, _, err := run(c.at); err != nil || got == "" || got == bin {
+			t.Errorf("%s: ran as %q (err %v), want a private copy", c.name, got, err)
+		}
+	}
 }
 
 // aclGate opts in to the one test that writes ACLs. The permission system refused the chmod +a
