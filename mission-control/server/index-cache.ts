@@ -1374,8 +1374,35 @@ export function classifyDispatches(entries: DispatchEntry[]): DispatchWork {
 // call, O_APPEND, never an edit. The runner appends later transitions to the same file through
 // this same function, so there is one writer implementation and not two.
 
-/** Appends one board transition. Throws on failure — the route turns that into a 500. */
+/** True when the file exists, is non-empty, and its last byte is not a newline: a writer died mid-line. */
+function endsMidLine(file: string): boolean {
+  let fd: number;
+  try {
+    fd = fs.openSync(file, 'r');
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return false;
+    throw e;
+  }
+  try {
+    const { size } = fs.fstatSync(fd);
+    if (size === 0) return false;
+    const last = Buffer.alloc(1);
+    fs.readSync(fd, last, 0, 1, size - 1);
+    return last[0] !== 0x0a;
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
+/**
+ * Appends one JSONL line. Throws on failure — the route turns that into a 500.
+ *
+ * A torn tail (a crashed writer left a line with no newline) would otherwise swallow this line:
+ * the two would concatenate into one unparseable line and the reader would skip both, so a 200
+ * would mean nothing. When the file does not end in a newline the append starts with one — in the
+ * same write, so the line and its separator cannot be split apart.
+ */
 export function appendMissionLine(line: object, file: string): void {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.appendFileSync(file, JSON.stringify(line) + '\n', 'utf8');
+  fs.appendFileSync(file, (endsMidLine(file) ? '\n' : '') + JSON.stringify(line) + '\n', 'utf8');
 }
