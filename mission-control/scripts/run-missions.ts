@@ -27,6 +27,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { appendMissionLine } from '../server/index-cache.ts';
+import { expireOrphanedDecisions, withDecisions } from './decisions.ts';
 import {
   boardPath,
   eventsPath,
@@ -208,7 +209,7 @@ export function createWriteTracker() {
   };
 }
 
-async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: RunnerDeps) {
+async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: RunnerDeps, extraPrompt: string[] = []) {
   const prompt = [
     `You are the Builder on a mission from a Mission Control board.`,
     `Mission title: ${m.title}`,
@@ -216,6 +217,7 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
     ``,
     `Work in the current directory. Write only the file(s) the goal names. Do not modify anything else.`,
     `When done, reply with one short paragraph naming each file you wrote.`,
+    ...extraPrompt,
   ].join('\n');
   const launchId = randomUUID();
   const args = builderArgs(prompt);
@@ -887,7 +889,18 @@ async function runClaimed(m: Mission, deps: RunnerDeps, stop: StopWatch) {
   // Asked to stop while still queued (or between claim and launch): nothing is ever launched.
   if (await settleIfStopped(m, stop, emit, [])) return;
   console.log(`[runner] mission ${m.id} "${m.title}" — builder starting`);
-  const built = await runBuilder(m, emit, deps);
+  const built = await withDecisions(m.id, (extra) => runBuilder(m, emit, deps, extra), {
+    note: (text, data) => emit(RUNNER, { kind: 'receipt', text, data }),
+    // A Stop (or the runner's own shutdown) while the founder is being asked must end the wait now,
+    // not at the decision timeout: nothing is running, so the stop watcher has nothing to signal.
+    interrupted: () => stop.requested(),
+  });
+  if (!built) {
+    // No answer in time (withDecisions put the card back on Waiting), or the wait was interrupted by
+    // a stop (it expired the question and wrote nothing): the second case settles `stopped` here.
+    await settleIfStopped(m, stop, emit, []);
+    return;
+  }
   if (await settleIfStopped(m, stop, emit, [BUILDER])) return;
   if (built.refused) {
     // Not a generic failure, and not a Done card. The Builder broke the one-process rule, so its
@@ -950,6 +963,8 @@ async function main() {
     const reaped = await reapOrphanGroups(id);
     if (reaped.length > 0) console.log(`[runner] mission ${id} — terminated ${reaped.length} orphaned worker process group(s): ${reaped.join(', ')}`);
   }
+  const orphaned = expireOrphanedDecisions();
+  if (orphaned.length) console.log(`[runner] expired ${orphaned.length} decision(s) left pending by a runner that is gone`);
   for (;;) {
     if (shuttingDown) {
       await new Promise((r) => setTimeout(r, 1000)); // the handler owns the exit; launch nothing meanwhile

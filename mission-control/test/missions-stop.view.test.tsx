@@ -9,7 +9,7 @@ import type { Mission } from '../server/missions.ts';
 
 const base: Mission = { id: '11111111-1111-4111-8111-111111111111', title: 'T', goal: 'G', status: 'working', createdAt: 1, updatedAt: 1 };
 const html = (m: Partial<Mission>, stopping = false) =>
-  renderToStaticMarkup(<Card m={{ ...base, ...m }} now={2} selected={false} stopping={stopping} onSelect={() => {}} onLaunch={() => {}} onStop={() => {}} />);
+  renderToStaticMarkup(<Card m={{ ...base, ...m }} now={2} selected={false} needsYou={false} stopping={stopping} onSelect={() => {}} onLaunch={() => {}} onStop={() => {}} />);
 // The button is the only <button> a working card has, and its attributes are what is asserted.
 const isDisabled = (b: string | undefined) => / disabled=""/.test(b ?? '');
 const button = (h: string) => /<button[^>]*>.*?<\/button>/s.exec(h)?.[0];

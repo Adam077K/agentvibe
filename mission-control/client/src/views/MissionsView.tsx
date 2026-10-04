@@ -9,7 +9,7 @@
 // Polling, not SSE: see server/routes/missions.ts for why.
 
 import { useCallback, useEffect, useState, type DragEvent, type FormEvent } from 'react';
-import type { Mission, MissionsPayload, TeamView } from '../api.ts';
+import type { DecisionsPayload, Mission, MissionsPayload, TeamView } from '../api.ts';
 import { formatRelative } from '../format.ts';
 import { HeadlineBar } from '../ui.tsx';
 import type { Freshness } from '../App.tsx';
@@ -23,7 +23,7 @@ function columnOf(m: Mission): Column {
   return 'Done';
 }
 
-function usePoll<T>(url: string | null, ms: number): { data: T | null; error: string | null; loadedAt: number | null; failedAt: number | null; refetch: () => void } {
+export function usePoll<T>(url: string | null, ms: number): { data: T | null; error: string | null; loadedAt: number | null; failedAt: number | null; refetch: () => void } {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadedAt, setLoadedAt] = useState<number | null>(null);
@@ -79,6 +79,7 @@ export function Card({
   m,
   now,
   selected,
+  needsYou,
   stopping,
   onSelect,
   onLaunch,
@@ -87,6 +88,8 @@ export function Card({
   m: Mission;
   now: number;
   selected: boolean;
+  /** The mission has a pending Decision waiting on the founder. */
+  needsYou: boolean;
   /** A stop request for this card is in flight from this page. */
   stopping: boolean;
   onSelect: () => void;
@@ -104,7 +107,13 @@ export function Card({
     >
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-[13px] text-text">{m.title}</span>
-        <StatusPill m={m} />
+        {needsYou ? (
+          <span className="fig text-[11px] text-warn" title="This mission's Builder is waiting on an answer in the Decisions tab.">
+            needs you
+          </span>
+        ) : (
+          <StatusPill m={m} />
+        )}
       </div>
       <p className="mt-1 line-clamp-3 text-[12px] text-muted" title={m.goal}>
         {m.goal}
@@ -207,6 +216,10 @@ function TeamPanel({ mission, now }: { mission: Mission; now: number }) {
 
 export function MissionsView({ now, onFreshness }: { now: number; onFreshness?: (f: Freshness) => void }) {
   const board = usePoll<MissionsPayload>('/api/missions', 1500);
+  // A card "needs you" while a decision for it is pending. Derived here rather than written to the
+  // board: the board fold stays one state machine, and the answer lives in exactly one file.
+  const decisions = usePoll<DecisionsPayload>('/api/decisions', 1500);
+  const needsYou = new Set((decisions.data?.pending ?? []).map((d) => d.missionId));
   useEffect(() => onFreshness?.({ loadedAt: board.loadedAt, failedAt: board.failedAt, loading: board.loadedAt === null && board.failedAt === null }), [board.loadedAt, board.failedAt, onFreshness]);
   const [selected, setSelected] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -293,6 +306,7 @@ export function MissionsView({ now, onFreshness }: { now: number; onFreshness?: 
                     m={m}
                     now={now}
                     selected={m.id === selected}
+                    needsYou={needsYou.has(m.id)}
                     stopping={stopping.has(m.id)}
                     onSelect={() => setSelected(m.id)}
                     onLaunch={() => void launch(m.id)}

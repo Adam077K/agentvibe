@@ -13,6 +13,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { appendMissionLine } from '../server/index-cache.ts';
+import { decisionsPath, foldDecisions, readDecisionLines } from '../server/decisions.ts';
+import { withDecisions, type BuilderRound } from '../scripts/decisions.ts';
 import { STOP_REQUESTED, boardPath, foldBoard, readBoardLines, readEvents, foldTeam, type MissionLine } from '../server/missions.ts';
 import { childrenPath, isOurs, processIdentity, reapOrphanGroups, reconcileWorking, validChildRecord } from '../scripts/run-missions.ts';
 
@@ -466,6 +468,122 @@ describe('a worker that leaves a process behind and exits normally', () => {
     const pids = pidsOf('claude') ?? JSON.parse(fs.readFileSync(path.join(work, 'claude.pids'), 'utf8'));
     expect(alive(pids.grandchild)).toBe(false);
   }, 40_000);
+});
+
+// ── a Stop while the runner is waiting on a Decision ─────────────────────────────────────────
+//
+// Nothing is running during the wait, so the stop watcher has no process group to signal: the wait
+// itself must notice. It must end promptly (not at the decision timeout), expire the question so it
+// leaves "pending", leave the card for settleIfStopped (not put it back on Waiting), and not resume
+// the Builder.
+
+// A Builder that finishes cleanly and ends on a DECISION line, counting its launches.
+const ASKING_CLAUDE = `#!/usr/bin/env node
+const fs = require('node:fs');
+fs.appendFileSync(require('node:path').join(process.env.FAKE_DIR, 'claude.runs'), 'x');
+const out = (o) => console.log(JSON.stringify(o));
+out({ type: 'system', subtype: 'init', model: 'fake', session_id: 's1' });
+out({ type: 'result', is_error: false, result: 'Need a choice.\\nDECISION: Which format? || markdown | plain', total_cost_usd: 0.01, subtype: 'success' });
+`;
+const runs = () => (fs.existsSync(path.join(work, 'claude.runs')) ? fs.readFileSync(path.join(work, 'claude.runs'), 'utf8').length : 0);
+const decisions = () => foldDecisions(readDecisionLines(decisionsPath()));
+
+describe('Stop while waiting on a Decision', () => {
+  const setup = () => {
+    process.env.MC_MISSIONS_DIR = dir; // decisionsPath() follows the board
+    const bins = { claude: mk('fake-claude', ASKING_CLAUDE), codex: mk('fake-codex', PASSING_CODEX) };
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    return bins;
+  };
+  afterEach(() => {
+    delete process.env.MC_MISSIONS_DIR;
+  });
+
+  test('the wait ends promptly (not at the 10-minute decision timeout), the question is expired, the card is stopped, the Builder is not resumed', async () => {
+    const bins = setup();
+    const { exited } = startRunner(bins, { MC_DECISION_TIMEOUT_MS: '600000' });
+    await until('pending decision', () => decisions().find((d) => d.status === 'pending'));
+    expect(mission(ID).status).toBe('working');
+
+    const t0 = Date.now();
+    requestStop(ID);
+    expect(await exited).toBe(0);
+    expect(Date.now() - t0).toBeLessThan(8_000);
+
+    expect(mission(ID).status).toBe('stopped');
+    expect(mission(ID).error).toBeUndefined(); // not decision_timeout, and not put back on Waiting first
+    expect(readBoardLines(board()).filter((l) => l.status === 'waiting')).toHaveLength(1); // only the creation line
+    expect(decisions().map((d) => d.status)).toEqual(['expired']);
+    expect(runs()).toBe(1); // asked once; never resumed
+    expect(fs.existsSync(path.join(work, 'codex.ran'))).toBe(false);
+    expect(fs.existsSync(path.join(dir, ID, 'runner.lock'))).toBe(false);
+  }, 40_000);
+
+  test('SIGINT during the wait: same outcome, exit 130', async () => {
+    const bins = setup();
+    const { child, exited } = startRunner(bins, { MC_DECISION_TIMEOUT_MS: '600000' });
+    await until('pending decision', () => decisions().find((d) => d.status === 'pending'));
+    child.kill('SIGINT');
+    expect(await exited).toBe(130);
+    expect(mission(ID).status).toBe('stopped');
+    expect(decisions().map((d) => d.status)).toEqual(['expired']);
+    expect(runs()).toBe(1);
+  }, 40_000);
+});
+
+describe('withDecisions — interrupted', () => {
+  const round = (summary: string): BuilderRound => ({ ok: true, refused: false, files: [], summary });
+  const clock = () => {
+    let t = 1_000_000;
+    return { now: () => t, sleep: async (ms: number) => void (t += ms) };
+  };
+
+  test('interrupted mid-wait: null, question expired, NO waiting line written, Builder not resumed', async () => {
+    process.env.MC_MISSIONS_DIR = dir;
+    try {
+      put(waiting(ID));
+      put({ id: ID, ts: 2, status: 'working' });
+      const file = decisionsPath();
+      let n = 0;
+      let polls = 0;
+      const out = await withDecisions(ID, async () => (n++, round('DECISION: q? || a | b')), {
+        file, pollMs: 1000, timeoutMs: 600_000, ...clock(), interrupted: () => ++polls > 3,
+      });
+      expect(out).toBeNull();
+      expect(n).toBe(1);
+      expect(foldDecisions(readDecisionLines(file)).map((d) => d.status)).toEqual(['expired']);
+      expect(readBoardLines(board()).map((l) => l.status)).toEqual(['waiting', 'working']); // the card is the caller's to settle
+    } finally {
+      delete process.env.MC_MISSIONS_DIR;
+    }
+  });
+
+  test('answered, then interrupted before the resume: the Builder is not relaunched', async () => {
+    process.env.MC_MISSIONS_DIR = dir;
+    try {
+      put(waiting(ID));
+      put({ id: ID, ts: 2, status: 'working' });
+      const file = decisionsPath();
+      let n = 0;
+      let stopped = false;
+      const c = clock();
+      const out = await withDecisions(ID, async () => (n++, round('DECISION: q? || a | b')), {
+        file, pollMs: 1000, timeoutMs: 600_000, now: c.now,
+        sleep: async (ms) => {
+          await c.sleep(ms);
+          const d = foldDecisions(readDecisionLines(file))[0]!;
+          appendMissionLine({ type: 'decision_answered', id: d.id, choice: 'a', by: 'founder', at: 1 }, file);
+          stopped = true; // the stop lands in the same breath as the answer
+        },
+        interrupted: () => stopped,
+      });
+      expect(out).toBeNull();
+      expect(n).toBe(1);
+    } finally {
+      delete process.env.MC_MISSIONS_DIR;
+    }
+  });
 });
 
 describe('reconcile and fold', () => {
