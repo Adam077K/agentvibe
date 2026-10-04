@@ -277,6 +277,28 @@
 #   names only, counting expired rows, one direction. Parts 1-2's 38 mutants re-run against this
 #   reference: unchanged (36 by the new file, 1 by HotSetValidationAndOrder, 1 equivalent).
 #   Total 54: 52 killed by the new file, 1 by a frozen test, 1 equivalent.
+#
+# RE-FREEZE r7, part 4, 2026-10-04 (a fourth commit; part 3 was pushed at 8f4b9f9; no force-push).
+#   fence_overlap_donetest_test.go ef4fddaa... -> c24c23c7... The red-team's LC-2 material
+#   ($TMPDIR lc2.e4OMxL, named by lc2.path; the brief's lc2.mTmpFm did not exist), treated as
+#   untrusted: every Go file and all 45 mutant variants scanned (stdlib strings/sort/fmt/utf8/time/
+#   json/sync/math/strconv/errors/context and the journal package only; no os, exec, net, unsafe);
+#   gen.py and run.py read and not run; their gocache NOT used (it holds prebuilt artifacts). Run
+#   in a fresh copy of this branch with this builder's own GOCACHE.
+#   Their reference (ref2.go + fence.patched.go + hot.patched.go, base identical to main) is a
+#   second, independent implementation: it passes every lease test, tagged, untagged, -race and
+#   -race -count=2 tagged, including all of part 3.
+#   Their 45 mutants against this file: 43 killed by it. 2 survive, both by design: O5d (every
+#   expired row reclaimed on any grant: item 7, not ruled, not pinned) and O6b (hot rows re-judged
+#   for canonicity: killed by the frozen HotSetValidationAndOrder, as C11).
+#   Their 7 proposed tests, each run on both references (pass) and on main: 5 duplicate part 3
+#   (red on main), DetectNoSelfOverlapEdge duplicates OverlapDetectIgnoresOwn (green pin), and
+#   NoOverReclaim pins the status quo answer to item 7 and is NOT adopted (not ruled).
+#   One gap adopted: ExemptionIsJobID's fourth case, holder job_ab and requester job_a. Measured
+#   first: an exemption "holder id starts with requester id" survived every lease test. Added to
+#   OverlapOwnJobIsExactID (the holder is now per case); it kills that mutant and its mirror.
+#   Nothing else changed. Red 15 of 16 on 963613b as in part 3; both references pass.
+#   Builder mutant total 56: 54 killed by this file, 1 by HotSetValidationAndOrder, 1 equivalent.
 register: B1-04r
 jobs:
   - id: B1-04
@@ -288,4 +310,4 @@ jobs:
       - path: kernel/internal/lease/fence_cover_donetest_test.go
         sha256: b1cc317f51c91c245e03ed51aa315a23ffa3047d97ced88261046f582ce2de19
       - path: kernel/internal/lease/fence_overlap_donetest_test.go
-        sha256: ef4fddaa0f6d08ed61494ad21d63d00b6b3f40e82bd05c05c95ca8b8c6cc1c59
+        sha256: c24c23c707ad11aa56d62c1ae14b355bb250f0e0aa63676c7ac5ee7970b6e264

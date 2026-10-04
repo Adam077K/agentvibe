@@ -11,4 +11,5 @@ Probed on 963613b: glob/exact both ways, nested globs and db:// globs all double
 Red 10 of 10 on main; every other lease test green untagged, tagged, -race. Scratch reference green in all four configs. Mutants 30 of 32 killed by the new file, 1 by frozen HotSetValidationAndOrder, 1 equivalent (slash-bounded string prefix).
 r7 part 2 (R6): #* and the bare file overlap every symbol of their repo:// file for Acquire only; OverlapWholeFile replaces StarAnchorIsLiteral; mutants 36 of 38 (+1 frozen, 1 equivalent), R6 9 of 9.
 r7 part 3: red-team GAPS (9) + R7 (Detect/cycleResources by overlap, live, not own); 6 tests added, red 15 of 16 (DetectIgnoresOwn green pin); mutants 54: 52 killed, 1 by frozen, 1 equivalent.
+r7 part 4: red-team material scanned (untrusted, own GOCACHE); their reference passes all; their mutants 43 of 45 (O5d item 7, O6b frozen); reverse-prefix exemption case adopted.
 NOT frozen: every expired row reclaimed on any grant (item 7, unruled); legacy non-canonical rows in a Journal.

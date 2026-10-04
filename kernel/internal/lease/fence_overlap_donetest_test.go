@@ -651,23 +651,26 @@ func TestB1_04R_OverlapReclaimOnWound(t *testing.T) {
 }
 
 // TestB1_04R_OverlapOwnJobIsExactID: O3 (r7 part 3, item 2). The own-lease exemption is the exact
-// job id, byte for byte. A job with job_a's Born, JOB_A, and job_ab all wait on job_a's glob.
+// job id, byte for byte. A job with job_a's Born, JOB_A, and job_ab all wait on job_a's glob; and
+// job_a waits on job_ab's (red-team r7 probe: the prefix taken the other way).
 //
 // Kills: the exemption keyed on Born (the same-Born job is granted); a case-folded job compare
-// (JOB_A is granted); a prefix compare (job_ab is granted).
+// (JOB_A is granted); a prefix compare in either direction (job_ab is granted beside job_a, or
+// job_a beside job_ab).
 func TestB1_04R_OverlapOwnJobIsExactID(t *testing.T) {
 	const glob, x = "repo://a/src/**", "repo://a/src/x.ts#f"
 	for i, tc := range []struct {
-		job  string
-		born time.Time
+		holder, job string
+		born        time.Time
 	}{
-		{"job_same_born", ovOld},
-		{"JOB_A", ovYoung},
-		{"job_ab", ovYoung},
+		{"job_a", "job_same_born", ovOld},
+		{"job_a", "JOB_A", ovYoung},
+		{"job_a", "job_ab", ovYoung},
+		{"job_ab", "job_a", ovYoung},
 	} {
 		t.Run(fmt.Sprintf("job%d", i), func(t *testing.T) {
 			e := ovOpen(t)
-			mustGrant(t, e.c, b104Req("job_a", ovOld, lease.AllOrNothing, glob))
+			mustGrant(t, e.c, b104Req(tc.holder, ovOld, lease.AllOrNothing, glob))
 			mustWait(t, e.c, b104Req(tc.job, tc.born, lease.AllOrNothing, x))
 			wantWait(t, e.c, tc.job, x)
 		})
