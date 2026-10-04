@@ -2,23 +2,28 @@
 // capacity cap, the wall-clock and idle backstops, the process-group kill, and reconciliation after
 // the daemon dies mid-job. It also holds the real launcher.Exec.
 //
-// This file is the surface frozen with the B1-09a done-tests (runner_donetest_test.go, build tag
-// donetest). Every entry point returns ErrNotImplemented: B1-09a implements it. Measurements behind
-// the contract: docs/vision-v3/_process/DR-B1-09a-MEASURE-2026-10-03.md.
+// The surface is frozen with the B1-09a done-tests (runner_donetest_test.go, build tag donetest).
+// exec.go is the real launcher.Exec, proc.go the process tree, acl.go the ACL reader. Measurements
+// behind the contract: docs/vision-v3/_process/DR-B1-09a-MEASURE-2026-10-03.md.
 package runner
 
 import (
 	"context"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"os"
+	"path/filepath"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/Adam077K/agentvibe/kernel/internal/launcher"
 )
 
 var (
-	// ErrNotImplemented is returned by every entry point until B1-09a lands.
-	ErrNotImplemented = errors.New("runner: not implemented")
 	// ErrDigest: the bytes Exec would execute do not hash to the digest it was given, or the digest
 	// is not "sha256:" + 64 lowercase hex. Nothing ran.
 	ErrDigest = errors.New("runner: executed bytes do not match the pinned digest")
@@ -47,38 +52,11 @@ type Limits struct {
 	Dir    string        // the worker's working directory; "" is the Exec's choice
 }
 
-// WithLimits returns ctx carrying l for Exec.Run.
-func WithLimits(ctx context.Context, l Limits) context.Context { return ctx }
-
 // ExecConfig names the worker the Exec defends against (r2, founder ruling Q1: the HYBRID exec model).
 type ExecConfig struct {
 	WorkerUID   int      // the worker's uid; 0 (root, or unset) is ErrSpec
 	WorkerGIDs  []int    // the worker's groups
 	WorkerRoots []string // every root a worker may write (worktrees, job dirs, TMPDIRs); >= 1, clean, absolute, not "/"
-}
-
-// NewExec returns the real launcher.Exec, or ErrSpec for a malformed cfg. Run executes only bytes
-// that hash to digest, on both paths below. It execs in place only when the binary, symlinks resolved
-// at exec time, and EVERY ancestor directory of the resolved path lie outside all WorkerRoots and are
-// not writable by the worker (owner, group and other mode bits against WorkerUID and WorkerGIDs); it
-// then execs the resolved path. "Not writable" includes ACLs and fails closed (r3, orchestrator
-// ceo-1, 2026-10-04): an extended ACL entry on the binary or any resolved ancestor that grants a
-// write-class right (write, append, add_file, add_subdirectory, delete, delete_child, writeattr,
-// writeextattr, writesecurity, chown) to anyone other than root or the daemon's uid, or an ACL that
-// cannot be read, makes it writable. Otherwise it copies into a private directory and execs the
-// copy, and the bytes it execs are the bytes it hashed: never hash once and read the file again.
-// The worker runs in a new process group, with exactly env as the environment (nil env is ErrSpec;
-// nothing is inherited from the Kernel), and Run returns only after the group and every descendant
-// are dead, however the leader ended, a leader that exits 0 included. The 90% SIGINT goes to the
-// whole process group. ctx cancellation kills the tree and returns ctx.Err(). A worker that exits
-// non-zero, or dies by a signal that no backstop and no ctx sent, is reported as an error wrapping
-// its *exec.ExitError (r3).
-func NewExec(cfg ExecConfig) (launcher.Exec, error) { return stubExec{}, nil }
-
-type stubExec struct{}
-
-func (stubExec) Run(context.Context, string, string, []string, []string) error {
-	return ErrNotImplemented
 }
 
 // Status is a job's state in the runner's persisted record.
@@ -107,10 +85,6 @@ type Identity struct {
 	Start time.Time
 }
 
-// ProcIdentity returns pid's identity from the kernel's process table (kern.proc.pid on darwin; never
-// a ps subprocess), or an error wrapping syscall.ESRCH when no live process has that pid.
-func ProcIdentity(pid int) (Identity, error) { return Identity{}, ErrNotImplemented }
-
 // Config configures a Runner.
 type Config struct {
 	State    string            // the runner's persisted state directory; it survives the daemon
@@ -126,10 +100,87 @@ type Config struct {
 }
 
 // Runner admits jobs and launches them under their Limits.
-type Runner struct{}
+type Runner struct {
+	cfg        Config
+	identify   func(pid int) (Identity, error)
+	mu         sync.Mutex
+	reconciled bool
+	active     map[string]bool
+}
+
+const (
+	defaultCapacity = 4
+	maxCapacity     = 12 // the launcher's cap
+)
 
 // New returns a Runner on cfg. A malformed Config is ErrSpec.
-func New(cfg Config) (*Runner, error) { return nil, ErrNotImplemented }
+func New(cfg Config) (*Runner, error) {
+	if cfg.Capacity == 0 {
+		cfg.Capacity = defaultCapacity
+	}
+	if cfg.State == "" || cfg.Launcher == nil || cfg.Capacity < 0 || cfg.Capacity > maxCapacity {
+		return nil, fmt.Errorf("%w: Config needs State, a Launcher, and Capacity 0..%d", ErrSpec, maxCapacity)
+	}
+	if err := os.MkdirAll(cfg.State, 0o700); err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrState, err)
+	}
+	r := &Runner{cfg: cfg, identify: cfg.Identify, active: map[string]bool{}}
+	if r.identify == nil {
+		r.identify = ProcIdentity
+	}
+	return r, nil
+}
+
+// record is a job's persisted state: one file in Config.State, replaced atomically.
+type record struct {
+	Job    string `json:"job"`
+	Lease  string `json:"lease"`
+	Status Status `json:"status"`
+	PID    int    `json:"pid,omitempty"`      // the leader, which is also its process group
+	Start  int64  `json:"start_us,omitempty"` // the leader's kernel start time, unix microseconds
+}
+
+func (r *Runner) path(job string) string {
+	return filepath.Join(r.cfg.State, hex.EncodeToString([]byte(job))+".json") // any job id is a safe file name
+}
+
+func (r *Runner) write(rec record) error {
+	b, err := json.Marshal(rec)
+	if err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(r.cfg.State, ".tmp-")
+	if err != nil {
+		return err
+	}
+	_, err = tmp.Write(b)
+	if err == nil {
+		err = tmp.Sync()
+	}
+	if cerr := tmp.Close(); err == nil {
+		err = cerr
+	}
+	if err == nil {
+		err = os.Rename(tmp.Name(), r.path(rec.Job))
+	}
+	if err != nil {
+		os.Remove(tmp.Name())
+		return fmt.Errorf("%w: %v", ErrState, err)
+	}
+	return nil
+}
+
+func (r *Runner) read(file string) (record, error) {
+	b, err := os.ReadFile(file)
+	if err != nil {
+		return record{}, err
+	}
+	var rec record
+	if err := json.Unmarshal(b, &rec); err != nil || rec.Job == "" {
+		return record{}, fmt.Errorf("%w: %s is corrupt", ErrState, file)
+	}
+	return rec, nil
+}
 
 // Run admits job (ErrState before Reconcile has completed on this Runner; ErrCapacity when Capacity
 // jobs are already admitted; both before Launch is called),
@@ -137,14 +188,121 @@ func New(cfg Config) (*Runner, error) { return nil, ErrNotImplemented }
 // launches it under job.Limits (every one of Wall, Idle, Stdout and Dir) and returns the Launch error
 // once the whole tree is dead. It then records the job StatusKilled when that error is ErrWall,
 // ErrIdle or ctx's error, and StatusExited otherwise (r3); a restart's Reconcile leaves either alone.
-func (r *Runner) Run(ctx context.Context, job Job) error { return ErrNotImplemented }
+// A job id runs once: an id State already holds is ErrSpec, so no Runner relaunches it.
+func (r *Runner) Run(ctx context.Context, job Job) error {
+	id := job.Req.JobID
+	r.mu.Lock()
+	switch {
+	case !r.reconciled:
+		r.mu.Unlock()
+		return fmt.Errorf("%w: Reconcile has not completed", ErrState)
+	case len(r.active) >= r.cfg.Capacity:
+		r.mu.Unlock()
+		return fmt.Errorf("%w: %d jobs admitted", ErrCapacity, r.cfg.Capacity)
+	case id == "" || r.active[id]:
+		r.mu.Unlock()
+		return fmt.Errorf("%w: job id %q is empty or already admitted", ErrSpec, id)
+	}
+	if _, err := os.Stat(r.path(id)); err == nil {
+		r.mu.Unlock()
+		return fmt.Errorf("%w: job %q is already recorded", ErrSpec, id)
+	}
+	r.active[id] = true
+	r.mu.Unlock()
+	defer func() { r.mu.Lock(); delete(r.active, id); r.mu.Unlock() }()
+
+	rec := record{Job: id, Lease: job.Req.Requires.FencedLease, Status: StatusRunning}
+	if err := r.write(rec); err != nil {
+		return err
+	}
+	var werr error
+	lctx := withStart(WithLimits(ctx, job.Limits), func(pid int) {
+		rec.PID = pid
+		if idn, err := r.identify(pid); err == nil && idn.PID == pid {
+			rec.Start = idn.Start.UnixMicro()
+		}
+		werr = r.write(rec) // a zero Start reads, to Reconcile, as an identity it cannot confirm
+	})
+	_, err := r.cfg.Launcher.Launch(lctx, job.Req)
+	rec.Status = StatusExited
+	if errors.Is(err, ErrWall) || errors.Is(err, ErrIdle) || (ctx.Err() != nil && errors.Is(err, ctx.Err())) {
+		rec.Status = StatusKilled
+	}
+	if e := r.write(rec); e != nil {
+		werr = e
+	}
+	if err == nil {
+		err = werr
+	}
+	return err
+}
 
 // Reconcile runs after a restart: for every job State records as running, it kills the surviving
 // process group and every descendant (guarding against pid reuse), marks the job
 // StatusInterrupted and calls Launcher.End for its lease. Interrupted is terminal: no Runner ever
 // relaunches or re-ends it (r2, ruling Q3). A second Reconcile is a no-op. It must complete before
-// Run admits anything (Q4).
-func (r *Runner) Reconcile(ctx context.Context) error { return ErrNotImplemented }
+// Run admits anything (Q4). A job whose process cannot be judged, or whose End fails, stays running
+// and Reconcile returns the error, so the next Reconcile retries it and Run stays refused.
+func (r *Runner) Reconcile(ctx context.Context) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	files, err := filepath.Glob(filepath.Join(r.cfg.State, "*.json"))
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrState, err)
+	}
+	var errs []error
+	for _, f := range files {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		rec, err := r.read(f)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("%w: %v", ErrState, err))
+			continue
+		}
+		if rec.Status != StatusRunning || r.active[rec.Job] {
+			continue
+		}
+		if err := r.interrupt(ctx, rec); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if err := errors.Join(errs...); err != nil {
+		return err
+	}
+	r.reconciled = true
+	return nil
+}
+
+// interrupt kills rec's tree, ends its launch, and records it interrupted.
+func (r *Runner) interrupt(ctx context.Context, rec record) error {
+	if rec.PID > 1 {
+		id, err := r.identify(rec.PID)
+		switch {
+		case errors.Is(err, syscall.ESRCH), // the leader is gone; its group and descendants may not be
+			err == nil && id.PID == rec.PID && id.Start.UnixMicro() == rec.Start:
+			t := newTree(rec.PID, func(p procInfo) bool { // each process must still be the one the table shows
+				i, err := r.identify(p.pid)
+				return err == nil && i.PID == p.pid && i.Start.Equal(p.start)
+			})
+			t.kill()
+		case err == nil: // the pid is another process now: nothing is signalled through it
+		default:
+			return fmt.Errorf("%w: job %q: cannot identify pid %d: %v", ErrState, rec.Job, rec.PID, err)
+		}
+	}
+	if err := r.cfg.Launcher.End(ctx, rec.Job, rec.Lease); err != nil && !errors.Is(err, launcher.ErrLease) {
+		return fmt.Errorf("job %q: end launch: %w", rec.Job, err) // ErrLease: its end is already recorded
+	}
+	rec.Status = StatusInterrupted
+	return r.write(rec)
+}
 
 // Status reports jobID's recorded status.
-func (r *Runner) Status(jobID string) (Status, error) { return "", ErrNotImplemented }
+func (r *Runner) Status(jobID string) (Status, error) {
+	rec, err := r.read(r.path(jobID))
+	if err != nil {
+		return "", fmt.Errorf("runner: job %q: %w", jobID, err)
+	}
+	return rec.Status, nil
+}
