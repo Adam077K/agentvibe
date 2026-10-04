@@ -133,14 +133,17 @@ func (st *fstate) hotSet() []string {
 }
 
 // cycleResources lists, sorted, the resources on the edges of cycle: those one job of the cycle waits
-// on while the next job of the cycle holds them.
+// on while the next job of the cycle holds a live lease that overlaps them.
 func (st *fstate) cycleResources(cycle []string, now int64) []string {
 	set := map[string]bool{}
 	for i, job := range cycle {
 		next := cycle[(i+1)%len(cycle)]
 		for _, r := range st.waits[job].Resources {
-			if l, ok := st.leases[r]; ok && l.Job == next && live(l, now) {
-				set[r] = true
+			for _, h := range st.overlapping(r, job) {
+				if h.Job == next && live(st.leases[h.Resource], now) {
+					set[r] = true
+					break
+				}
 			}
 		}
 	}
