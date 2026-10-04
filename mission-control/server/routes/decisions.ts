@@ -29,7 +29,7 @@ import {
   type Decision,
   type DecisionAnswered,
 } from '../decisions.ts';
-import { boardPath, foldBoard, missionsDir, readBoardLines, type Mission } from '../missions.ts';
+import { boardPath, foldBoard, missionsDir, readBoardLines, type Mission, type MissionStatus } from '../missions.ts';
 
 export const RECENT_ANSWERED = 20;
 /** An answer is `{"choice": "<≤120 chars>"}`; 2 KiB is generous and still a hard ceiling. */
@@ -38,6 +38,8 @@ export const MAX_BODY_BYTES = 2048;
 export interface DecisionRow extends Decision {
   /** The mission's title, joined from the board so the card can say what it is about. */
   missionTitle?: string;
+  /** The mission's status now, so an answer that landed just before a stop can be told from one that was acted on. */
+  missionStatus?: MissionStatus;
 }
 export interface DecisionsPayload {
   pending: DecisionRow[];
@@ -73,13 +75,13 @@ export function createDecisionsApi(fileOverride?: string): Hono {
   const file = () => fileOverride ?? decisionsPath();
 
   const withTitles = (rows: Decision[]): DecisionRow[] => {
-    let titles: Map<string, string>;
+    let missions: Map<string, Mission>;
     try {
-      titles = new Map(foldBoard(readBoardLines(boardPath(missionsDir()))).map((m) => [m.id, m.title]));
+      missions = new Map(foldBoard(readBoardLines(boardPath(missionsDir()))).map((m) => [m.id, m]));
     } catch {
-      titles = new Map(); // The board is decoration here; a read failure must not hide a question.
+      missions = new Map(); // The board is decoration here; a read failure must not hide a question.
     }
-    return rows.map((d) => ({ ...d, missionTitle: titles.get(d.missionId) }));
+    return rows.map((d) => ({ ...d, missionTitle: missions.get(d.missionId)?.title, missionStatus: missions.get(d.missionId)?.status }));
   };
 
   api.get('/', (c) => {
