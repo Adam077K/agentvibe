@@ -1,0 +1,4 @@
+# Founder minutes, logged BY HAND (B0-12). One row per sitting. Read by mission-control/scripts/scorecard.ts.
+# date = YYYY-MM-DD (UTC) · minutes = whole number, 0 to 1440 · kind = decision | rescue · note = free text, no commas.
+# No row for a week renders that week's founder cell as FOG — never as zero. Do not back-fill estimates.
+date,minutes,kind,note
