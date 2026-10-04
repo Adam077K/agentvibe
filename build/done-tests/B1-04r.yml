@@ -224,6 +224,29 @@
 #   admitted, wraps ErrWait, name not in the refusal. One survivor, equivalent: a slash-bounded
 #   string prefix agrees with covers() on every name Acquire now admits (it differs only on
 #   non-canonical names, which can no longer be granted).
+#
+# RE-FREEZE r7, part 2, 2026-10-04 (a second commit: part 1 was pushed at 0908907; no force-push).
+#   fence_overlap_donetest_test.go 8b9598ba... -> a938900d...
+#   Ruling R6 (orchestrator ceo-1, 2026-10-04), for Acquire OVERLAP only; Receive coverage stays
+#   literal (fence_cover_donetest_test.go StarAnchorIsLiteral unchanged). Two repo:// resources on
+#   the SAME file (before the first '#') overlap when either is the whole-file name file#* or the
+#   bare file. Distinct symbols of one file (file#f, file#g) do not. Rationale: SP2 leases
+#   whole-file as #* so that a whole-file editor collides with a symbol editor. Supersedes part 1's
+#   O8 ("#* stays literal" for overlap) and closes its "bare file vs its symbols" open item.
+#   Test: TestB1_04R_OverlapStarAnchorIsLiteral replaced by TestB1_04R_OverlapWholeFile, 25 pairs:
+#   #* vs symbol and bare vs symbol/#*, both ways; #f vs #g, #f vs #<header> granted; a directory
+#   glob overlaps all three forms, both ways; x.tsx, y.ts, another repository, x.ts.bak and
+#   x.ts/y.ts beside; db://x/t#* and db://x/t vs db://x/t#f granted (R6 binds repo:// only, as R1).
+#   Nothing else changed. Every frozen test still passes under R6, SP2 fixtures included.
+#   Red 10 of 10 on 963613b (WholeFile: 15 overlap pairs red, its 10 no-overlap controls green);
+#   every other lease test passes untagged, tagged, -race. Scratch reference + R6 passes all four
+#   configs (-race -count=2 tagged) and the launcher donetests.
+#   Mutants re-run against the R6 reference: 36 of 38 killed by the new file, 1 more (hot rows
+#   re-judged) by HotSetValidationAndOrder, 1 equivalent (slash-bounded string prefix, as part 1).
+#   R6 mutants, 9 of 9 killed by OverlapWholeFile: #* literal for overlap, bare file
+#   non-overlapping, #* one way (each way), bare one way (each way), every symbol pair of one file
+#   overlapping, the file matched as a string prefix, R6 applied to every scheme. Part 1's three #*
+#   wildcard mutants are retired: R6 makes their direction correct, and R6b-d are their successors.
 register: B1-04r
 jobs:
   - id: B1-04
@@ -235,4 +258,4 @@ jobs:
       - path: kernel/internal/lease/fence_cover_donetest_test.go
         sha256: b1cc317f51c91c245e03ed51aa315a23ffa3047d97ced88261046f582ce2de19
       - path: kernel/internal/lease/fence_overlap_donetest_test.go
-        sha256: 8b9598ba4dd3913ab73c836c943d0e469e34b2dadbe2416ede6de532c2763b6d
+        sha256: a938900d4d121cc0bb682cf8208e3e86e96d3c88f433e77b8a1edfac37b3a1e4

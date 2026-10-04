@@ -46,7 +46,16 @@
 //	O6 Hot resources are part of the request (hot.go): an auto-added hot resource that overlaps a
 //	   held lease makes the request busy, even when no named resource does.
 //	O7 R5: a glob of any other scheme keeps the plain-prefix rule for overlap, as for coverage.
-//	O8 "#*" stays literal (LC-1 r6, StarAnchorIsLiteral): x.ts#* and x.ts#f do not overlap.
+//	O8 Superseded by R6 (r7 part 2). It read: "#*" stays literal (LC-1 r6, StarAnchorIsLiteral):
+//	   x.ts#* and x.ts#f do not overlap.
+//
+// R6 (orchestrator ceo-1, 2026-10-04), for Acquire overlap ONLY; Receive coverage stays literal
+// (fence_cover_donetest_test.go StarAnchorIsLiteral is unchanged). Two repo:// resources on the
+// SAME file (everything before the first '#') overlap when either is the whole-file name file#* or
+// the bare file. Distinct symbols of one file (file#f, file#g) do not. Rationale: SP2 leases
+// whole-file as "#*" precisely so that a whole-file editor collides with a symbol editor; two
+// writers on one file is the conflict LC-2 exists to stop. R6 binds repo:// only, as R1 does; another
+// scheme keeps the plain-prefix rule (R5) and its '#' means nothing to overlap.
 //
 // Non-canonical names at Acquire (follow-up LC-1 "Whether Acquire may GRANT such a glob is not
 // decided here"; decided now, fail closed). A requested repo:// name is canonical when it is one of:
@@ -59,8 +68,6 @@
 // here (R2 judges touched names only; HotSetValidationAndOrder pulls in src/a.ts#b#c).
 //
 // NOT frozen, and why:
-//   - A bare file lease (repo://a/x.ts) against a symbol of that file (repo://a/x.ts#f). covers()
-//     says neither covers the other, as for #*; a ruling may still call a bare file whole-file.
 //   - HotCandidates' cycle edges through an overlap (hot.go cycleResources looks up identical names
 //     only). Counting them is the consistent reading, but no ruling covers it.
 //   - The error text and sentinel of a non-canonical refusal beyond "not ErrWait, not ErrStaleToken".
@@ -417,24 +424,56 @@ func TestB1_04R_OverlapNonRepoPlainPrefix(t *testing.T) {
 	}
 }
 
-// TestB1_04R_OverlapStarAnchorIsLiteral: O8. "#*" is the whole-file resource NAME, not a wildcard
-// (LC-1 r6): x.ts#* and x.ts#f, or x.ts#<header>, do not overlap, either way round. A glob over the
-// directory overlaps x.ts#*, either way round.
+// TestB1_04R_OverlapWholeFile: R6. On one repo:// file, the whole-file name x.ts#* and the bare file
+// x.ts each overlap every symbol of the file and each other, either way round; distinct symbols do
+// not overlap each other. A glob over the directory overlaps all three forms. The file is the whole
+// name before the first '#', compared byte for byte: a longer file name, another file, another
+// repository, or a "file" read as a directory are beside it. Another scheme is not judged by R6.
 //
-// Kills: "#*" read as a wildcard over the file's symbols, by file compare or as a "#"-prefix; a
-// symbol lease read as covering its file's #*.
-func TestB1_04R_OverlapStarAnchorIsLiteral(t *testing.T) {
+// Kills: "#*" literal for overlap (the superseded O8: x.ts#f granted beside x.ts#*); the bare file
+// treated as non-overlapping (x.ts#f granted beside x.ts); either rule in one direction only; every
+// pair of symbols of one file overlapping (file compare ignoring the anchor: #g waits on #f); the
+// file matched as a string prefix (x.tsx#f, x.ts.bak, x.ts/y.ts#f wait); R6 applied to every
+// scheme (db://x/t#f waits on db://x/t#*).
+func TestB1_04R_OverlapWholeFile(t *testing.T) {
+	const x = "repo://a/src/x.ts"
 	for i, tc := range []struct {
 		held, req string
 		overlap   bool
 	}{
-		{"repo://a/x.ts#*", "repo://a/x.ts#f", false},
-		{"repo://a/x.ts#f", "repo://a/x.ts#*", false},
-		{"repo://a/x.ts#*", "repo://a/x.ts#<header>", false},
-		{"repo://a/**", "repo://a/x.ts#*", true},
-		{"repo://a/x.ts#*", "repo://a/**", true},
+		// #* against a symbol, either way
+		{x + "#*", x + "#f", true},
+		{x + "#f", x + "#*", true},
+		{x + "#*", x + "#<header>", true},
+		{x + "#<eof>", x + "#*", true},
+		// the bare file against a symbol, against #*, either way
+		{x, x + "#f", true},
+		{x + "#f", x, true},
+		{x, x + "#*", true},
+		{x + "#*", x, true},
+		// distinct symbols of one file do not overlap
+		{x + "#f", x + "#g", false},
+		{x + "#g", x + "#f", false},
+		{x + "#f", x + "#<header>", false},
+		// a glob over the directory overlaps all three forms, either way
+		{"repo://a/src/**", x + "#*", true},
+		{x + "#*", "repo://a/src/**", true},
+		{"repo://a/**", x, true},
+		{x, "repo://a/**", true},
+		{"repo://a/src/**", x + "#f", true},
+		{x + "#f", "repo://a/**", true},
+		// beside the file
+		{x + "#*", "repo://a/src/x.tsx#f", false},
+		{x + "#*", "repo://a/src/y.ts#f", false},
+		{x + "#*", "repo://b/src/x.ts#f", false},
+		{x, "repo://a/src/x.ts.bak", false},
+		{x, "repo://a/src/x.ts/y.ts#f", false},
+		{"repo://a/src/x.tsx", x + "#f", false},
+		// R6 binds repo:// only
+		{"db://x/t#*", "db://x/t#f", false},
+		{"db://x/t", "db://x/t#f", false},
 	} {
-		t.Run(fmt.Sprintf("star%d", i), func(t *testing.T) { ovPair(t, tc.held, tc.req, tc.overlap) })
+		t.Run(fmt.Sprintf("file%d", i), func(t *testing.T) { ovPair(t, tc.held, tc.req, tc.overlap) })
 	}
 }
 
