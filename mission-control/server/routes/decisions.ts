@@ -154,6 +154,11 @@ export function createDecisionsApi(fileOverride?: string): Hono {
     if (mission?.status !== 'working') {
       return c.json({ error: `this mission is not being worked (${mission?.status ?? 'not on the board'}), so no runner is waiting for an answer` } satisfies DecisionError, 409);
     }
+    // A stop is already on its way: the runner will expire this question on its next look, so an
+    // answer now goes into the void the check above exists to prevent.
+    if (mission.stopRequested) {
+      return c.json({ error: 'this mission is being stopped, so no runner will read an answer' } satisfies DecisionError, 409);
+    }
     if (!decision.options.includes(choice)) {
       return c.json({ error: 'choice must be one of the decision options' } satisfies DecisionError, 400);
     }

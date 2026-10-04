@@ -208,6 +208,17 @@ describe('/api/decisions', () => {
 });
 
 describe('/api/decisions — orphans, torn tails, body size', () => {
+  test('an answer is refused (409) once a stop is requested on the mission, and appends nothing', async () => {
+    const d = needed();
+    appendMissionLine(d, file);
+    appendMissionLine({ id: MISSION, ts: 5, status: 'stop_requested' }, boardFile());
+    const before = readDecisionLines(file).length;
+    const res = await createDecisionsApi().request(`/${d.id}/answer`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ choice: d.options[0] }) });
+    expect(res.status).toBe(409);
+    expect(readDecisionLines(file)).toHaveLength(before);
+    expect(foldDecisions(readDecisionLines(file))[0]!.status).toBe('pending');
+  });
+
   test('an answer is refused (409) when the mission is not being worked, and appends nothing', async () => {
     const cases: [string, 'queued' | 'done' | 'missing'][] = [
       [randomUUID(), 'queued'],
