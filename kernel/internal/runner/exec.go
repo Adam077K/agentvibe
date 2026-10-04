@@ -39,6 +39,13 @@ func withStart(ctx context.Context, f func(pid int) error) context.Context {
 
 var digestRe = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 
+// Seams for the regression tests: nothing else makes a process-table lookup fail, or a kill go
+// unconfirmed, on demand.
+var (
+	lookup   = lookupProc
+	killTree = func(t *tree) bool { return t.kill() }
+)
+
 var errSurvivors = errors.New("runner: part of the worker tree survived SIGKILL")
 
 const pollEvery = 50 * time.Millisecond // how often a running tree is scanned for descendants
@@ -245,22 +252,33 @@ func (e *execer) Run(ctx context.Context, path, digest string, argv, env []strin
 	}
 	pid := cmd.Process.Pid
 	tr := newTree(pid, nil)
-	if p, err := lookupProc(pid); err == nil {
+	p, lerr := lookup(pid) // before the Wait goroutine: until then even a leader that has exited is still listed
+	if lerr == nil {
 		tr.known[pid] = p // a leader that leaves its group is still found, by its identity
 	}
 	waitCh := make(chan error, 1)
 	go func() { waitCh <- cmd.Wait() }()
+	// abort kills the worker, group and tree, waits for the leader, and fails the Run: used when the
+	// worker cannot be tracked or recorded, because one that is not must not be left running.
+	abort := func(cause error) error {
+		cmd.Process.Signal(syscall.SIGKILL) // never signals a pid already reaped
+		syscall.Kill(-pid, syscall.SIGKILL)
+		dead := killTree(tr)
+		select {
+		case <-waitCh:
+		case <-time.After(5 * time.Second):
+		}
+		if !dead {
+			cause = errors.Join(cause, errSurvivors)
+		}
+		return fmt.Errorf("runner: worker %d: %w; killed", pid, cause)
+	}
+	if lerr != nil { // unseeded, a leader that left its group would outlive every kill: fail closed
+		return abort(fmt.Errorf("cannot identify the leader: %w", lerr))
+	}
 	if f, ok := ctx.Value(startKey{}).(func(int) error); ok {
 		if err := f(pid); err != nil {
-			dead := tr.kill()
-			select {
-			case <-waitCh:
-			case <-time.After(5 * time.Second):
-			}
-			if !dead {
-				err = errors.Join(err, errSurvivors)
-			}
-			return fmt.Errorf("runner: worker %d could not be recorded, killed: %w", pid, err)
+			return abort(fmt.Errorf("cannot record it: %w", err))
 		}
 	}
 
@@ -317,7 +335,7 @@ loop:
 			tr.scan()
 		}
 	}
-	if !tr.kill() { // the leader's end does not end its tree
+	if !killTree(tr) { // the leader's end does not end its tree
 		result = errors.Join(result, errSurvivors)
 	}
 	if !waited {

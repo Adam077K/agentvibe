@@ -222,12 +222,21 @@ func (r *Runner) Run(ctx context.Context, job Job) error {
 	}
 	lctx := withStart(WithLimits(ctx, job.Limits), func(pid int) error {
 		rec.PID = pid
-		if idn, err := r.identify(pid); err == nil && idn.PID == pid {
+		switch idn, err := r.identify(pid); {
+		case err == nil && idn.PID == pid:
 			rec.Start = idn.Start.UnixMicro()
+		case errors.Is(err, syscall.ESRCH):
+			// The leader is already gone and reaped: it ran and ended. Its pid is still recorded, with no
+			// start time, so a Reconcile after a crash kills what its group left behind.
+		default: // a live worker with no identity would wedge the next Reconcile: fail, and Exec kills it
+			return fmt.Errorf("%w: identify worker pid %d: %v", ErrState, pid, err)
 		}
-		return r.write(rec) // a zero Start reads, to Reconcile, as an identity it cannot judge; a failed write kills the worker
+		return r.write(rec) // a failed write kills the worker too
 	})
 	_, err := r.cfg.Launcher.Launch(lctx, job.Req)
+	if errors.Is(err, errSurvivors) {
+		return err // not confirmed dead: stays running, so the next Reconcile retries it
+	}
 	rec.Status = StatusExited
 	if errors.Is(err, ErrWall) || errors.Is(err, ErrIdle) || (ctx.Err() != nil && errors.Is(err, ctx.Err())) {
 		rec.Status = StatusKilled
