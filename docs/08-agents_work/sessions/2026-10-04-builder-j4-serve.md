@@ -2,7 +2,8 @@
 role: builder
 task: j4-serve
 tier: full
-qa_verdict: PENDING
+verdict recorded by: j4-reviewer, Opus 5.5, single family (recorded by founder)
+qa_verdict: PASS
 ---
 J4 on build/j4-serve: mission-control serves client/dist from the Hono server (one port, 4300). New server/routes/static.ts, mounted last in app.ts behind the guard; /api and /events win; SPA fallback; missing dist -> 503 naming `bun run build`; `start` script added.
 Confinement: NUL/backslash/`..` -> 400, realpath must stay under the real root (symlink out -> 404). test/static.test.ts 27/27; dropping the realpath check fails 2.
