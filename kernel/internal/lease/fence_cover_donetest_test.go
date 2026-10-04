@@ -63,6 +63,9 @@
 //	R3 A path or repository segment holding '\' or an encoded separator (%2f %2F %5c %5C) is
 //	   refused, fail closed.
 //
+//	R4 (orchestrator ceo-1, 2026-10-04) A C1 control (U+0080-U+009F) is non-canonical in every
+//	   segment of a touched name: repository, path and anchor. Fails closed; matches R2.
+//
 // Not decided here, and NOT frozen: whether a glob lease and a file#symbol lease under it, held by
 // two jobs, conflict (fence.go "Open, NOT decided here"). Measured on main: both are granted and
 // BOTH jobs' pushes of the symbol are accepted. That needs a ruling first.
@@ -288,6 +291,10 @@ func TestB1_04R_CoverShapeRefused(t *testing.T) {
 		"repo://a/x.ts#\tf",
 		"repo://a/x.ts#a\u0085b",
 		"repo://a/x.ts#a\u009fb",
+		// R4: a C1 control in a path segment
+		"repo://a/x\u0085.ts#f",
+		"repo://a/src/x\u009f.ts#f",
+		"repo://a/\u0080/x.ts#f",
 	} {
 		lcRefusedForShape(t, v, "job_a", g.Tokens, bad)
 	}
@@ -316,6 +323,9 @@ func TestB1_04R_CoverExactNonCanonicalRefused(t *testing.T) {
 		"repo://*/x.ts#f",
 		"repo://a#f",
 		"repo://a\\b/x.ts#f",
+		// R4: a C1 control in the repository segment
+		"repo://a\u0085/x.ts#f",
+		"repo://a\u009f/x.ts#f",
 		// r5 R2
 		"repo://a/x.ts#f/../../../b",
 	} {
