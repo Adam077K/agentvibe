@@ -46,6 +46,34 @@ const EVIL = 'evil.example:4300';
 const INDEX_SENTINEL = 'HG1-INDEX-SENTINEL-5c1e';
 const ASSET_SENTINEL = 'HG1-ASSET-SENTINEL-9b2d';
 
+const STATE_ENV = ['MC_MISSIONS_DIR', 'MC_DISPATCH_QUEUE', 'MC_TRUSTED_FILE', 'MC_INDEX_CACHE'];
+/** Names an allowlist variable would plausibly have. Set to the attacker's host by one test. */
+const ALLOWLIST_ENV = ['MC_ALLOWED_HOSTS', 'MC_HOSTS', 'MC_HOST', 'ALLOWED_HOSTS', '__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS'];
+
+/**
+ * What a real rebinding fetch() or EventSource carries. The browser believes the page and the
+ * server share an origin, so Sec-Fetch-Site is `same-origin` — a guard that waves same-origin
+ * through has waved the attack through.
+ */
+const BROWSER_SAME_ORIGIN: Record<string, string> = {
+  'sec-fetch-site': 'same-origin',
+  'sec-fetch-mode': 'cors',
+  'sec-fetch-dest': 'empty',
+};
+const EVENTSOURCE: Record<string, string> = {
+  ...BROWSER_SAME_ORIGIN,
+  accept: 'text/event-stream',
+  'cache-control': 'no-cache',
+};
+
+/** A Bun-server stand-in whose peer is loopback — every rebinding request's peer is. */
+function loopbackPeer(address: string, calls: number[] = []) {
+  return {
+    requestIP: (_r: Request) => ({ address, family: address.includes(':') ? 'IPv6' : 'IPv4', port: 50_000 }),
+    timeout: (_r: Request, s: number) => void calls.push(s),
+  };
+}
+
 let tmp: string;
 let dist: string;
 let missionsDir: string;
@@ -64,6 +92,11 @@ function fixtureState(name: string): LiveState {
 }
 
 const appWith = (state: LiveState = fixtureState(`s-${Math.random().toString(36).slice(2)}`)) => createApp(state, dist);
+
+/** Browser headers plus an Accept that names every content type a route here serves. */
+function r2Accept(h: Record<string, string>): Record<string, string> {
+  return { ...h, accept: 'text/event-stream, application/json, text/html, */*' };
+}
 
 /** The request a rebinding page actually produces: URL authority and Host both name the attacker. */
 function rebound(p: string, init: { method?: string; headers?: Record<string, string>; body?: string } = {}): Request {
@@ -110,9 +143,13 @@ beforeAll(() => {
   // Every write a handler could make lands in the fixture — on the seam the handlers DO run.
   missionsDir = path.join(tmp, 'missions');
   fs.mkdirSync(missionsDir, { recursive: true });
-  for (const k of ['MC_MISSIONS_DIR', 'MC_DISPATCH_QUEUE']) envBefore[k] = process.env[k];
+  // Never the real ~/.agentvibe: every state path the server resolves from the environment is
+  // pointed into the fixture for the life of this file, and restored after.
+  for (const k of [...STATE_ENV, ...ALLOWLIST_ENV]) envBefore[k] = process.env[k];
   process.env.MC_MISSIONS_DIR = missionsDir;
   process.env.MC_DISPATCH_QUEUE = path.join(tmp, 'dispatch-queue.jsonl');
+  process.env.MC_TRUSTED_FILE = path.join(tmp, 'trusted-projects.txt');
+  process.env.MC_INDEX_CACHE = path.join(tmp, 'index-cache-env.json');
 });
 
 afterAll(() => {
@@ -187,6 +224,8 @@ describe('hostVerdict — the Host header is matched exactly, case-insensitively
     'IPv4 spellings a URL parser would fold onto 127.0.0.1': [
       '127.1', '127.0.1', '2130706433', '0x7f000001', '0x7f.0.0.1', '0177.0.0.1', '127.0.0.1:4300.',
       '127.0.0.2', '0.0.0.0', '0',
+      // An allowlist written as a regex with unescaped dots matches these.
+      '127a0b0c1', '127a0b0c1:4300', '127x0.0.1', '127.0.0a1:4301',
     ],
     'list, path and injection shapes': [
       'localhost,evil.example', 'localhost, evil.example', 'evil.example, localhost', 'localhost:4300, localhost:4300',
@@ -277,12 +316,17 @@ describe('createApp — a foreign Host is refused with 421 on EVERY route, metho
     expect(routes.some((r) => r.method === 'POST')).toBe(true);
 
     const bodies = new Set<string>();
-    for (const r of routes) {
-      const init = r.method === 'POST' ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' } : { method: r.method };
-      const res = await settle(await app.fetch(rebound(r.path, init)));
-      expect({ route: `${r.method} ${r.path}`, status: res.status }).toEqual({ route: `${r.method} ${r.path}`, status: REFUSED });
-      expect(res.type ?? '').toMatch(/^text\/plain/);
-      bodies.add(res.body!);
+    // Twice: bare, and with the headers a rebinding fetch() really carries from a loopback peer.
+    for (const extra of [{}, r2Accept(BROWSER_SAME_ORIGIN)]) {
+      for (const r of routes) {
+        const headers = { ...extra, ...(r.method === 'POST' ? { 'content-type': 'application/json' } : {}) };
+        const init = r.method === 'POST' ? { method: 'POST', headers, body: '{}' } : { method: r.method, headers };
+        const res = await settle(await app.fetch(rebound(r.path, init), loopbackPeer('127.0.0.1')));
+        const route = `${r.method} ${r.path} ${JSON.stringify(extra)}`;
+        expect({ route, status: res.status }).toEqual({ route, status: REFUSED });
+        expect(res.type ?? '').toMatch(/^text\/plain/);
+        bodies.add(res.body!);
+      }
     }
     // ONE constant body: a refusal that varied by route could be carrying that route's data.
     expect(bodies.size).toBe(1);
@@ -367,6 +411,55 @@ describe('createApp — a foreign Host is refused with 421 on EVERY route, metho
     expect(boardLines().length).toBe(before);
   });
 
+  test('a rebinding fetch() exactly as the browser sends it — Sec-Fetch-Site: same-origin — is refused and does no work', async () => {
+    // The browser calls this request same-origin. Skipping the check for same-origin (or for a
+    // same-origin GET) is skipping it for the attack itself.
+    for (const p of ['/api/sessions', '/api/fleet']) {
+      const state = fixtureState(`same-origin-${p.replace(/\W/g, '')}`);
+      const app = createApp(state, dist);
+      const res = await settle(await app.fetch(rebound(p, { headers: BROWSER_SAME_ORIGIN }), loopbackPeer('127.0.0.1')));
+      expect({ p, status: res.status }).toEqual({ p, status: REFUSED });
+      expect(state.isBuilt).toBe(false);
+    }
+  });
+
+  test('a rebinding EventSource exactly as the browser opens it — Accept: text/event-stream — is refused before the stream', async () => {
+    const state = fixtureState('eventsource');
+    const app = createApp(state, dist);
+    const calls: number[] = [];
+    const res = await settle(await app.fetch(rebound('/events', { headers: EVENTSOURCE }), loopbackPeer('127.0.0.1', calls)));
+    expect(res.status).toBe(REFUSED);
+    expect(res.type ?? '').not.toContain('text/event-stream');
+    expect(calls).toEqual([]);
+    expect(state.isBuilt).toBe(false);
+    // Accept alone, with no Sec-Fetch-* at all, is the same answer.
+    const bare = await settle(await app.fetch(rebound('/events', { headers: { accept: 'text/event-stream' } }), loopbackPeer('127.0.0.1', calls)));
+    expect(bare.status).toBe(REFUSED);
+    expect(calls).toEqual([]);
+  });
+
+  test('NO Host header and a foreign URL authority is refused — absence of the header is not a pass', async () => {
+    // In-process this is the only place the attacker's name can sit. A guard that calls next()
+    // whenever Host is absent would serve it; on the wire that guard is also caught, but only
+    // when the socket half runs, so it is pinned here as well.
+    const state = fixtureState('no-host-foreign-url');
+    const app = createApp(state, dist);
+    const calls: number[] = [];
+    for (const [p, init] of [
+      ['/api/health', {}],
+      ['/api/sessions', { headers: BROWSER_SAME_ORIGIN }],
+      ['/events', { headers: EVENTSOURCE }],
+      ['/', {}],
+    ] as const) {
+      const req = new Request(`http://${EVIL}${p}`, init);
+      expect(req.headers.get('host')).toBeNull();
+      const res = await settle(await app.fetch(req, loopbackPeer('127.0.0.1', calls)));
+      expect({ p, status: res.status }).toEqual({ p, status: REFUSED });
+    }
+    expect(calls).toEqual([]);
+    expect(state.isBuilt).toBe(false);
+  });
+
   test('a cross-site request with OUR Host is still guard.ts\'s to refuse (403) — the two do not merge', async () => {
     const app = appWith();
     const res = await app.fetch(ours('/api/health', `127.0.0.1:${PORT}`, { headers: { 'sec-fetch-site': 'cross-site' } }));
@@ -386,9 +479,14 @@ describe('createApp — what the guard reads, and what it never reads', () => {
       { 'x-original-host': loop },
       { 'x-forwarded-server': loop },
     ];
-    for (const headers of laundering) {
-      const res = await settle(await app.fetch(rebound('/api/health', { headers })));
-      expect({ headers, status: res.status }).toEqual({ headers, status: REFUSED });
+    // From no peer, and from a LOOPBACK peer — the rebinding page's peer is always loopback, so
+    // "trust forwarding headers from a local proxy" trusts the attacker.
+    for (const peer of [undefined, loopbackPeer('127.0.0.1'), loopbackPeer('::1'), loopbackPeer('::ffff:127.0.0.1')]) {
+      for (const headers of laundering) {
+        const res = await settle(await app.fetch(rebound('/api/health', { headers }), peer));
+        const label = { peer: peer?.requestIP(new Request('http://x/')).address ?? 'none', headers };
+        expect({ ...label, status: res.status }).toEqual({ ...label, status: REFUSED });
+      }
     }
   });
 
@@ -402,24 +500,82 @@ describe('createApp — what the guard reads, and what it never reads', () => {
     const app = appWith();
     const headerOursUrlNot = new Request(`http://${EVIL}/api/health`, { headers: { host: `127.0.0.1:${PORT}` } });
     const urlOursHeaderNot = new Request(`http://127.0.0.1:${PORT}/api/health`, { headers: { host: EVIL } });
-    expect((await settle(await app.fetch(headerOursUrlNot))).status).toBe(REFUSED);
-    expect((await settle(await app.fetch(urlOursHeaderNot))).status).toBe(REFUSED);
+    const constant = (await settle(await app.fetch(rebound('/api/health')))).body;
+    for (const req of [headerOursUrlNot, urlOursHeaderNot]) {
+      const res = await settle(await app.fetch(req));
+      expect(res.status).toBe(REFUSED);
+      expect(res.body).toBe(constant); // which half failed is not told to the client
+    }
   });
 
   test('two Host headers, in either order, are refused — the joined value is not a name', async () => {
     const app = appWith();
+    const constant = (await settle(await app.fetch(rebound('/api/health')))).body;
     for (const order of [[`127.0.0.1:${PORT}`, EVIL], [EVIL, `127.0.0.1:${PORT}`]]) {
       const headers = new Headers();
       for (const h of order) headers.append('host', h);
       const res = await settle(await app.fetch(new Request(`http://127.0.0.1:${PORT}/api/health`, { headers })));
       expect({ order, status: res.status }).toEqual({ order, status: REFUSED });
+      expect(res.body).toBe(constant);
     }
   });
 
   test('an empty Host header is refused', async () => {
     const app = appWith();
+    const constant = (await settle(await app.fetch(rebound('/api/health')))).body;
     const res = await settle(await app.fetch(new Request(`http://127.0.0.1:${PORT}/api/health`, { headers: { host: '' } })));
     expect(res.status).toBe(REFUSED);
+    expect(res.body).toBe(constant);
+  });
+});
+
+describe('the allowed set comes from this module and nowhere else', () => {
+  const SRC = path.join(import.meta.dir, '..', 'server', 'routes', 'host-guard.ts');
+  // Comments are stripped by the TRANSPILER, not by a regex: the header prose contains `/api/*`,
+  // and a hand-rolled block-comment regex read that `/*` as an opener and swallowed real code
+  // after it — measured: a module-level `process.env` read walked straight past it.
+  const transpiler = new Bun.Transpiler({ loader: 'ts' });
+  const code = () => transpiler.transformSync(fs.readFileSync(SRC, 'utf8'));
+
+  test('host-guard.ts reads no environment and no machine name (comments stripped)', () => {
+    const src = code();
+    // NON-VACUITY: the stripped source is the module — its exports and its one runtime import.
+    for (const present of ['function hostVerdict', 'function hostGuard', 'function allowedHosts', 'LOOPBACK_HOSTNAMES', '../config.ts']) {
+      expect({ present, found: src.includes(present) }).toEqual({ present, found: true });
+    }
+    const imports = transpiler.scanImports(fs.readFileSync(SRC, 'utf8')).map((i) => i.path);
+    expect(imports.filter((i) => /^(node:)?(os|process|child_process)$/.test(i))).toEqual([]);
+    for (const forbidden of [/process\.env/, /Bun\.env/, /import\.meta\.env/, /hostname\s*\(/, /networkInterfaces/, /from\s+['"](node:)?os['"]/, /require\(\s*['"](node:)?os['"]/]) {
+      expect({ forbidden: String(forbidden), found: forbidden.test(src) }).toEqual({ forbidden: String(forbidden), found: false });
+    }
+  });
+
+  test('an allowlist variable naming the attacker changes nothing', async () => {
+    try {
+      for (const k of ALLOWLIST_ENV) process.env[k] = `${EVIL},evil.example`;
+      expect(hostVerdict(EVIL, `http://${EVIL}/`).allow).toBe(false);
+      const res = await settle(await appWith().fetch(rebound('/api/health')));
+      expect(res.status).toBe(REFUSED);
+    } finally {
+      for (const k of ALLOWLIST_ENV) {
+        if (envBefore[k] === undefined) delete process.env[k];
+        else process.env[k] = envBefore[k];
+      }
+    }
+  });
+
+  test("this machine's own hostname is not a loopback name and is refused", async () => {
+    const me = os.hostname().toLowerCase();
+    // If a machine is literally named one of ours there is nothing to distinguish; say so.
+    if ((LOOPBACK_HOSTNAMES as readonly string[]).includes(me)) {
+      console.warn(`[host-guard.test] os.hostname() is ${me}; the hostname case cannot be distinguished here.`);
+      return;
+    }
+    for (const h of [`${me}:${PORT}`, me, `${me}.local:${PORT}`, `${os.hostname()}:${PORT}`]) {
+      expect({ h, allow: hostVerdict(h, `http://${h}/`).allow }).toEqual({ h, allow: false });
+      const res = await settle(await appWith().fetch(new Request(`http://${h}/api/health`, { headers: { host: h } })));
+      expect({ h, status: res.status }).toEqual({ h, status: REFUSED });
+    }
   });
 });
 
@@ -584,6 +740,7 @@ describe.skipIf(BIND_REFUSED !== null)('over a real socket — forged Host heade
     expect(r.status).toBe(REFUSED);
     expect(r.headers).not.toContain('text/event-stream');
     expect(r.body).not.toContain('event:');
+    expect(r.body).toBe(refusalBody);
   });
 
   test('CONTROL: GET /events with our Host is a live event stream', async () => {
@@ -595,6 +752,7 @@ describe.skipIf(BIND_REFUSED !== null)('over a real socket — forged Host heade
   test('a missing Host: HTTP/1.0 is refused by the guard; HTTP/1.1 is refused by Bun before it', async () => {
     const h10 = await raw(port, 'GET /api/health HTTP/1.0\r\n\r\n');
     expect(h10.status).toBe(REFUSED);
+    expect(h10.body).toBe(refusalBody);
     expect(h10.body).not.toContain('"ok"');
     const h11 = await raw(port, 'GET /api/health HTTP/1.1\r\nConnection: close\r\n\r\n');
     expect(h11.status).not.toBe(200);
@@ -605,26 +763,37 @@ describe.skipIf(BIND_REFUSED !== null)('over a real socket — forged Host heade
     for (const [a, b] of [[LOOP, EVIL], [EVIL, LOOP]]) {
       const r = await raw(port, `GET /api/health HTTP/1.1\r\nHost: ${a}\r\nHost: ${b}\r\nConnection: close\r\n\r\n`);
       expect({ a, b, status: r.status }).toEqual({ a, b, status: REFUSED });
+      expect(r.body).toBe(refusalBody);
     }
+  });
+
+  test('an empty Host header on the wire is refused with the same body', async () => {
+    const r = await raw(port, 'GET /api/health HTTP/1.1\r\nHost: \r\nConnection: close\r\n\r\n');
+    expect(r.status).toBe(REFUSED);
+    expect(r.body).toBe(refusalBody);
   });
 
   test('absolute-form: the request-line authority and Host must both be ours', async () => {
     const r1 = await raw(port, `GET http://${LOOP}/api/health HTTP/1.1\r\nHost: ${EVIL}\r\nConnection: close\r\n\r\n`);
     expect(r1.status).toBe(REFUSED);
+    expect(r1.body).toBe(refusalBody);
     const r2 = await raw(port, `GET http://${EVIL}/api/health HTTP/1.1\r\nHost: ${LOOP}\r\nConnection: close\r\n\r\n`);
     expect(r2.status).toBe(REFUSED);
+    expect(r2.body).toBe(refusalBody);
   });
 
   test('spellings Bun folds onto 127.0.0.1 in req.url are refused — the HEADER is judged, raw', async () => {
     for (const h of ['127.1', `127.1:${PORT}`, '2130706433', `0x7f000001:${PORT}`, `localhost.:${PORT}`, `localhost:80`, `[0::1]:${PORT}`]) {
       const r = await raw(port, get11('/api/health', h));
       expect({ h, status: r.status }).toEqual({ h, status: REFUSED });
+      expect(r.body).toBe(refusalBody);
     }
   });
 
   test('forwarding headers on the wire do not launder a forged Host', async () => {
     const r = await raw(port, get11('/api/health', EVIL, `X-Forwarded-Host: ${LOOP}\r\nForwarded: host=${LOOP}\r\n`));
     expect(r.status).toBe(REFUSED);
+    expect(r.body).toBe(refusalBody);
   });
 
   test('a forged-Host POST over the wire is refused and writes nothing', async () => {
@@ -635,6 +804,18 @@ describe.skipIf(BIND_REFUSED !== null)('over a real socket — forged Host heade
       `POST /api/missions HTTP/1.1\r\nHost: ${EVIL}\r\nContent-Type: application/json\r\nContent-Length: ${Buffer.byteLength(body)}\r\nConnection: close\r\n\r\n${body}`
     );
     expect(r.status).toBe(REFUSED);
+    expect(r.body).toBe(refusalBody);
     expect(boardLines().length).toBe(before);
+  });
+
+  test('a rebinding EventSource over the wire, with the headers a browser sends, is refused', async () => {
+    const r = await raw(
+      port,
+      get11('/events', EVIL, 'Accept: text/event-stream\r\nSec-Fetch-Site: same-origin\r\nSec-Fetch-Mode: cors\r\nSec-Fetch-Dest: empty\r\n'),
+      { timeoutMs: 4_000 }
+    );
+    expect(r.timedOut).toBe(false);
+    expect(r.status).toBe(REFUSED);
+    expect(r.body).toBe(refusalBody);
   });
 });
