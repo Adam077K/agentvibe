@@ -118,6 +118,8 @@ export const MAX_UNPARSED_LINES = 1_000_000;
 export const MAX_MINUTES = 1_440;
 /** What a model id may look like. Anything else is not a model id and must never reach a table cell. */
 const MODEL_RE = /^[\w.:-]{1,64}$/;
+/** What a launch id may look like (a UUID, or `<launchId>:<tool_use_id>` for a child). Markdown such as `![x](url)` is not an id. */
+const ID_RE = /^[\w.:-]{1,128}$/;
 export const FOUNDER_KINDS = ['decision', 'rescue'] as const;
 
 const isStr = (v: unknown): v is string => typeof v === 'string' && v.length > 0;
@@ -158,7 +160,8 @@ export function parseReceipts(sources: SourceText[]): { receipts: ParsedReceipt[
       if (!countOrNull(p.turns)) bad.push('turns');
       if (!(p.exit === null || p.exit === undefined || Number.isInteger(p.exit))) bad.push('exit');
       if (!countOrNull(p.unparsedLines)) bad.push('unparsedLines');
-      if (!(p.parentLaunchId === undefined || isStr(p.parentLaunchId))) bad.push('parentLaunchId');
+      if (!ID_RE.test(p.launchId as string)) bad.push('launchId');
+      if (!(p.parentLaunchId === undefined || (isStr(p.parentLaunchId) && ID_RE.test(p.parentLaunchId)))) bad.push('parentLaunchId');
       if (!MODEL_RE.test(p.model as string)) bad.push('model');
       if (bad.length) {
         unparsed.push({ file, line, reason: `mistyped: ${bad.join(', ')}` });
@@ -283,13 +286,14 @@ export function buildScorecard(input: ScorecardInput): Scorecard {
   const weekAll = parsed.receipts.filter((r) => r.startedAt >= start && r.startedAt < end);
   // Child receipts (parentLaunchId set) run inside their parent's process: counting them as launches, or
   // adding their wall-clock, would double-count the parent. They are reported on their own row.
-  // A child naming a parent that is in no receipt file cannot be shown to run inside anything. It is
-  // counted as a top-level launch rather than silently dropped, and flagged.
-  const knownLaunchIds = new Set(parsed.receipts.map((r) => r.launchId));
-  const isOrphan = (r: ParsedReceipt) => r.parentLaunchId !== null && !knownLaunchIds.has(r.parentLaunchId);
+  // A child counts as a child only if its parent is a TOP-LEVEL launch in some receipt file. A parent in no
+  // file, itself, another child, or a cycle cannot be shown to contain it, and counting such receipts only
+  // as children would deflate launches. They are counted as top-level launches and flagged.
+  const topLevelIds = new Set(parsed.receipts.filter((r) => r.parentLaunchId === null).map((r) => r.launchId));
+  const isOrphan = (r: ParsedReceipt) => r.parentLaunchId !== null && !topLevelIds.has(r.parentLaunchId);
   const anomalies: Unparsed[] = weekAll.filter(isOrphan).map((r) => ({
     file: r.file, line: r.line,
-    reason: `child launch ${r.launchId} names parentLaunchId ${r.parentLaunchId} which is in no receipt; counted as a top-level launch`,
+    reason: `child launch ${r.launchId} names parentLaunchId ${r.parentLaunchId} which is not a top-level launch in any receipt; counted as a top-level launch`,
   }));
   const inWeek = weekAll.filter((r) => r.parentLaunchId === null || isOrphan(r));
   const children = weekAll.filter((r) => r.parentLaunchId !== null && !isOrphan(r));

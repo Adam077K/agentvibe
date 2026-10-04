@@ -249,6 +249,59 @@ describe('scorecard v0 — orphan children', () => {
   });
 });
 
+describe('scorecard v0 — id shape', () => {
+  const IMG = '![x](https://evil.example/p.png)';
+
+  test('a launchId or parentLaunchId that is not a plain id makes the receipt unparsed, so no image or link reaches the render', () => {
+    const s = build([
+      receipt({ launchId: IMG }),
+      receipt({ launchId: 'OK', parentLaunchId: IMG }),
+      receipt({ launchId: '[a](javascript:alert(1))' }),
+      receipt({ launchId: 'x'.repeat(129) }),
+      receipt({ launchId: 'with space' }),
+    ].join('\n'));
+    expect(s.unparsed.map((u) => [u.line, u.reason])).toEqual([
+      [1, 'mistyped: launchId'], [2, 'mistyped: parentLaunchId'], [3, 'mistyped: launchId'],
+      [4, 'mistyped: launchId'], [5, 'mistyped: launchId'],
+    ]);
+    const md = renderMarkdown(s);
+    expect(md).not.toContain('evil.example');
+    expect(md).not.toMatch(/!\[x\]\(/);
+    expect(metric(s, 'launches').kind).toBe('fog');
+  });
+
+  test.each([['L1'], ['L1:tu_1'], ['3f2b8c1e-9d4a-4e0b-8a77-2f6c1d9e5b10'], ['x'.repeat(128)]])('id %j is accepted', (launchId) => {
+    expect(build(receipt({ launchId })).unparsed).toEqual([]);
+  });
+});
+
+describe('scorecard v0 — parent graph', () => {
+  const child = (launchId: string, parentLaunchId: string) =>
+    receipt({ launchId, role: 'builder-subagent', parentLaunchId, startedAt: T + 1_000, endedAt: T + 5_000 });
+
+  test('a self-parent is an orphan: top-level and flagged, not a child that deflates launches', () => {
+    const s = build(child('S', 'S'));
+    expect(metric(s, 'launches')).toMatchObject({ kind: 'value', value: 1, provenance: { launchIds: ['S'] } });
+    expect(metric(s, 'child launches (inside a parent)').kind).toBe('fog');
+    expect(s.anomalies).toHaveLength(1);
+    expect(s.anomalies[0]!.reason).toContain('S');
+  });
+
+  test('a 2-cycle: both are top-level and both flagged', () => {
+    const s = build([child('A', 'B'), child('B', 'A')].join('\n'));
+    expect(metric(s, 'launches')).toMatchObject({ value: 2, provenance: { launchIds: ['A', 'B'] } });
+    expect(metric(s, 'child launches (inside a parent)').kind).toBe('fog');
+    expect(s.anomalies.map((a) => a.line)).toEqual([1, 2]);
+  });
+
+  test('a child of a child is an orphan; a child of a top-level launch is still a child', () => {
+    const s = build([receipt(), child('C1', 'L1'), child('C2', 'C1')].join('\n'));
+    expect(metric(s, 'launches')).toMatchObject({ value: 2, provenance: { launchIds: ['L1', 'C2'] } });
+    expect(metric(s, 'child launches (inside a parent)')).toMatchObject({ value: 1, provenance: { launchIds: ['C1'] } });
+    expect(s.anomalies.map((a) => a.line)).toEqual([3]);
+  });
+});
+
 describe('scorecard v0 — founder minutes validation', () => {
   test.each([
     ['2026-02-30,10,decision,x', 'date'],
