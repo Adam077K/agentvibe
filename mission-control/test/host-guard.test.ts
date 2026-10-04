@@ -40,13 +40,25 @@ import { CLIENT_PORT, PORT } from '../server/config.ts';
 import { siteVerdict } from '../server/routes/guard.ts';
 import { allowedHosts, hostGuard, hostVerdict, LOOPBACK_HOSTNAMES } from '../server/routes/host-guard.ts';
 import { LiveState } from '../server/state.ts';
+import { missionsDir as resolveMissionsDir } from '../server/missions.ts';
+import { cachePath as indexCachePath, dispatchQueuePath } from '../server/index-cache.ts';
+import { trustFilePath } from '../server/trust.ts';
+import { discoverProjects } from '../server/projects.ts';
+// @ts-expect-error — CommonJS, untyped; the same module the collectors resolve through.
+import usageLib from '../../scripts/lib/usage.js';
 
 const REFUSED = 421;
 const EVIL = 'evil.example:4300';
 const INDEX_SENTINEL = 'HG1-INDEX-SENTINEL-5c1e';
 const ASSET_SENTINEL = 'HG1-ASSET-SENTINEL-9b2d';
 
-const STATE_ENV = ['MC_MISSIONS_DIR', 'MC_DISPATCH_QUEUE', 'MC_TRUSTED_FILE', 'MC_INDEX_CACHE'];
+// EVERY home-relative state path a handler can resolve, each overridden into the fixture.
+// HOME itself cannot be the lever: Bun's os.homedir() does not follow a runtime change to
+// process.env.HOME (measured, Bun 1.3.10), so a temp HOME would look like isolation and be none.
+const STATE_ENV = [
+  'MC_MISSIONS_DIR', 'MC_DISPATCH_QUEUE', 'MC_TRUSTED_FILE', 'MC_INDEX_CACHE', 'MC_PROJECT_ROOTS',
+  'AGENTVIBE_USAGE_CACHE', 'AGENTVIBE_PROJECTS_DIR',
+];
 /** Names an allowlist variable would plausibly have. Set to the attacker's host by one test. */
 const ALLOWLIST_ENV = ['MC_ALLOWED_HOSTS', 'MC_HOSTS', 'MC_HOST', 'ALLOWED_HOSTS', '__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS'];
 
@@ -150,6 +162,9 @@ beforeAll(() => {
   process.env.MC_DISPATCH_QUEUE = path.join(tmp, 'dispatch-queue.jsonl');
   process.env.MC_TRUSTED_FILE = path.join(tmp, 'trusted-projects.txt');
   process.env.MC_INDEX_CACHE = path.join(tmp, 'index-cache-env.json');
+  process.env.MC_PROJECT_ROOTS = path.join(tmp, 'project-roots');
+  process.env.AGENTVIBE_USAGE_CACHE = path.join(tmp, 'usage-cache.json');
+  process.env.AGENTVIBE_PROJECTS_DIR = path.join(tmp, 'claude-projects');
 });
 
 afterAll(() => {
@@ -158,6 +173,28 @@ afterAll(() => {
     else process.env[k] = v;
   }
   fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+// ── isolation: this file never resolves state under the real home ──────────────────────
+
+describe('ISOLATION — every state path this file can reach resolves into the fixture', () => {
+  test('missions, decisions, dispatch queue, index cache, trust file, usage cache, corpus and project roots', () => {
+    const realAgentvibe = path.join(os.homedir(), '.agentvibe');
+    const resolved: Record<string, string> = {
+      missionsDir: resolveMissionsDir(),
+      dispatchQueuePath: dispatchQueuePath(),
+      indexCachePath: indexCachePath(),
+      trustFilePath: trustFilePath(),
+      usageCachePath: (usageLib as { cachePath: () => string }).cachePath(),
+      usageProjectsDir: (usageLib as { projectsDir: () => string }).projectsDir(),
+    };
+    for (const [name, p] of Object.entries(resolved)) {
+      expect({ name, underFixture: p.startsWith(tmp + path.sep) }).toEqual({ name, underFixture: true });
+      expect({ name, underRealAgentvibe: p.startsWith(realAgentvibe) }).toEqual({ name, underRealAgentvibe: false });
+    }
+    // The default discovery roots too — a handler that discovers without a LiveState lands here.
+    expect(discoverProjects().every((proj) => proj.root.startsWith(tmp))).toBe(true);
+  });
 });
 
 // ── the allowed set, by value ────────────────────────────────────────────────────────────
@@ -225,7 +262,7 @@ describe('hostVerdict — the Host header is matched exactly, case-insensitively
       '127.1', '127.0.1', '2130706433', '0x7f000001', '0x7f.0.0.1', '0177.0.0.1', '127.0.0.1:4300.',
       '127.0.0.2', '0.0.0.0', '0',
       // An allowlist written as a regex with unescaped dots matches these.
-      '127a0b0c1', '127a0b0c1:4300', '127x0.0.1', '127.0.0a1:4301',
+      '127a0b0c1', '127a0b0c1:4300', '127x0.0.1', '127.0.0a1:4301', '127-0-0-1:4300', '127_0_0_1:4301',
     ],
     'list, path and injection shapes': [
       'localhost,evil.example', 'localhost, evil.example', 'evil.example, localhost', 'localhost:4300, localhost:4300',
@@ -233,6 +270,10 @@ describe('hostVerdict — the Host header is matched exactly, case-insensitively
       'localhost\tevil.example', 'localhost\u0000',
     ],
     'empty and whitespace': ['', ' ', '\t'],
+    // U+017F LATIN SMALL LETTER LONG S upper-cases to `S`, so a guard that folds with
+    // toUpperCase() matches it against LOCALHOST. A browser cannot put it on the wire (header
+    // values are ByteStrings), so this pins the pure function's fold, not a live vector.
+    'Unicode that case-folds onto a loopback name': ['localho\u017Ft', 'localho\u017Ft:4300', 'LOCALHO\u017FT:4301'],
   };
   for (const [group, hosts] of Object.entries(refuse)) {
     describe(`refuses ${group}`, () => {
@@ -276,6 +317,10 @@ describe('hostVerdict — the URL authority is checked too, and absence is not p
     expect(hostVerdict('localhost:4300', 'http://evil.example/api/health', ALLOWED).allow).toBe(false);
     expect(hostVerdict('evil.example', 'http://localhost:4300/api/health', ALLOWED).allow).toBe(false);
     expect(hostVerdict('localhost:4300', 'http://localhost:4300/api/health', ALLOWED).allow).toBe(true);
+    // The URL authority is compared WITH its port — not its hostname alone — even when a Host
+    // header is present and is ours.
+    expect(hostVerdict('localhost:4300', 'http://localhost:9999/api/health', ALLOWED).allow).toBe(false);
+    expect(hostVerdict('127.0.0.1:4301', 'http://127.0.0.1:9999/api/health', ALLOWED).allow).toBe(false);
   });
 
   test('the verdict carries a reason, which is for logs and never for the body', () => {
@@ -354,6 +399,35 @@ describe('createApp — a foreign Host is refused with 421 on EVERY route, metho
       const res = await settle(await app.fetch(rebound('/api/health', { method })));
       expect({ method, status: res.status }).toEqual({ method, status: REFUSED });
     }
+  });
+
+  test('no request shape is exempt — a CORS preflight and a WebSocket upgrade are refused like any other', async () => {
+    const app = appWith();
+    const shapes: { what: string; method: string; headers: Record<string, string> }[] = [
+      { what: 'CORS preflight', method: 'OPTIONS', headers: { origin: `http://${EVIL}`, 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type' } },
+      { what: 'WebSocket upgrade', method: 'GET', headers: { upgrade: 'websocket', connection: 'Upgrade', 'sec-websocket-version': '13', 'sec-websocket-key': 'dGhlIHNhbXBsZSBub25jZQ==' } },
+    ];
+    for (const { what, method, headers } of shapes) {
+      for (const p of ['/api/health', '/events', '/']) {
+        const res = await settle(await app.fetch(rebound(p, { method, headers })));
+        expect({ what, p, status: res.status }).toEqual({ what, p, status: REFUSED });
+      }
+    }
+  });
+
+  test('a request with NO authority anywhere — no Host, a URL with no host — is refused by the guard itself', async () => {
+    // The in-process stand-in for a hostless HTTP/1.0 request, which Bun presents with a
+    // relative URL. A guard that waves through "no Host and not an http URL" would serve it, and
+    // without this the only test that sees that guard is on the socket, which can be skipped.
+    const state = fixtureState('no-authority');
+    const app = createApp(state, dist);
+    for (const u of ['file:///api/health', 'file:///api/sessions', 'file:///events', 'file:///']) {
+      const req = new Request(u);
+      expect(req.headers.get('host')).toBeNull();
+      const res = await settle(await app.fetch(req));
+      expect({ u, status: res.status }).toEqual({ u, status: REFUSED });
+    }
+    expect(state.isBuilt).toBe(false);
   });
 
   test('/events: refused before the stream exists — no SSE, no reaper opt-out, no index build', async () => {
@@ -500,8 +574,9 @@ describe('createApp — what the guard reads, and what it never reads', () => {
     const app = appWith();
     const headerOursUrlNot = new Request(`http://${EVIL}/api/health`, { headers: { host: `127.0.0.1:${PORT}` } });
     const urlOursHeaderNot = new Request(`http://127.0.0.1:${PORT}/api/health`, { headers: { host: EVIL } });
+    const headerOursUrlPortNot = new Request('http://localhost:9999/api/health', { headers: { host: `localhost:${PORT}` } });
     const constant = (await settle(await app.fetch(rebound('/api/health')))).body;
-    for (const req of [headerOursUrlNot, urlOursHeaderNot]) {
+    for (const req of [headerOursUrlNot, urlOursHeaderNot, headerOursUrlPortNot]) {
       const res = await settle(await app.fetch(req));
       expect(res.status).toBe(REFUSED);
       expect(res.body).toBe(constant); // which half failed is not told to the client
@@ -780,6 +855,13 @@ describe.skipIf(BIND_REFUSED !== null)('over a real socket — forged Host heade
     const r2 = await raw(port, `GET http://${EVIL}/api/health HTTP/1.1\r\nHost: ${LOOP}\r\nConnection: close\r\n\r\n`);
     expect(r2.status).toBe(REFUSED);
     expect(r2.body).toBe(refusalBody);
+    const r4 = await raw(port, `GET http://127.0.0.1:9999/api/health HTTP/1.1\r\nHost: ${LOOP}\r\nConnection: close\r\n\r\n`);
+    expect(r4.status).toBe(REFUSED);
+    expect(r4.body).toBe(refusalBody);
+    // HTTP/1.0 absolute-form with NO Host line: the request-line authority is all there is.
+    const r3 = await raw(port, `GET http://${EVIL}/api/health HTTP/1.0\r\n\r\n`);
+    expect(r3.status).toBe(REFUSED);
+    expect(r3.body).toBe(refusalBody);
   });
 
   test('spellings Bun folds onto 127.0.0.1 in req.url are refused — the HEADER is judged, raw', async () => {
@@ -806,6 +888,12 @@ describe.skipIf(BIND_REFUSED !== null)('over a real socket — forged Host heade
     expect(r.status).toBe(REFUSED);
     expect(r.body).toBe(refusalBody);
     expect(boardLines().length).toBe(before);
+  });
+
+  test('a rebinding fetch() over the wire, with the headers a browser sends, is refused', async () => {
+    const r = await raw(port, get11('/api/sessions', EVIL, 'Sec-Fetch-Site: same-origin\r\nSec-Fetch-Mode: cors\r\nSec-Fetch-Dest: empty\r\nAccept: */*\r\n'));
+    expect(r.status).toBe(REFUSED);
+    expect(r.body).toBe(refusalBody);
   });
 
   test('a rebinding EventSource over the wire, with the headers a browser sends, is refused', async () => {
