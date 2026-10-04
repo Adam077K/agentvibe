@@ -14,7 +14,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { appendMissionLine } from '../server/index-cache.ts';
 import { STOP_REQUESTED, boardPath, foldBoard, readBoardLines, readEvents, foldTeam, type MissionLine } from '../server/missions.ts';
-import { reconcileWorking } from '../scripts/run-missions.ts';
+import { childrenPath, processIdentity, reapOrphanGroups, reconcileWorking } from '../scripts/run-missions.ts';
 
 const RUNNER_TS = path.resolve(import.meta.dir, '..', 'scripts', 'run-missions.ts');
 const ID = '11111111-1111-4111-8111-111111111111';
@@ -219,6 +219,108 @@ describe('the runner stops a running mission', () => {
     requestStop(ID);
     expect(mission(ID)).toMatchObject({ status: 'done', verdict: 'PASS' });
     expect(mission(ID).stopRequested).toBeUndefined();
+  }, 40_000);
+});
+
+// A Builder that leaves a background process behind and then finishes normally: the runner, not
+// the worker, is responsible for what outlives the leader.
+const STRAGGLER_CLAUDE = QUICK_CLAUDE.replace(
+  "const fs = require('node:fs');",
+  `const fs = require('node:fs');
+const bg = require('node:child_process').spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' });
+bg.unref(); // else the worker's own event loop waits for it and the leader never exits
+fs.writeFileSync(require('node:path').join(process.env.FAKE_DIR, 'claude.pids'), JSON.stringify({ child: process.pid, grandchild: bg.pid }));`,
+);
+
+describe('the runner itself shuts down', () => {
+  const CODES = { SIGINT: 130, SIGHUP: 129, SIGTERM: 143 } as const;
+  test.each(['SIGINT', 'SIGHUP', 'SIGTERM'] as const)(
+    '%s with two queued missions: no child survives, mission 1 is stopped (not failed), mission 2 is never launched, locks are released',
+    async (sig) => {
+      const bins = { claude: mk('fake-claude', FORKING_WORKER('claude')), codex: mk('fake-codex', PASSING_CODEX) };
+      put(waiting(ID));
+      put({ id: ID, ts: 2, status: 'queued' });
+      put(waiting(ID2));
+      put({ id: ID2, ts: 3, status: 'queued' });
+      const { child, exited } = startRunner(bins, { FAKE_GC_MODE: 'stubborn' });
+      const pids = await until('builder pids', () => pidsOf('claude'));
+      await until('working', () => mission(ID).status === 'working');
+
+      child.kill(sig);
+      expect(await exited).toBe(CODES[sig]);
+
+      expect(alive(pids.child)).toBe(false);
+      expect(alive(pids.grandchild)).toBe(false);
+      expect(mission(ID).status).toBe('stopped');
+      expect(mission(ID).error).toBeUndefined();
+      expect(mission(ID2).status).toBe('queued'); // never claimed, never launched
+      expect(readEvents(ID2, dir)).toEqual([]);
+      expect(pidsOf('claude')!.child).toBe(pids.child); // the Builder was spawned once, for mission 1 only
+      expect(fs.existsSync(path.join(dir, ID, 'runner.lock'))).toBe(false);
+      expect(fs.existsSync(path.join(dir, ID2, 'runner.lock'))).toBe(false);
+      expect(fs.existsSync(path.join(work, 'codex.ran'))).toBe(false);
+    },
+    40_000,
+  );
+});
+
+describe('a SIGKILLed runner does not orphan its worker groups', () => {
+  test('reconcile + reap kills the recorded group (leader and grandchild) of the dead runner', async () => {
+    const bins = { claude: mk('fake-claude', FORKING_WORKER('claude')), codex: mk('fake-codex', PASSING_CODEX) };
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    const { child, exited } = startRunner(bins);
+    const pids = await until('builder pids', () => pidsOf('claude'));
+    await until('working', () => mission(ID).status === 'working');
+    child.kill('SIGKILL');
+    await exited;
+    // The premise: nothing the dead runner could do is left to clean up, so they are still running.
+    expect(alive(pids.child) && alive(pids.grandchild)).toBe(true);
+
+    expect(reconcileWorking(dir)).toEqual([ID]);
+    expect(await reapOrphanGroups(ID, dir)).toEqual([pids.child]);
+    expect(alive(pids.child)).toBe(false);
+    expect(alive(pids.grandchild)).toBe(false);
+    // And it is recorded as handled, so a second pass signals nothing.
+    expect(await reapOrphanGroups(ID, dir)).toEqual([]);
+  }, 40_000);
+
+  test('a recorded group whose leader pid now belongs to a different process is NOT signalled; the same record with the true identity is', async () => {
+    const bystander = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { detached: true, stdio: 'ignore' });
+    try {
+      const pid = bystander.pid!;
+      const truth = await until('bystander identity', () => processIdentity(pid));
+      fs.mkdirSync(path.join(dir, ID), { recursive: true });
+      const record = (identity: string | null) =>
+        fs.appendFileSync(childrenPath(ID, dir), JSON.stringify({ ts: 1, pgid: pid, identity, role: 'builder', runner: 1 }) + '\n');
+
+      record('Thu Jan  1 00:00:00 1970'); // a pgid that was reused: same number, different process
+      expect(await reapOrphanGroups(ID, dir)).toEqual([]);
+      expect(alive(pid)).toBe(true);
+
+      record(truth);
+      expect(await reapOrphanGroups(ID, dir)).toEqual([pid]);
+      await until('bystander gone', () => !alive(pid));
+    } finally {
+      try {
+        process.kill(bystander.pid!, 'SIGKILL');
+      } catch {
+        /* already gone */
+      }
+    }
+  }, 40_000);
+});
+
+describe('a worker that leaves a process behind and exits normally', () => {
+  test('the runner terminates the straggler: the leader exiting is not the group being empty', async () => {
+    const bins = { claude: mk('fake-claude', STRAGGLER_CLAUDE), codex: mk('fake-codex', PASSING_CODEX) };
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    const { exited } = startRunner(bins);
+    expect(await exited).toBe(0);
+    expect(mission(ID).status).toBe('done');
+    const pids = pidsOf('claude') ?? JSON.parse(fs.readFileSync(path.join(work, 'claude.pids'), 'utf8'));
+    expect(alive(pids.grandchild)).toBe(false);
   }, 40_000);
 });
 

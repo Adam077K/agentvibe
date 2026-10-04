@@ -154,6 +154,13 @@ describe('POST /api/missions/:id/stop', () => {
     expect(readBoardLines(f())).toHaveLength(n);
   });
 
+  test('a stop_requested line missing its id or ts is not a board line at all', () => {
+    // `a && b && status-in-list || status === stop_requested` let the right arm through alone.
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(f(), [{ status: STOP_REQUESTED }, { ts: 1, status: STOP_REQUESTED }, { id: ID, status: STOP_REQUESTED }, { id: 7, ts: 1, status: STOP_REQUESTED }].map((l) => JSON.stringify(l)).join('\n') + '\n');
+    expect(readBoardLines(f())).toEqual([]);
+  });
+
   test('a non-UUID id is 400 and never reaches path.join; an unknown id is 404', async () => {
     const api = createMissionsApi(dir);
     expect((await post(api, '/..%2F..%2Fetc/stop')).status).toBe(400);

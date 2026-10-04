@@ -109,7 +109,7 @@ export function readBoardLines(file: string = boardPath()): MissionLine[] {
     if (!raw.trim()) continue;
     try {
       const p = JSON.parse(raw) as MissionLine;
-      if (typeof p.id === 'string' && typeof p.ts === 'number' && (MISSION_STATUSES as readonly string[]).includes(p.status) || p.status === STOP_REQUESTED) out.push(p);
+      if (typeof p.id === 'string' && typeof p.ts === 'number' && ((MISSION_STATUSES as readonly string[]).includes(p.status) || p.status === STOP_REQUESTED)) out.push(p);
     } catch {
       // A torn final line from a crashed writer: skip, never half-parse.
     }
