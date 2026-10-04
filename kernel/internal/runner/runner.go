@@ -57,6 +57,11 @@ type ExecConfig struct {
 	WorkerUID   int      // the worker's uid; 0 (root, or unset) is ErrSpec
 	WorkerGIDs  []int    // the worker's groups
 	WorkerRoots []string // every root a worker may write (worktrees, job dirs, TMPDIRs); >= 1, clean, absolute, not "/"
+	// ACLWritable is the ACL half of the writability check (r4, a seam for the fail-closed ruling);
+	// nil means the platform's ACL reader. Exec asks it about the resolved binary and each resolved
+	// ancestor up to "/" until one is writable. (true, nil) makes that path writable, and so does ANY
+	// error: an ACL it cannot read is writable. Only (false, nil) for every path allows in place.
+	ACLWritable func(path string) (bool, error)
 }
 
 // Status is a job's state in the runner's persisted record.
@@ -237,8 +242,11 @@ func (r *Runner) Run(ctx context.Context, job Job) error {
 // process group and every descendant (guarding against pid reuse), marks the job
 // StatusInterrupted and calls Launcher.End for its lease. Interrupted is terminal: no Runner ever
 // relaunches or re-ends it (r2, ruling Q3). A second Reconcile is a no-op. It must complete before
-// Run admits anything (Q4). A job whose process cannot be judged, or whose End fails, stays running
-// and Reconcile returns the error, so the next Reconcile retries it and Run stays refused.
+// Run admits anything (Q4). A recorded leader whose identity still matches is killed itself, with its
+// descendants, even if it left its process group (r4). "Cannot judge" is not "interrupted" (r4): when
+// Identify fails with anything but syscall.ESRCH, nothing is signalled through that pid, and when
+// Launcher.End fails, the job stays running; either way Reconcile returns the error, Run stays
+// refused (ErrState), and the next Reconcile retries the job.
 func (r *Runner) Reconcile(ctx context.Context) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()

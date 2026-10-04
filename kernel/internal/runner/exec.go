@@ -47,6 +47,21 @@ type execer struct {
 	uid   int
 	gids  []int
 	roots []string
+	acl   func(path string) (bool, error) // ExecConfig.ACLWritable; nil: the platform's reader
+}
+
+// aclWritable asks the seam about each path in turn, or the platform reader about all of them: true
+// when one is writable or unreadable (an error is writable).
+func (e *execer) aclWritable(paths []string) bool {
+	if e.acl == nil {
+		return aclWritable(paths)
+	}
+	for _, p := range paths {
+		if w, err := e.acl(p); w || err != nil {
+			return true
+		}
+	}
+	return false
 }
 
 func (cfg ExecConfig) valid() bool {
@@ -71,14 +86,14 @@ func NewExec(cfg ExecConfig) (launcher.Exec, error) {
 	if !cfg.valid() {
 		return nil, fmt.Errorf("%w: ExecConfig needs a non-root WorkerUID and clean absolute WorkerRoots other than /", ErrSpec)
 	}
-	return &execer{uid: cfg.WorkerUID, gids: slices.Clone(cfg.WorkerGIDs), roots: slices.Clone(cfg.WorkerRoots)}, nil
+	return &execer{uid: cfg.WorkerUID, gids: slices.Clone(cfg.WorkerGIDs), roots: slices.Clone(cfg.WorkerRoots), acl: cfg.ACLWritable}, nil
 }
 
 // writable reports whether p or any ancestor is writable by the worker: by owner, group and other mode
 // bits, then by ACL, failing closed. It also returns p's own stat. With sticky set, a sticky ancestor
 // (/tmp) does not count for its group and other bits: only an entry's owner may replace it there, and
 // the copy's directory is the daemon's own. The check of a binary run in place never sets it.
-func (e *execer) writable(p string, sticky bool) (bool, syscall.Stat_t) {
+func (e *execer) writable(p string, sticky bool, acl func([]string) bool) (bool, syscall.Stat_t) {
 	var self syscall.Stat_t
 	var chain []string
 	for q := p; ; q = filepath.Dir(q) {
@@ -101,7 +116,7 @@ func (e *execer) writable(p string, sticky bool) (bool, syscall.Stat_t) {
 			break
 		}
 	}
-	return aclWritable(chain), self
+	return acl(chain), self
 }
 
 // inRoot reports whether p lies in a worker root, as given or with symlinks resolved.
@@ -131,7 +146,7 @@ func (e *execer) prepare(path, digest string) (string, func(), error) {
 	if err != nil {
 		return "", nil, err
 	}
-	w, checked := e.writable(real, false)
+	w, checked := e.writable(real, false, e.aclWritable)
 	inPlace := !w && !e.inRoot(real)
 	src, err := os.Open(real)
 	if err != nil {
@@ -157,9 +172,10 @@ func (e *execer) prepare(path, digest string) (string, func(), error) {
 	}
 	cleanup := func() { os.RemoveAll(dir) }
 	// A worker that is not the daemon's uid must not be able to write the copy's directory or replace
-	// it (a writable ancestor, or an inherited ACL). The same uid could write anything the daemon can.
+	// it (a writable ancestor, or an inherited ACL; read by the platform's reader, never the seam). The
+	// same uid could write anything the daemon can.
 	if d := resolved(dir); e.uid != os.Getuid() {
-		if dw, _ := e.writable(d, true); dw || e.inRoot(d) {
+		if dw, _ := e.writable(d, true, aclWritable); dw || e.inRoot(d) {
 			cleanup()
 			return "", nil, fmt.Errorf("runner: private copy dir %s is writable by the worker", d)
 		}

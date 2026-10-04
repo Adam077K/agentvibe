@@ -1,6 +1,6 @@
 package runner_test
 
-// Regression tests for the independent review of B1-09a @260d5ec (one HIGH, six LOW). Not frozen, and
+// Regression tests for the independent review of B1-09a @260d5ec (six LOW; the HIGH is frozen test r4). Not frozen, and
 // they build without the donetest tag; every helper is fx-prefixed so it cannot meet the frozen file's.
 
 import (
@@ -156,59 +156,8 @@ func fxJob(id, bin string, argv []string, env map[string]string, l runner.Limits
 	return runner.Job{Req: launcher.Request{JobID: id, Binary: bin, Argv: argv, Env: env, Requires: launcher.Prerequisites{FencedLease: "job://" + id + "#1"}}, Limits: l}
 }
 
-// HIGH: a leader that leaves its group before the first scan must be dead when Run returns.
-func TestFix_ExecKillsLeaderThatLeftItsGroup(t *testing.T) {
-	dir := t.TempDir()
-	pids := filepath.Join(dir, "pids")
-	fxReap(t, pids)
-	const wall = 1500 * time.Millisecond
-	done := make(chan error, 1)
-	t0 := time.Now()
-	go func() {
-		done <- fxExec(t, os.Getuid()).Run(runner.WithLimits(context.Background(), runner.Limits{Wall: wall, Idle: time.Minute, Stdout: io.Discard}),
-			fxPerl, fxDigest(t, fxPerl), []string{"-e", fxEscapeScript}, []string{"FX_PIDS=" + pids})
-	}()
-	select {
-	case err := <-done:
-		if !errors.Is(err, runner.ErrWall) {
-			t.Fatalf("err %v, want ErrWall", err)
-		}
-		if took := time.Since(t0); took > wall+2*time.Second {
-			t.Errorf("Run took %v for a wall of %v", took, wall)
-		}
-	case <-time.After(wall + 10*time.Second):
-		t.Fatal("Run did not return")
-	}
-	if len(fxPids(pids)) != 1 {
-		t.Fatalf("recorded pids %v, want the leader's", fxPids(pids))
-	}
-	fxWaitDead(t, "leader that left its group, after Run", pids)
-}
-
-// HIGH, Reconcile: the recorded leader's identity matches, and it has left its group.
-func TestFix_ReconcileKillsLeaderThatLeftItsGroup(t *testing.T) {
-	dir := t.TempDir()
-	pids := filepath.Join(dir, "pids")
-	fxReap(t, pids)
-	c := fxStartEscaper(t, pids)
-	id, err := runner.ProcIdentity(c.Process.Pid)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fxRecord(t, state(t, dir), "job-x", c.Process.Pid, id.Start.UnixMicro())
-	fl := &fxLauncher{}
-	r, err := runner.New(runner.Config{State: state(t, dir), Capacity: 2, Launcher: fl})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := r.Reconcile(context.Background()); err != nil {
-		t.Fatalf("Reconcile: %v", err)
-	}
-	fxWaitDead(t, "leader that left its group, after Reconcile", pids)
-	if st, err := r.Status("job-x"); err != nil || st != runner.StatusInterrupted {
-		t.Fatalf("status %q (%v), want interrupted", st, err)
-	}
-}
+// The HIGH (a leader that leaves its group) is pinned by the frozen TestB1_09a_LeaderLeavesGroup, for
+// Exec and for Reconcile, so it is not repeated here.
 
 func state(t *testing.T, dir string) string {
 	t.Helper()

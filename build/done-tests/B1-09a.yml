@@ -127,9 +127,60 @@
 # binary in a worker root (ExecInPlaceOrCopy); ProcIdentity Start = now, or nil error for a dead pid
 # (ProcIdentity and others). Survives the default run: a mutant that ignores ACLs (only the gated
 # test can kill it, and it is unverified).
+#
+# RE-FREEZE r4 2026-10-04: the independent review of the implementation (build/b1-09a, ce81a28) found
+# a HIGH regression and eight mutants the r3 tests let through. Frozen on build/b1-09a-tests-r2,
+# base 87800f0. Stub contract additions (kernel/internal/runner/runner.go), each pinned below:
+# ExecConfig.ACLWritable (the ACL seam; an error is writable); the tree includes the leader itself
+# even after it leaves its group; rescans at least every 250ms; a leader that exits after the 90%
+# SIGINT is ErrWall; the leader is reaped when Run returns; a job id runs once (ErrSpec, from Q3);
+# an Identify error (not ESRCH) or a failed End leaves the job running, Reconcile errs, Run refused.
+#   Tests, 21 (was 14): 20 always run, 1 gated (ExecACLWritable, still unverified, below).
+#   LeaderLeavesGroup           NEW (HIGH): perl leader setpgid()s into its parent's group in
+#                               milliseconds (in place, uncopied, before any scan), then spawns a
+#                               child; both dead after Run (Exec in a host process, so the group
+#                               joined is never the test's) and after Reconcile (identity matches).
+#   IdleBackstopKillsTree       CHANGED (flake, 3 of 24 under 4x load): judged from the leader's first
+#                               byte, a "ready" handshake; the leader is perl, in place, so exec is
+#                               not what is timed (a copied 10MB Go leader measured >700ms to exec
+#                               under 4x load, every attempt); an attempt with no byte before ErrIdle
+#                               measured nothing and is retried, at most 3 times. Idle stays 700ms;
+#                               the r3 control's 1.5s is back to 700ms (a perl chatty worker).
+#   WallAfterGracefulExit       NEW: leader exits 0 on the 90% SIGINT -> ErrWall.
+#   KillFreezesBreeder          NEW: a leader spawning setsid perl children through the kill.
+#   OrphanAfterScanKilled       NEW: a setsid child orphaned 600ms in is still killed.
+#   ReconcileCannotJudgeStaysRunning / ReconcileEndFailsStaysRunning   NEW.
+#   ExecACLSeam                 NEW: the fail-closed half of the ACL ruling, through the seam: every
+#                               path in the resolved chain is asked; an unreadable ACL on the binary,
+#                               its dir, "/" or an ancestor, or a writable one, takes the copy path.
+#   WallBackstopKillsTree       + the leader is reaped (kill 0 is ESRCH) when Run returns; the leader
+#                               is the same perl tree (the copied Go leader once took 1.6s to start).
+#   RunnerAppliesLimits, DaemonKilledMidJob   + a recorded job id run again is ErrSpec, no Launch.
+#   ExecInPlaceOrCopy           + 6e: a world-writable (0757) ancestor, group bits granting nothing.
+# Proof, 2026-10-04, scratch reference in $TMPDIR (never on this branch): 20 of 20 pass, gated test
+# SKIPs; red 20 of 20 against the stub. Under load, the whole suite 4 instances in parallel x 5
+# rounds: 20 of 20 runs green, 0 retries, 0 strays, 0 fixture leftovers (before the perl leaders:
+# 6 of 20 runs failed, 5 Idle, 1 Wall). The r3 timing mutants (SIGINT to the leader only, SIGKILL at
+# 2x wall, SIGINT at 99%) still fail WallBackstopKillsTree with the perl leader. Mutants were applied to that reference, not to build/b1-09a: setting
+# the implementation up in scratch was refused by the permission system and not retried.
+#   killed: leader not seeded into the tree, Exec half and Reconcile half (LeaderLeavesGroup);
+#   End error swallowed (ReconcileEndFailsStaysRunning); poll scan dropped (OrphanAfterScanKilled);
+#   no ErrWall after a SIGINT exit (WallAfterGracefulExit); world bit ignored (ExecInPlaceOrCopy);
+#   job-id-once dropped (RunnerAppliesLimits, DaemonKilledMidJob); identify error marked interrupted
+#   (ReconcileCannotJudgeStaysRunning); ACL error read as not writable, ACL asked of the binary only
+#   (ExecACLSeam); idle not reset by output (IdleBackstopKillsTree).
+#   NOT killed, and why:
+#   - freeze step dropped (three variants, incl. kill-the-group-then-scan with no pre-kill scan):
+#     survives KillFreezesBreeder 5 of 5. The window the freeze closes is a fork landing between a
+#     scan and the SIGKILL's delivery; the scan right after kill(-pgid) still sees the breeder alive
+#     (delivery lags), so its children are found by ppid. No black-box test opens that window
+#     deterministically; the freeze stays a reviewed invariant, the test a guard for the gross case.
+#   - 5s wait skipped (leader not waited for): equivalent up to a race. The Wait goroutine reaps the
+#     leader microseconds after the kill, before the test can look; the reaped check in
+#     WallBackstopKillsTree pins the contract but does not reliably catch this mutant.
 register: B1-09a
 jobs:
   - id: B1-09a
     files:
       - path: kernel/internal/runner/runner_donetest_test.go
-        sha256: 20e818ec621b814abb45a8aece5291c8033e41cddf0c430839985eca884060a5
+        sha256: b3e78e1972773aa05ed36d61d7fb4dd3bf5a05b9f74e44045121f9aca3f5babc
