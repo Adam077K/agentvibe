@@ -1,0 +1,263 @@
+{
+  "cases": [
+    {
+      "name": "control",
+      "want": "valid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "09a-ENGINEERING.md:592-609"
+    },
+    {
+      "name": "escaped-high-surrogate-venture",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"\\ud800\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "escaped-low-surrogate-venture",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"\\udc00\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "escaped-reversed-pair",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v\\udc00\\ud800\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "escaped-high-then-letter",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v\\ud800a\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "escaped-lone-in-subjects",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_\\udfff\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "escaped-lone-in-derived_from",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_\\ud8ff\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "escaped-lone-in-quote",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\\udbff\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "escaped-lone-in-title",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel \\udc80\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "escaped-lone-in-key",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"\\ud800\":1,\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "escaped-two-lone-keys",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"\\ud800\":1,\"\\udc00\":2,\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "escaped-valid-pair-in-quote",
+      "want": "valid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\\ud83d\\ude00\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a surrogate PAIR is one character and is accepted; RFC 8259 §7"
+    },
+    {
+      "name": "escaped-valid-pair-in-venture",
+      "want": "valid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_\\ud83d\\ude00\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a surrogate PAIR is accepted"
+    },
+    {
+      "name": "raw-high-surrogate-venture",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"\\ud800\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "raw-low-surrogate-venture",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"\\udc00\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "raw-reversed-pair",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v\\udc00\\ud800\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "raw-high-then-letter",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v\\ud800a\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "raw-lone-in-subjects",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_\\udfff\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "raw-lone-in-derived_from",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_\\ud8ff\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "raw-lone-in-quote",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\\udbff\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "raw-lone-in-title",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel \\udc80\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "raw-lone-in-key",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"\\ud800\":1,\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "raw-two-lone-keys",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"\\ud800\":1,\"\\udc00\":2,\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a lone UTF-16 surrogate, escaped or raw, is refused anywhere in a label in both languages (Go would read U+FFFD, Userland the surrogate: two readers, two values); RFC 8259 §8.2; 09a-ENGINEERING.md:588"
+    },
+    {
+      "name": "raw-valid-pair-in-quote",
+      "want": "valid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\\ud83d\\ude00\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a surrogate PAIR is one character and is accepted; RFC 8259 §7"
+    },
+    {
+      "name": "raw-valid-pair-in-venture",
+      "want": "valid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_\\ud83d\\ude00\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: a surrogate PAIR is accepted"
+    },
+    {
+      "name": "escaped-replacement-char-is-valid",
+      "want": "valid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\\ufffd\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: U+FFFD itself is an ordinary character"
+    },
+    {
+      "name": "p-minus-zero",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":-0},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: confidence.p is a canonical JSON number within ±(2^53-1) (the spelling JSON.stringify writes), so Encode(Decode(text)) reproduces it in both languages; -0 is refused; 09a-ENGINEERING.md:607"
+    },
+    {
+      "name": "p-minus-zero-point-zero",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":-0.0},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: confidence.p is a canonical JSON number within ±(2^53-1) (the spelling JSON.stringify writes), so Encode(Decode(text)) reproduces it in both languages; -0 is refused; 09a-ENGINEERING.md:607"
+    },
+    {
+      "name": "p-trailing-zero",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.50},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: confidence.p is a canonical JSON number within ±(2^53-1) (the spelling JSON.stringify writes), so Encode(Decode(text)) reproduces it in both languages; -0 is refused; 09a-ENGINEERING.md:607"
+    },
+    {
+      "name": "p-exponent",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":5e-1},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: confidence.p is a canonical JSON number within ±(2^53-1) (the spelling JSON.stringify writes), so Encode(Decode(text)) reproduces it in both languages; -0 is refused; 09a-ENGINEERING.md:607"
+    },
+    {
+      "name": "p-unsafe-fraction",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":9007199254740993.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: confidence.p is a canonical JSON number within ±(2^53-1) (the spelling JSON.stringify writes), so Encode(Decode(text)) reproduces it in both languages; -0 is refused; 09a-ENGINEERING.md:607"
+    },
+    {
+      "name": "p-overflow",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":1e400},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: confidence.p is a canonical JSON number within ±(2^53-1) (the spelling JSON.stringify writes), so Encode(Decode(text)) reproduces it in both languages; -0 is refused; 09a-ENGINEERING.md:607"
+    },
+    {
+      "name": "p-leading-plus-dot",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: confidence.p is a canonical JSON number within ±(2^53-1) (the spelling JSON.stringify writes), so Encode(Decode(text)) reproduces it in both languages; -0 is refused; 09a-ENGINEERING.md:607"
+    },
+    {
+      "name": "p-zero",
+      "want": "valid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: confidence.p is a canonical JSON number within ±(2^53-1) (the spelling JSON.stringify writes), so Encode(Decode(text)) reproduces it in both languages; -0 is refused; 09a-ENGINEERING.md:607"
+    },
+    {
+      "name": "p-one",
+      "want": "valid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":1},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: confidence.p is a canonical JSON number within ±(2^53-1) (the spelling JSON.stringify writes), so Encode(Decode(text)) reproduces it in both languages; -0 is refused; 09a-ENGINEERING.md:607"
+    },
+    {
+      "name": "p-tenth",
+      "want": "valid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.1},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: confidence.p is a canonical JSON number within ±(2^53-1) (the spelling JSON.stringify writes), so Encode(Decode(text)) reproduces it in both languages; -0 is refused; 09a-ENGINEERING.md:607"
+    },
+    {
+      "name": "p-many-digits",
+      "want": "valid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"q\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.123456789},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r3: confidence.p is a canonical JSON number within ±(2^53-1) (the spelling JSON.stringify writes), so Encode(Decode(text)) reproduces it in both languages; -0 is refused; 09a-ENGINEERING.md:607"
+    }
+  ]
+}

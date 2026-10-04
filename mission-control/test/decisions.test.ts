@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createApp } from '../server/app.ts';
-import { createDecisionsApi } from '../server/routes/decisions.ts';
+import { MAX_BODY_BYTES, createDecisionsApi } from '../server/routes/decisions.ts';
 import { appendMissionLine } from '../server/index-cache.ts';
 import {
   decisionsPath,
@@ -264,15 +264,16 @@ describe('/api/decisions — orphans, torn tails, body size', () => {
     expect(foldDecisions(readDecisionLines(file))[0]!.status).toBe('expired');
   });
 
-  test('a chunked body with no Content-Length is cut off at the cap (413): the stream is not read to the end', async () => {
+  test('a chunked body with no Content-Length is cut off at the cap (413) without reading the stream to the end', async () => {
     const n = needed();
     seed(n);
     let pulled = 0;
+    const CHUNKS = 1024; // 1 MiB in all, and it ends: a read-everything mutant finishes (and fails) instead of hanging
     const chunk = new TextEncoder().encode('x'.repeat(1024));
     const body = new ReadableStream<Uint8Array>({
       pull(ctl) {
-        pulled++;
-        ctl.enqueue(chunk); // never closes: an unbounded body
+        if (pulled++ >= CHUNKS) return ctl.close();
+        ctl.enqueue(chunk);
       },
     });
     const r = await createDecisionsApi().request(`/${n.id}/answer`, {
@@ -282,8 +283,33 @@ describe('/api/decisions — orphans, torn tails, body size', () => {
       duplex: 'half',
     } as RequestInit);
     expect(r.status).toBe(413);
-    expect(pulled).toBeLessThan(20); // 2 KiB cap; a few chunks of read-ahead is the stream's own buffering
+    expect(pulled).toBeLessThan(20); // the cap is 2 KiB; a few chunks of read-ahead is the stream's own buffering
     expect(readDecisionLines(file)).toHaveLength(1);
+  });
+
+  test('the cap is exact: a body of 2 KiB is read, 2 KiB + 1 byte is refused', async () => {
+    const api = createDecisionsApi();
+    const sized = (bytes: number) => {
+      const base = new TextEncoder().encode(JSON.stringify({ choice: 'MIT', pad: '' })).length;
+      const text = JSON.stringify({ choice: 'MIT', pad: 'x'.repeat(bytes - base) });
+      expect(new TextEncoder().encode(text).length).toBe(bytes);
+      return text;
+    };
+    // Chunked (a stream), so the running cap — not Content-Length — decides.
+    const post = (id: string, text: string) =>
+      api.request(`/${id}/answer`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: new Blob([text]).stream(),
+        duplex: 'half',
+      } as RequestInit);
+    const over = needed();
+    const exact = needed();
+    seed(over, exact);
+    expect((await post(over.id, sized(MAX_BODY_BYTES + 1))).status).toBe(413);
+    expect(foldDecisions(readDecisionLines(file)).find((d) => d.id === over.id)!.status).toBe('pending');
+    expect((await post(exact.id, sized(MAX_BODY_BYTES))).status).toBe(200);
+    expect(foldDecisions(readDecisionLines(file)).find((d) => d.id === exact.id)!.status).toBe('answered');
   });
 
   test('an unreadable board is a clear 500, not an unhandled throw, and appends nothing', async () => {

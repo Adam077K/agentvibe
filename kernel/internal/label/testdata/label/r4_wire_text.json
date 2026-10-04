@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "name": "escaped-high-then-e000",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\",\"deadline\":\"2027-01-01T00:00:00Z\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"\\ud800\\ue000\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\",\"mission\":\"m_1\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"consent_scope\":\"cs_1\",\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r4: a high surrogate escape followed by an escape outside DC00-DFFF is lone, not a pair (the pair's upper bound); RFC 8259 §8.2"
+    },
+    {
+      "name": "escaped-high-then-ffff",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\",\"deadline\":\"2027-01-01T00:00:00Z\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"\\udbff\\uffff\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\",\"mission\":\"m_1\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"consent_scope\":\"cs_1\",\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r4: a high surrogate escape followed by an escape outside DC00-DFFF is lone, not a pair (the pair's upper bound); RFC 8259 §8.2"
+    },
+    {
+      "name": "escaped-high-then-high",
+      "want": "invalid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\",\"deadline\":\"2027-01-01T00:00:00Z\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"\\ud800\\ud800\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\",\"mission\":\"m_1\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"consent_scope\":\"cs_1\",\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r4: a high surrogate escape followed by an escape outside DC00-DFFF is lone, not a pair (the pair's upper bound); RFC 8259 §8.2"
+    },
+    {
+      "name": "escaped-pair-upper-edge",
+      "want": "valid",
+      "raw": false,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\",\"deadline\":\"2027-01-01T00:00:00Z\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"\\udbff\\udfff\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\",\"mission\":\"m_1\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"consent_scope\":\"cs_1\",\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r4: U+10FFFF (DBFF DFFF) is a valid pair"
+    },
+    {
+      "name": "raw-high-then-e000",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\",\"deadline\":\"2027-01-01T00:00:00Z\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"\\ud800\\ue000\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\",\"mission\":\"m_1\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"consent_scope\":\"cs_1\",\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r4: a high surrogate escape followed by an escape outside DC00-DFFF is lone, not a pair (the pair's upper bound); RFC 8259 §8.2"
+    },
+    {
+      "name": "raw-high-then-ffff",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\",\"deadline\":\"2027-01-01T00:00:00Z\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"\\udbff\\uffff\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\",\"mission\":\"m_1\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"consent_scope\":\"cs_1\",\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r4: a high surrogate escape followed by an escape outside DC00-DFFF is lone, not a pair (the pair's upper bound); RFC 8259 §8.2"
+    },
+    {
+      "name": "raw-high-then-high",
+      "want": "invalid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\",\"deadline\":\"2027-01-01T00:00:00Z\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"\\ud800\\ud800\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\",\"mission\":\"m_1\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"consent_scope\":\"cs_1\",\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r4: a high surrogate escape followed by an escape outside DC00-DFFF is lone, not a pair (the pair's upper bound); RFC 8259 §8.2"
+    },
+    {
+      "name": "raw-pair-upper-edge",
+      "want": "valid",
+      "raw": true,
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\",\"deadline\":\"2027-01-01T00:00:00Z\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"quote\":\"\\udbff\\udfff\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\",\"mission\":\"m_1\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"consent_scope\":\"cs_1\",\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"subjects\":[\"subj_a\"],\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 re-review r4: U+10FFFF (DBFF DFFF) is a valid pair"
+    }
+  ]
+}

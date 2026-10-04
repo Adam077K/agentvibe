@@ -1,0 +1,59 @@
+# Done-test register, B1-08h: launcher hardening from the B1-08 r7 Opus review follow-ups
+# (docs/vision-v3/HANDOFF-NEXT.md on build/session-2-log, "B1-08 follow-ups"; PR #166 at d715c18).
+# Frozen 2026-10-03 by a non-implementer. Base: origin/build/b1-08 @ d715c18.
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest -run B108_H ./internal/launcher/
+#         go -C kernel test -count=1 -tags donetest -run B108_H ./internal/socket/   (binds a unix
+#         socket: run outside the sandbox)
+# Pinned: F1 (socket reserves launcher.JournalStream; a racing foreign append never ErrState and
+# never burns a lease), F2 (journal append survives a cancelled ctx), F3 (State out of HOME's
+# reach), F4 (a root resolving to / is refused), F6 (HOME and PATH pins clean and absolute, no
+# empty PATH entry, no PATH entry in a worker root, HOME counted as one), F7 (dangling or looping
+# root refused; a refused New leaves State empty). Not pinned: F5, F8 (deferred by the brief);
+# F3's request-with-no-HOME rule (founder question: both fail-safe readings contradict frozen
+# r3 TestB108_R3_ExecGetsPinnedDigestAndAllowListedEnv and r7 TestB108_R7_EnvTakesOnlyPinnedValues).
+# On d715c18 unchanged: all 7 tests FAIL. F7 fails only on its HOME-pin case; its other cases pin
+# behaviour the base already has. Every earlier B108 done-test passes there, unchanged.
+# Reference proof: NOT RUN. Building a reference implementation in TMPDIR was refused by the
+# permission system on 2026-10-03, and the refusal was not routed around.
+# RE-FREEZE r2 2026-10-03: 2026-10-03 re-freeze B1-08h founder ruling: HOME required. Added
+#   TestB108_H_F3_RequestCarriesPinnedHome: with HOME pinned, no Env, an empty Env, LANG only, every
+#   other pinned name, or codex with CODEX_HOME but no HOME is ErrSpec, as is any other HOME. HOME at
+#   its pin is admitted (claude and codex). On d715c18 it FAILS on the five missing-HOME cases. The
+#   earlier rigs were re-frozen in B0-17b.yml to send HOME. The question above is closed by that ruling.
+# RE-FREEZE r3 2026-10-03: 2026-10-03 orchestrator ruling: HOME pin required. Added
+#   TestB108_H_F3_GrantPinsHome: a grant whose EnvPinned lacks HOME, or is empty, is ErrGrant at New
+#   and leaves State untouched; HOME alone, or with the other pins, is accepted. FAILS on d715c18.
+# RE-FREEZE r4 2026-10-03: 2026-10-03 red-team r1 gaps. The red-team's reference passes every test at
+#   cbe0885 (reachability proven). Added to launcher_h_donetest_test.go:
+#     F2_ExecSeesCallerCancel: only the journal append is detached; Exec.Run, if reached after a
+#       cancel at Consume, sees Canceled. PASSES on d715c18 (no detach there); it guards the fix.
+#     F6_PathComparedResolved: PATH entries and worker roots both resolved (symlinked WorktreeRoot,
+#       TmpRoot given through a symlink, t.TempDir() where TMPDIR lies under one); a dangling PATH
+#       entry (toward <worktree>/later), one under it, and a looping one are ErrGrant. FAILS on d715c18.
+#     F7_RefusedNewLeavesUsedStateIntact: on a used State, a refused New (PATH in a worker root; no
+#       HOME pin) leaves state.json byte-identical and the lock in place. FAILS on d715c18.
+#   F1_RacingAppendNeverBurnsALease: comment only, it now claims what it checks (orchestrator ruling:
+#   forged-launch-record races are fail-closed only, absorption unspecified). No assertion added: the
+#   racing launch itself being refused has no cheap, ruled assertion.
+#   Accepted survivors, LOW, no test: unbounded journal-append retry; context.Background in place of
+#   WithoutCancel; reserving a kernel.* prefix or an EqualFold match in place of the exact stream name;
+#   no timeout on the detached append.
+# RE-FREEZE r5 2026-10-03: 2026-10-03 review r1: pin HOME rulings. The review SHIPped, but two
+#   behaviours were correct in code and pinned by no frozen test. Added, adapted from the reviewer's
+#   probes (no ctxExec, which clashes with F2's):
+#     F3_NoHomePinWhateverAllowlist: no HOME pin is ErrGrant at New for EnvAllow [LANG], [LANG PATH]
+#       and nil, and leaves State untouched.
+#     F3_MissingHomeKeepsLease: Env {LANG: C} is ErrSpec with no exec, no receipt and the lease
+#       unconsumed: the HOME check runs before Consume.
+#   Both FAIL on d715c18. Not run against f76d2a5 by this builder (orchestrator: skip; the reviewer
+#   ran the same probes there and they pass).
+register: B1-08h
+jobs:
+  - id: B1-08h
+    files:
+      - path: kernel/internal/launcher/launcher_h_donetest_test.go
+        sha256: 5cb387b3d7d24caa3500bde407e795c99c6ac87ee3d67a73fc39cff3a91b2566
+      - path: kernel/internal/socket/socket_b108h_donetest_test.go
+        sha256: 2d05c72a42dd198916dc04ef2021c8ffbc65d99ea4137eea349a9782bf8157da

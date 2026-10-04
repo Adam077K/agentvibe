@@ -1,0 +1,11 @@
+{
+  "subject": "62d3cf93f9052ee663aa1f18b97c1062fbfe39ca7b11d40e4e73000478268c07",
+  "base": "b01716d5ce96d7c5b7e40f298f1c7e1d5b7ff29b",
+  "tier": "lite",
+  "tier_driver": "build/done-tests/B1-03.yml",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "B1-03 Opus reviewer PASS at a395043, b3ffff3 and ec1a2a0; mutant tests r2-r4 by a separate test builder; founder ordered the merge 2026-10-01",
+  "recorded_at": "2026-10-01T21:53:46.093Z"
+}

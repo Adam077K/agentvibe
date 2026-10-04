@@ -1,0 +1,49 @@
+# Done-test register, B1-02 (docs/vision-v3/14-BUILD-PLAN.md §6: "Round-trip fixtures in both
+# languages; an upcaster cannot change a past decision's meaning (replay test)").
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run (Go):       go -C kernel test -count=1 -tags donetest ./internal/nouns/
+# Run (Userland): pnpm --dir userland install --frozen-lockfile --ignore-scripts && pnpm --dir userland run test:donetest
+# Frozen red against ErrNotImplemented on 2026-10-01: 6 of 6 tests fail. kernel/internal/nouns/nouns.go
+# is NOT registered: it is the interface the job implements (the B0-17 pattern).
+#
+# Re-hashed 2026-10-01 (B1-02-ts, reviewer low finding): invalid.json drops the case
+# operation.business-key-empty. Canon types business_key `string` (09a §3) and the wire rules in
+# nouns.go require non-empty only for *Id and *Ref types, so refusing "" asserted a rule nothing
+# states. 34 invalid cases remain. nouns.go (unregistered) gains `held` in Outcome.disposition (09a §5).
+#
+# The three fixture files are registered because they are the wire contract: the Go test and the
+# Userland test read the same bytes, so a fixture edit changes both languages' acceptance at once.
+#
+# Userland half added 2026-10-01 (B1-02-ts): userland/ holds Userland (avd, 09a §2) with zod 4.6.5
+# pinned exactly; JSON Schema comes from Zod 4's built-in z.toJSONSchema. Frozen red against
+# NotImplementedError: 3 of 3 top-level tests fail, 99 of 99 with subtests. userland/src/nouns.ts is
+# NOT registered: it is the interface the job implements. The emitted-JSON-Schema check validates
+# with z.fromJSONSchema because the repository holds no other validator; it is not independent of Zod.
+#
+# Run line changed 2026-10-01 (package manager per canon): the Userland Run line read
+# `npm --prefix userland ci`, which fails since the npm lockfile was replaced by userland/pnpm-lock.yaml.
+# Canon names pnpm (09a §2, §13). The test command is userland/package.json's test:donetest. No hash changes.
+#
+# Re-frozen 2026-10-02 B1-26: single Label reader. nouns.Label becomes label.V1 (DR-LABEL-RECONCILE:61:
+# "no label/1 reader has shipped yet. B1-26 is that reader"), so the label values inside valid.json,
+# invalid.json and decisions.json move to the LabelV1 shape (provenance a Provenance record, confidence
+# {rung, p}), and the label pins in both test files follow; the Go pins read the struct through its
+# JSON tags so they compile against either type. RED against the nouns on main until B1-26 lands;
+# green (66 Go subtests, Userland all) against a $TMPDIR reference where nouns.Label = label.V1.
+# The unregistered unit tests (nouns_test.go, nouns.test.ts) still assume the old shape; B1-26's
+# implementer moves them with nouns.Label.
+register: B1-02
+jobs:
+  - id: B1-02
+    files:
+      - path: kernel/internal/nouns/nouns_donetest_test.go
+        sha256: eb5d90193b674e5f29eb2260ddad3522c6f618493fe458b649fbd4473ae8fe48
+      - path: kernel/internal/nouns/testdata/nouns/valid.json
+        sha256: e906e500f47b8ad98b03b56829d842f25a77bf8503114458583a9fd13b0660bc
+      - path: kernel/internal/nouns/testdata/nouns/invalid.json
+        sha256: 166aa2a392c62574cd3d151a84bed4f7e7ac39256957c8c6d695d6843e7b288d
+      - path: kernel/internal/nouns/testdata/nouns/decisions.json
+        sha256: 36f3714e307817e4c47bd280d831473ce2f7dc2214cdb42233801a2ee6777625
+      - path: userland/test/nouns.donetest.test.ts
+        sha256: b22bc4a2c796747aaa49f0d60512863dc1e85d6ec5c35dcc0f7f74bd70364389

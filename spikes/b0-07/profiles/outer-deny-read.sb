@@ -1,0 +1,5 @@
+(version 1)
+;; B0-07 arm (a) outer profile: allow everything except reading the sibling dir S.
+(allow default)
+(deny file-read*
+  (subpath (param "S_PATH")))

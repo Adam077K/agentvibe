@@ -14,7 +14,22 @@
 // A gate needs something to check that the author cannot trivially restate. The thing that works
 // is a verdict keyed to the CONTENT of the change:
 //
-//   subject = sha256( git diff <merge-base origin/main REF>..REF -- . ':(exclude,glob).qa/verdicts/*.json' )
+//   subject = sha256( git diff --full-index <merge-base origin/main REF>..REF -- . ':(exclude,glob).qa/verdicts/*.json' )
+//
+// `--full-index` IS LOAD-BEARING. A plain diff abbreviates the blob hashes on its `index` lines to a
+// length set by core.abbrev=auto, which scales with object count: 7 characters on a laptop, 8 on the
+// GitHub runner, more as the repository grows. A verdict recorded locally then failed CI on PR #166
+// (reason=absent) with no byte of the change different.
+//
+// `--full-index` ALONE DID NOT MAKE THE SUBJECT A FUNCTION OF CONTENT. `git diff` output also depends
+// on user config (color.ui, diff.noprefix, diff.mnemonicPrefix, diff.external, textconv drivers, diff.algorithm,
+// diff.renames, diff.context, ...) and on GIT_DIFF_OPTS / GIT_EXTERNAL_DIFF in the environment. So
+// `computeSubject` pins every output-shaping option on the command line and runs git with an
+// environment stripped of those variables and of global/system config. What remains is the
+// repository's own content plus its committed `.gitattributes`; the one residue no flag reaches is
+// a checkout-local `.git/info/attributes` or `.git/config` `core.attributesFile` marking a path
+// `-diff`, which is a property of the checkout and not of the change. `merge-gate.test.mjs`
+// executes each pin: remove one and its case fails.
 //
 // THE ANCHOR, AND WHY THIS ONE
 // PR #77 keyed a verdict to a HEAD SHA. That anchor stops existing the instant the verdict is
@@ -52,6 +67,7 @@
 // this block said five flags where the code read seven. usage() is generated from FLAGS.
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -152,7 +168,7 @@ function maxBuffer(env = process.env) {
   return n;
 }
 
-function git(repo, args, env = process.env) {
+function git(repo, args, env = process.env, childEnv = undefined) {
   const limit = maxBuffer(env);
   try {
     return execFileSync('git', args, {
@@ -160,9 +176,12 @@ function git(repo, args, env = process.env) {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
       maxBuffer: limit,
+      ...(childEnv ? { env: childEnv } : {}),
     });
   } catch (e) {
-    const cmd = `git ${args.slice(0, 2).join(' ')}`;
+    // Skip leading `-c k=v` pins so the message names the subcommand, not a config key.
+    const sub = args.filter((a, i) => a !== '-c' && args[i - 1] !== '-c');
+    const cmd = `git ${sub.slice(0, 2).join(' ')}`;
     // NAME WHAT HAPPENED, NOT WHAT IT RESEMBLES. `spawnSync git ENOBUFS` is the message Node
     // produces here, and it reads as a fault in git or in the repository. It is neither: the
     // command succeeded and this process declined to hold the answer. A reader who is told "git
@@ -211,10 +230,66 @@ export function mergeBase(repo, ref, base = 'origin/main') {
   return out;
 }
 
+/**
+ * Every option that shapes `git diff` output, pinned on the command line. Command-line flags and
+ * `-c` beat every config file, so a developer's ~/.gitconfig and the repo's .git/config cannot move
+ * the bytes. Each entry is exercised by a case in merge-gate.test.mjs that fails without it.
+ */
+const SUBJECT_DIFF_ARGS = [
+  '-c', 'core.quotePath=true',            // non-ASCII path quoting
+  '-c', 'diff.suppressBlankEmpty=false',  // blank context lines: " " vs ""
+  '-c', 'diff.interHunkContext=0',        // hunk merging
+  'diff',
+  '--full-index',                         // blob hashes at full length, not core.abbrev
+  '--no-ext-diff', '--no-textconv',       // diff.external / diff drivers / textconv
+  '--no-color',                           // color.ui / color.diff
+  '--no-relative',                        // diff.relative
+  '-U3',                                  // diff.context
+  '-O/dev/null',                          // diff.orderFile
+  '--src-prefix=a/', '--dst-prefix=b/',   // diff.noprefix / diff.mnemonicPrefix
+  '--diff-algorithm=myers', '--indent-heuristic', // diff.algorithm / diff.indentHeuristic
+  '--no-renames',                         // diff.renames
+];
+
+/**
+ * The environment git runs in for the subject.
+ *  - GIT_DIFF_OPTS and GIT_EXTERNAL_DIFF change diff output directly, and no command-line flag
+ *    outranks GIT_DIFF_OPTS, so they are removed.
+ *  - GIT_CONFIG_COUNT/KEY_n/VALUE_n/PARAMETERS inject config that outranks files, and the `-c` pins
+ *    are only known to win for the options they name, so the whole family is removed rather than
+ *    reasoned about.
+ *  - ~/.gitconfig, $XDG_CONFIG_HOME/git and /etc/gitconfig could still supply an option the command
+ *    line does not pin (core.attributesFile marking files `-diff` prints "Binary files differ").
+ *    GIT_CONFIG_GLOBAL/SYSTEM go to /dev/null, NOSYSTEM is set, and HOME / XDG_CONFIG_HOME point at an
+ *    empty directory the caller removes afterwards, which also empties the default attributes file.
+ * What remains is the repository's own content, its committed .gitattributes, and its own
+ * .git/config, whose diff-shaping keys the command-line pins outrank.
+ */
+function subjectEnv(home) {
+  const env = {};
+  for (const [k, v] of Object.entries(process.env)) {
+    if (k === 'GIT_DIFF_OPTS' || k === 'GIT_EXTERNAL_DIFF' || k.startsWith('GIT_CONFIG')) continue;
+    env[k] = v;
+  }
+  env.HOME = home;
+  env.XDG_CONFIG_HOME = home;
+  env.GIT_CONFIG_GLOBAL = '/dev/null';
+  env.GIT_CONFIG_SYSTEM = '/dev/null';
+  env.GIT_CONFIG_NOSYSTEM = '1';
+  env.GIT_ATTR_NOSYSTEM = '1';
+  return env;
+}
+
 /** The content subject. See the header for why this anchor and not a commit SHA. */
 export function computeSubject(repo, ref = 'HEAD') {
   const base = mergeBase(repo, ref);
-  const diff = git(repo, ['diff', `${base}..${ref}`, ...DIFF_PATHSPEC]);
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'verdict-subject-'));
+  let diff;
+  try {
+    diff = git(repo, [...SUBJECT_DIFF_ARGS, `${base}..${ref}`, ...DIFF_PATHSPEC], process.env, subjectEnv(home));
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
   return {
     subject: crypto.createHash('sha256').update(diff).digest('hex'),
     base,
