@@ -1,0 +1,2503 @@
+# build/jobs.yml — the Build Register (14-BUILD-PLAN.md §6), as data.
+#
+# Generated from docs/vision-v3/14-BUILD-PLAN.md §6 job tables (P0-P5), one row per job,
+# by a throwaway parser (not hand-typed). Linted directly: `node build/lint-jobs.mjs` (not an npm script).
+#
+# Field notes:
+#  - depends_on: job ids, normalised from the plan's short forms within their own phase context;
+#    a dependency on a split parent (e.g. B1-16) expands to both halves (B1-16a, B1-16b).
+#  - founder_deps: non-job founder decisions/drafts from canon §9 (e.g. F1, D1, F-host).
+#  - gate_deps: phase-gate events from §4 (G0-G5) a job waits on, distinct from job ids.
+#  - builder/referee family is one of exactly four values: claude | codex | both (both families
+#    build/referee jointly) | either (cast by prior accuracy post-Handover; used for both sides of
+#    the plan's "Either→other" row, since "other" is not a distinct family — it names "whichever
+#    family did not build", which is what "either" already means from the referee's side). "both"
+#    and "either" are the legal cross-family forms named in 14-BUILD-PLAN.md §6's legend and are
+#    never flagged as a same-family referee. Validated and compared case-exact by
+#    build/lint-jobs.mjs — run it directly: `node build/lint-jobs.mjs` (not an npm script).
+#  - builder.title is a lane default (14-BUILD-PLAN.md §5), not a per-job assignment — the plan
+#    names lane titles, not per-job titles.
+#  - window_hours_est = turns_est / 8 (illustration ratio, 14-BUILD-PLAN.md §1, until B0-00).
+#  - status is not_started for every row at population time; the register is imported at the
+#    Handover (14-BUILD-PLAN.md §7).
+
+- id: B0-00
+  title: "**Capacity measurement**: every subscription seat, both families — a fixed benchmark job per seat, run until the rolling window throttles; weekly-cap headroom read from each plan's usage page"
+  phase: P0
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: []
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: both, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: both, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 10
+  window_hours_est: 1.3
+  status: not_started
+  acceptance: "Table filed to [12](12-SPIKE-RESULTS.md) with n per seat: turns/WH, WH per 5-h window, WH per week, concurrency before throttling; §1 and §5 dates re-derived the same day; re-measured weekly and on any plan change"
+  acceptance_hash: "sha256:1d3d8ebc541b994b0fb737081fdf6bb33ff2bd5289dd0934f4d923aa4e514166"
+
+- id: B0-01
+  title: "Merge `vision/v3-slice` to `main`"
+  phase: P0
+  lane: S
+  protected_base: false
+  critical: false
+  depends_on: []
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 12
+  window_hours_est: 1.5
+  status: not_started
+  acceptance: "6/6 mission route tests; crosscheck 0 write/shell exceptions; `npm run check` tally unchanged except named sandbox artefacts"
+  acceptance_hash: "sha256:e186ed641a08eb9e5d1ccbdb15e8629d7c746691cc80087c542a3aec03419d0f"
+
+- id: B0-02
+  title: "Provider Contract Registry v0: fetch plan terms (headless use, window and weekly caps) for the pinned models and seats"
+  phase: P0
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: []
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: claude, model: "claude-sonnet-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  acceptance: "Every pinned model has a row with URL, hash and `valid_until`; every launch shows its seat and window in `launches.csv`"
+  acceptance_hash: "sha256:6014fa796d866c8948a97689c4fcf1d096b6e0d4e680f65f079ee942bb2b9bbc"
+
+- id: B0-03
+  title: "Runner receipts + child jobs: `parent_tool_use_id` keyed, `--disallowedTools Agent,Task`"
+  phase: P0
+  lane: S
+  protected_base: false
+  critical: false
+  depends_on: ["B0-01"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Surface Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  acceptance: "A Builder that calls `Agent` is refused, or is drawn as \"Builder › subagent\" with its own receipt"
+  acceptance_hash: "sha256:fd2e0cfd3b00e19976e716c81fcd36f8a02f6c91a0c5b825540a4a2e0a3c63dd"
+
+- id: B0-04
+  title: "Context profile v0 (minimal `--setting-sources`, Launch-Pack stub)"
+  phase: P0
+  lane: K
+  protected_base: false
+  critical: false
+  depends_on: ["B0-03"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  acceptance: "SLICE's hello mission re-run; turns and seconds recorded against SLICE's 152.9 s; target ≤40% of SLICE's turns"
+  acceptance_hash: "sha256:5c4d51f6dcc2c68e7598fd468809081ce7be87945edc7ea8758074fb314dea17"
+
+- id: B0-05
+  title: "Owed spike: `claude -p` under a second macOS user via `setup-token` (I2)"
+  phase: P0
+  lane: K
+  protected_base: false
+  critical: false
+  depends_on: []
+  founder_deps: ["F-host", "D1"]
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 12
+  window_hours_est: 1.5
+  status: not_started
+  acceptance: "Sibling-venture `cat` fails in the OS for both families; result filed to [12](12-SPIKE-RESULTS.md) [15 OG7]"
+  acceptance_hash: "sha256:491774bbdb349e0ff37532f797fbef8e7d6c0c27a25de21144c252b90607fc5f"
+
+- id: B0-06
+  title: "Owed spike: Apple `container` VM reaches a stub proxy with no other egress (I3)"
+  phase: P0
+  lane: K
+  protected_base: false
+  critical: false
+  depends_on: []
+  founder_deps: ["F-host", "D1"]
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 18
+  window_hours_est: 2.3
+  status: not_started
+  acceptance: "Egress to any non-proxy host fails from the VM; a model call through the stub proxy succeeds [15 OG7]"
+  acceptance_hash: "sha256:72fbda537ab75ae39a21ecc944ce94cfeb48e6bb0ea11989ecdf0e415e4ab972"
+
+- id: B0-07
+  title: "Owed spike: outer Seatbelt profile wrapping a worker's own sandbox"
+  phase: P0
+  lane: K
+  protected_base: false
+  critical: false
+  depends_on: []
+  founder_deps: ["F-host", "D1"]
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 12
+  window_hours_est: 1.5
+  status: not_started
+  acceptance: "Pass/fail recorded; if fail, the named fallback (I3 for all headless work, at a measured capacity cost) is written into B1-10 [15 OG7]"
+  acceptance_hash: "sha256:ad4b7711654eac05a9f7179f28964be50c3120f532286b471eadcae7cfc64320"
+
+- id: B0-08
+  title: "SP2 live arms A and B under the launcher grant"
+  phase: P0
+  lane: K
+  protected_base: false
+  critical: false
+  depends_on: []
+  founder_deps: ["D1"]
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "~16–20 launches; `summary.json` per run; C1, C2, C4–C6 decided rather than \"not tested\"; lost-edit rate and rework recorded [15 OG7]"
+  acceptance_hash: "sha256:cce2f798fc28d4da528482b3a50e04dd31a82764de08ddcd60815d4d3191ef8b"
+
+- id: B0-09
+  title: "**SP1-bis**: the loop, cross-family, with DR-73's changes — ≥3 goals; arms loop, single run, single run + one Referee pass, fixed recipe; a real Codex Referee ([12 §6.4](12-SPIKE-RESULTS.md) row 3)"
+  phase: P0
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B0-20"]
+  founder_deps: ["D1"]
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  acceptance: "Pre-registered: PASS if the Steward stops on its own in ≥2 of 3 goals and the loop beats run + Referee on verifiability by ≥1 point within one generator (targets); result filed to [12](12-SPIKE-RESULTS.md) and [03 §5](03-MISSION-ENGINE.md#5-sp1--mission-choosing-its-own-next-steps-results-partial); B2-03's acceptance test rewritten if the result demands it (DR-55, DR-73)"
+  acceptance_hash: "sha256:384a42b3befcedd0e17a1a229bb2830c414d4b6f7b130b3a4638b747b7cd8ac2"
+
+- id: B0-10
+  title: "Title-vs-procedure spike: four arms, ≥10 pairs × 2 replicates, within-generator"
+  phase: P0
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: []
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: both, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: both, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  acceptance: "Pre-registration committed before generation; no published sign flips when judge families are swapped; the result is filed to [12](12-SPIKE-RESULTS.md) **before a second hybrid passes Shadow** (DR-54) [15 OG8]"
+  acceptance_hash: "sha256:590374a82e74970ecbd130d0be369d648918a2d5189e8311a821e231ceb9dea9"
+
+- id: B0-11
+  title: "Referee base-rate study: 30 labelled missions, self-review vs cross-family Referee vs truth"
+  phase: P0
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B0-01"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: both, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: both, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "Confusion table n≥30 with CI; rate at which the Referee is wrong is reported (SLICE unknown)"
+  acceptance_hash: "sha256:2ab03bcee76c41eca0557c2861304d7571270726b2b24749afb7ae207fc8d2a0"
+
+- id: B0-12
+  title: "Scorecard v0 + Budget Ledger v0 over receipts (measure first)"
+  phase: P0
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B0-02", "B0-03"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  acceptance: "The Sunday scorecard renders from receipts only; missing values render as fog; founder minutes are logged by hand"
+  acceptance_hash: "sha256:7292da632ac532ccc3cc27bb36b0830c9a1b73601f3168914fa4720a3eb81dbc"
+
+- id: B0-13
+  title: "Build Register: `build/jobs.yml` + lint"
+  phase: P0
+  lane: G
+  protected_base: false
+  critical: false
+  depends_on: []
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  acceptance: "The lint refuses a job with >30 turns, a same-family Referee, no test, or a dangling dependency; the register covers every destination capability"
+  acceptance_hash: "sha256:bec6cf97def82faf5b93910b219c21350b1f5a481ea760079f3be02d05d96952"
+
+- id: B0-14
+  title: "Fleet Import census, read-only, 26 directories"
+  phase: P0
+  lane: V
+  protected_base: false
+  critical: false
+  depends_on: ["B0-19"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: claude, model: "claude-sonnet-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 10
+  window_hours_est: 1.3
+  status: not_started
+  acceptance: "Census table; no model reads a repo that B0-19 has not scanned; any committed secret opens a Hygiene mission (Know · Buzz); the founder's sort is classification consent and grants no authority (DR-76)"
+  acceptance_hash: "sha256:c68cbe5713b6cdcb1ec46f17e01d359c61dd9d8f26760d6ade54596c636f3e97"
+
+- id: B0-15
+  title: "Reconcile the worktree-protocol contradiction (agent bodies + lint predicate, one PR)"
+  phase: P0
+  lane: G
+  protected_base: false
+  critical: false
+  depends_on: []
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  acceptance: "`schema-lint` 18 pass · 0 fail · 0 warnings; irreversible-tier gate PASS (CLAUDE.md \"known contradiction\")"
+  acceptance_hash: "sha256:1e55fa6e20c9c46881476f2f41946a411b1034fa81a9e665ffcf4cd927dad2fb"
+
+- id: B0-16
+  title: "`kernel/` Go module: allowed-module list, ≤15,000-line lint, CI boundary checks"
+  phase: P0
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: []
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  founder_present: false
+  acceptance: "CI fails on a disallowed import, and on any non-`kernel/` path writing the Journal"
+  acceptance_hash: "sha256:8eaa9fda425d3a8338a0815b0f4894055757d137c594660e5faf99da2f188219"
+
+- id: B0-17
+  title: "Freeze the P1 done-tests: journal crash, Q3 subset, launcher refusals, two-runner race"
+  phase: P0
+  lane: A
+  protected_base: true
+  critical: true
+  depends_on: ["B0-13", "B0-16"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  founder_present: false
+  acceptance: "Every test exists, fails red against an empty implementation, and has its hash in the register"
+  acceptance_hash: "sha256:512eede8dcb09e1680048a7dae136f737ddcdd657dd6fe465617d0cfaf8a2030"
+
+- id: B0-18
+  title: "UNPARSED-rate measurement per family over every P0 launch (B0-08, B0-09, B0-10, B0-11)"
+  phase: P0
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B0-03", "B0-20"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: claude, model: "claude-sonnet-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 12
+  window_hours_est: 1.5
+  status: not_started
+  acceptance: "UNPARSED rate recorded per family with n and CI, filed to [12](12-SPIKE-RESULTS.md); a rate above 2% (parameter) opens B1-24; UNPARSED counts against verifier capacity in T01's model [15 OG11]"
+  acceptance_hash: "sha256:6b350e927f0e0e2ec52d12f41172a71afd1cf3e6a6264b829c6e196848b4e55d"
+
+- id: B0-19
+  title: "Pre-model secret scanner: deterministic, runs on every repo before any model reads it"
+  phase: P0
+  lane: V
+  protected_base: true
+  critical: false
+  depends_on: []
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  founder_present: false
+  acceptance: "A seeded secret in each of 26 fixture repos is found with no model call; a repo not yet scanned cannot be opened by any worker (DR-76)"
+  acceptance_hash: "sha256:e926a8b6943ac57c55d14a1af7f2ecc8af93a9c9179ca44037e4031a7e08d517"
+
+- id: B0-20
+  title: "Launch-log family derived from the model id, never from the slot, in `launches.csv` and the Receipt schema"
+  phase: P0
+  lane: K
+  protected_base: false
+  critical: false
+  depends_on: ["B0-03"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 8
+  window_hours_est: 1
+  status: not_started
+  acceptance: "A Codex model launched in a \"Claude\" slot is logged `family: codex`; a slot/model mismatch is recorded as an event (DR-83)"
+  acceptance_hash: "sha256:02787e54dfbd7976f9e10f833eb170b221a8a7006a185ad28e6cb8f180b079ce"
+
+- id: B0-21
+  title: "**Revenue lane V0**: pick 1–2 ventures from the census (live revenue first) and run them founder-driven at A0/A1 on the current harness (SLICE board, human-sent outreach)."
+  phase: P0
+  lane: V
+  protected_base: false
+  critical: false
+  depends_on: ["B0-14"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 12
+  window_hours_est: 1.5
+  status: not_started
+  acceptance: "Every V0 mission leaves a receipt with outcome, founder minutes and model id; ≥10 labelled missions reach B0-11 by Day 7 and feed B2-29 (targets); first revenue or a filed null by Day 30 (target)"
+  acceptance_hash: "sha256:283a46d5770d5bc3060733fb21a0678b413eede156d193980cb5ac88677bfa4f"
+
+- id: B1-01a
+  title: "Journal core: SQLite WAL, single writer, streams, optimistic seq"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B0-17"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  founder_present: false
+  acceptance: "10k random appends + crash injection → identical rebuild"
+  acceptance_hash: "sha256:b90a99ff70f8fee198b0047dfa02072f771881ecaed3a599a71d0233c9ea4c3b"
+
+- id: B1-01b
+  title: "Journal hash chain + blobs"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B1-01a"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 12
+  window_hours_est: 1.5
+  status: not_started
+  founder_present: false
+  acceptance: "State hash reproduced on rebuild; a tampered row breaks the chain and is refused"
+  acceptance_hash: "sha256:065e375c1deeebf837e71853b7ab4bb721b67adae1a5cebbd0ce50d6211ec6c8"
+
+- id: B1-02
+  title: "Six nouns + Operation: Go structs, Zod → JSON Schema for Userland, upcasters"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B1-01a", "B1-01b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 22
+  window_hours_est: 2.8
+  status: not_started
+  founder_present: false
+  acceptance: "Round-trip fixtures in both languages; an upcaster cannot change a past decision's meaning (replay test)"
+  acceptance_hash: "sha256:1af5359752d47a381179914e2274c1ac12edcaef273ccfa3f660792cfdb51283"
+
+- id: B1-03
+  title: "Command socket `avk:avd` (propose_event, request_leases, propose_effect, admit_job, compile, renew/release)"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B1-02"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  founder_present: false
+  acceptance: "Userland's direct append fails at the OS (mode 660); a malformed command is refused and journaled"
+  acceptance_hash: "sha256:722c07bebb625369c607d4107d8a5d6b16402619ac3996d95811c0960627195a"
+
+- id: B1-04
+  title: "Leases + storage fencing: all-or-nothing, wound-wait, deadlock detector, hot resources, pre-receive verifier"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: false
+  depends_on: ["B1-01a", "B1-01b", "B1-02"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  founder_present: false
+  acceptance: "SP2 B0-greedy + drill fixtures nightly; stale holder rejected by storage; touched ≠ declared → refused"
+  acceptance_hash: "sha256:bb5e2d8154d9778120d6c42b11e0d0e82a5abe242aa6093dbc0b971b5f3cb7d2"
+
+- id: B1-05
+  title: "`job://` claim lease"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: false
+  depends_on: ["B1-04"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 10
+  window_hours_est: 1.3
+  status: not_started
+  founder_present: false
+  acceptance: "1,000 two-runner races → 0 double claims (SLICE unknown closed)"
+  acceptance_hash: "sha256:701f9d91704a0ecb2e03d8f6654e6293e7b7ea64f24decc77978ae94b3a51d97"
+
+- id: B1-06
+  title: "WorkerAdapter `claude`: pinned argv, `contract_hash`, subtype map, children, `init_expect`"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B1-03"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  founder_present: false
+  acceptance: "Contract fixtures; a changed MCP description aborts before the first tool call; empty result → `unresolved`"
+  acceptance_hash: "sha256:abdf9cbb999507b204a30ec2933d3913c1f7a0c9dcbfe5354c7f08e204c440cf"
+
+- id: B1-07
+  title: "WorkerAdapter `codex`: `exec`, `--output-schema`, `-o`, `--ephemeral`"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B1-03"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 22
+  window_hours_est: 2.8
+  status: not_started
+  founder_present: false
+  acceptance: "Fixtures; empty stdout (known detached-TTY bug) → `unresolved`, never `pass`"
+  acceptance_hash: "sha256:2309de6dff7688818ca1ec485ca0766c215521614d7997c968d651b2015121ed"
+
+- id: B1-08
+  title: "Launcher under `launcher_grant`: digests, forbidden flags, caps, one Receipt per launch"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B1-06", "B1-07"]
+  founder_deps: ["F1"]
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  founder_present: false
+  acceptance: "`--dangerously-skip-permissions` refused before exec; an unattended 03:00 launch succeeds; the 121st launch in an hour is refused"
+  acceptance_hash: "sha256:1b99d8556d72e90bc66ab345b651dbae91c8d174519d6d242865fca3f1917276"
+
+- id: B1-09a
+  title: "Runner: admission, capacity/wall/idle backstops, pgid kill"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B1-05", "B1-08"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  founder_present: false
+  acceptance: "Daemon killed mid-job → reconciled, no orphan"
+  acceptance_hash: "sha256:ecf18f3c846827932f1a3e7496cebcc2ea3a30b7e750d072a6e076e2e411be6e"
+
+- id: B1-09b
+  title: "Runner: ≤2 continuations, runner commits, hash-locked done-tests"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B1-09a"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 12
+  window_hours_est: 1.5
+  status: not_started
+  founder_present: false
+  acceptance: "A self-editing test → `blocked`; 20 jobs, 0 status mismatches"
+  acceptance_hash: "sha256:2a4212d7ed752d59183fc6823f8de76b9124a5ae021d68ad653df0336eb66e1c"
+
+- id: B1-10
+  title: "I2: a Unix user per venture, roots `chmod 700`, egress allowlist proxy"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: false
+  depends_on: ["B0-05", "B0-09"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  founder_present: false
+  acceptance: "Cross-venture read fails for both families and every tool; egress to a non-allowlisted host fails"
+  acceptance_hash: "sha256:07272a39970c231e462a134b50796bc0885da46aff650f0f7b14da5ce18d8dae"
+
+- id: B1-11a
+  title: "I3 container per mission, no credential inside"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B0-06", "B0-09"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  founder_present: false
+  acceptance: "No credential inside the VM; the VM stops on the kill path"
+  acceptance_hash: "sha256:daabdbea988a83e0f02d06c0fb2c2b262e3ef748533b097f362cf58942523a3a"
+
+- id: B1-11b
+  title: "Inference proxy: seat-token injection, metering, capacity refusal, data-eligibility, kill point"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B1-11a"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  founder_present: false
+  acceptance: "An over-capacity request is refused; kill stops model traffic within one request"
+  acceptance_hash: "sha256:6803cc17e7f9389c312a500182fd99d025deea23347ca7b567522aa36e8190e1"
+
+- id: B1-12
+  title: "Outbox + Operation IDs + reconciler; local effectors: git PR, preview deploy, founder-mailbox email"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: false
+  depends_on: ["B1-03", "B1-04"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  founder_present: false
+  acceptance: "Q3 subset: faults at 4 crash points → one effect; `uncertain` never auto-retries"
+  acceptance_hash: "sha256:de9ed0c2d66b10ecc164d934a7157be21802c484a1fc33b6a76427194b43947b"
+
+- id: B1-13
+  title: "Watchdog + kill path v0 (`av stop --all`, kill file, VM + proxy stop)"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: false
+  depends_on: ["B1-09a", "B1-09b", "B1-11a", "B1-11b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 18
+  window_hours_est: 2.3
+  status: not_started
+  founder_present: false
+  acceptance: "Weekly drill: new dispatch refused at p99 ≤5 s (target); committed effects listed by Operation"
+  acceptance_hash: "sha256:cd0589fbd172fa5c08de0de208211d9dda589a10e1a1fca248a6bf636394e1aa"
+
+- id: B1-14a
+  title: "Policy compiler v0: snapshot, P1→P8 walk, typed rules"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B1-03"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 18
+  window_hours_est: 2.3
+  status: not_started
+  founder_present: false
+  acceptance: "100% table tests on the seed rights matrix; a method-typed admission rule is rejected"
+  acceptance_hash: "sha256:aae6159802e61fcba19362e09ba1789b70a1698192ee2e04d9e6f8232b5422dd"
+
+- id: B1-14b
+  title: "Compiler v0: door type from `classifier.js`, `gates.yml` approval kinds, stale-contract recompile"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: true
+  depends_on: ["B1-14a"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 12
+  window_hours_est: 1.5
+  status: not_started
+  founder_present: false
+  acceptance: "Every QA tier maps to one door type; a stale contract is recompiled"
+  acceptance_hash: "sha256:3b58a08d9c2bb322ae4c10da609915bb862526dd6cdc0ecce157480c289fe5f6"
+
+- id: B1-15
+  title: "Presence helper (Swift, Secure Enclave) + approvals bound to the canonical displayed action"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: false
+  depends_on: ["B1-14a", "B1-14b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  founder_present: false
+  acceptance: "An artifact changed after signing is refused end to end; an old nonce replay is refused"
+  acceptance_hash: "sha256:44c3a4d70d620ad61aa49627d240e0edc905ff795b4273af945d7793eb42df68"
+
+- id: B1-16a
+  title: "Acceptance v0: cross-family Referee job, parsed-verdict only, UNPARSED state"
+  phase: P1
+  lane: A
+  protected_base: true
+  critical: true
+  depends_on: ["B1-09a", "B1-09b", "B1-11a", "B1-11b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  founder_present: false
+  acceptance: "A builder's \"reviewed\" line never moves a card; a same-family verdict does not satisfy the contract"
+  acceptance_hash: "sha256:219109dea42285581e05a2423060f1be8a8d153e70f1f3dee8192b726e5c022f"
+
+- id: B1-16b
+  title: "Coverage contract v0, oracle first (from `qa.js`)"
+  phase: P1
+  lane: A
+  protected_base: true
+  critical: true
+  depends_on: ["B1-16a"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  founder_present: false
+  acceptance: "INCOMPLETE ≠ pass; the oracle runs before any judge"
+  acceptance_hash: "sha256:5d144dba7e8105d65cb88902567f9a2af43f6720b7d72ffb3379fe7bce3a6f23"
+
+- id: B1-17
+  title: "Out-of-sandbox observer (own OS user, read-effect)"
+  phase: P1
+  lane: A
+  protected_base: true
+  critical: false
+  depends_on: ["B1-12"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  founder_present: false
+  acceptance: "A \"watched it live\" claim with no observer read → `unresolved`"
+  acceptance_hash: "sha256:4eb5b7afbc944f65d48e1ec2b8d2ee956d369eb8decbf543f5d33287d90dbe80"
+
+- id: B1-18
+  title: "Budget Ledger v1 on the Journal: four resources, tranches with completion reserves"
+  phase: P1
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B1-03"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 22
+  window_hours_est: 2.8
+  status: not_started
+  acceptance: "The acceptance reserve cannot be spent on execution; the projection carries `journal_offset`"
+  acceptance_hash: "sha256:a882673bc1d1c115551874a9493a5c09752d3285d872eed7bf9b9a01c5813868"
+
+- id: B1-19
+  title: "Board as a Journal projection through the command API; SSE with `Last-Event-ID`"
+  phase: P1
+  lane: S
+  protected_base: false
+  critical: false
+  depends_on: ["B1-03", "B1-16a", "B1-16b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "Rebuilding from zero equals live; crosscheck still 0 exceptions; disconnect-resume test passes"
+  acceptance_hash: "sha256:7ab90ef4436bffc3c862ab4b9e7ae686a08bda51461cc9096a7a598883567d78"
+
+- id: B1-20
+  title: "Stop that tells the truth + Live with child cards"
+  phase: P1
+  lane: S
+  protected_base: false
+  critical: false
+  depends_on: ["B1-13", "B1-19"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Surface Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  acceptance: "A real run that ignores SIGTERM renders as requested → acknowledged → confirmed"
+  acceptance_hash: "sha256:9a099a66bf674065579e42bee8fc222be80d75fb5448da1f3e390675637f587a"
+
+- id: B1-21
+  title: "Decisions page v0: DecisionPacket, hash-bound, expiry; ntfy for **Buzz**"
+  phase: P1
+  lane: S
+  protected_base: false
+  critical: false
+  depends_on: ["B1-15", "B1-19"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  acceptance: "An expired packet is refused; a Decide at Buzz round-trips with an ack receipt"
+  acceptance_hash: "sha256:170977dc824d28aaca11b3b43a1965e3b770e03ce8060cdf8903bbe1d39a57ad"
+
+- id: B1-22
+  title: "Fleet Import excavation + adoption PRs, obligations first"
+  phase: P1
+  lane: V
+  protected_base: false
+  critical: false
+  depends_on: ["B0-14"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "Obligations registered before any classification; each harness PR refereed by the other family ([17 §4](17-VIBE-STARTUPING-IN-PRACTICE.md#4-fleet-import--bringing-in-the-founders-26-directories))"
+  acceptance_hash: "sha256:e5fe2c61a2af30ade575cb54e9a6b2e53a72a6d8d0147ddb4d0b9709759d1693"
+
+- id: B1-23
+  title: "Baseline mission for the first Live venture (payments, analytics, support read)"
+  phase: P1
+  lane: V
+  protected_base: false
+  critical: false
+  depends_on: ["B1-22"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  acceptance: "Every Vital Sign has a denominator from a system of record"
+  acceptance_hash: "sha256:b311596ccea3a3a65e0b3e55053d9822e4147ce4d03908d77599547820f7d96c"
+
+- id: B1-24
+  title: "Codex adapter hardening: pseudo-TTY + streamed JSON for detached `codex exec`"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: false
+  depends_on: ["B1-07", "B0-18"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  founder_present: false
+  acceptance: "A detached launch returns parsed output; the per-family UNPARSED rate is ≤2% (parameter) on a 50-launch rerun **before any autonomous venture** (B3-16, B3-17 depend on it) [15 OG11]"
+  acceptance_hash: "sha256:75a9cb5b54f650860dc83918d571277d43195dcccd52f0b4a26980341dc84fb0"
+
+- id: B1-25
+  title: "Continuity lists in compiler v0: safe states carry `continuity:`; a P2 deny passes only listed routes"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: false
+  depends_on: ["B1-14a", "B1-14b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  founder_present: false
+  acceptance: "Table tests: a listed continuity route survives a P2 deny, an unlisted one is refused, and no obligation outranks a safety rule (DR-56)"
+  acceptance_hash: "sha256:fa2d3f91b483e58b5713e455cd934a37924907ac6226e75b70a8aa4c704abd8a"
+
+- id: B1-26
+  title: "Label wire schema v1 + published mapping (owned by [09a](09a-ENGINEERING.md))"
+  phase: P1
+  lane: K
+  protected_base: true
+  critical: false
+  depends_on: ["B1-02"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 18
+  window_hours_est: 2.3
+  status: not_started
+  founder_present: false
+  acceptance: "Classification, boundary, retention class, retention deadline, permission, taint and origin round-trip as distinct fields; human provenance is a provenance field; every 06 label name maps to one wire name (DR-68)"
+  acceptance_hash: "sha256:0e9f0575b4e07a84458806dab8dcab9e7a783a338056a8baafce81c8dc8c2ccc"
+
+- id: B1-27
+  title: "Spend-cap reservation buckets on the Budget Ledger"
+  phase: P1
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B1-18"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  acceptance: "A bucket is held before every debit; execution cannot consume acceptance headroom; the S10 judge-cap exhaustion replays without a failed judgement (DR-81)"
+  acceptance_hash: "sha256:61c1131f954b7fdd55a7f4b75344e977e7d6560f1a6836f92d29dde02f82ff1b"
+
+- id: B2-01
+  title: "Mission record, facets, lifecycle ([03 §1–2](03-MISSION-ENGINE.md#1-the-mission-record))"
+  phase: P2
+  lane: M
+  protected_base: false
+  critical: true
+  depends_on: []
+  founder_deps: []
+  gate_deps: ["G1"]
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "Residual facets hold no leases; goal and metric versions freeze at admission (DR-28, DR-33)"
+  acceptance_hash: "sha256:8603a77274c67cb3831ef0d377afb962c03a6fa032825a2e63c6fdef1315e63f"
+
+- id: B2-02
+  title: "Framing Contracts: no measure, no money"
+  phase: P2
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B2-01"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  acceptance: "A mission with no measure cannot receive a tranche"
+  acceptance_hash: "sha256:8e7cedc688a3c8b06c7d1e1914e7bc2b881ad2759a5b28daebc769d9f65dc41c"
+
+- id: B2-03a
+  title: "Moves + planner (branch set by B0-09)"
+  phase: P2
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B2-01", "B2-23", "B2-24", "B0-09", "B2-28"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  acceptance: "Twin v0 \"validate idea X\" runs ≥4 move families"
+  acceptance_hash: "sha256:27dcca2680ae6fb68713ef94834ea7248e6a6a630aefb77d1548a09e50f9e27b"
+
+- id: B2-03b
+  title: "Guards + stop-check"
+  phase: P2
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B2-03a"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  acceptance: "Stops on a seeded kill criterion; 3-cycle \"same\" stops"
+  acceptance_hash: "sha256:94116dd398b96180e868100dcbc33a7c94ff530fe579a983524704ccc75c8603"
+
+- id: B2-04
+  title: "Allocator v0: VoI ranking, Thompson tranches, sleeve ledger (Improvement ≤15%)"
+  phase: P2
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B2-01", "B1-18"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  acceptance: "Replaying 50 missions reproduces allocations; sleeve caps hold; every draw is charged to exactly one pool by purpose and names a beneficiary (DR-60); Regulation messages cannot fund (DR-04)"
+  acceptance_hash: "sha256:6fe1a1febc4771056d3ba924a0d912ae42b5bf63d894f37c6eeeba729adf1b3c"
+
+- id: B2-05
+  title: "Identity records + compiler for both harnesses; 7 engines + lenses as seeds"
+  phase: P2
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B1-06", "B1-07"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "One record, both families, the same 10-task smoke suite passes"
+  acceptance_hash: "sha256:c41f4313de8bc9ec83a298993d45eff2655342599cbb43dba46bbf43e6b5fd91"
+
+- id: B2-06
+  title: "Cast registry + casting v0 (transparent feature table, exploration ≥10%)"
+  phase: P2
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B2-05"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  acceptance: "The exploration floor holds over 100 castings; one of each family stays in every task-family pool"
+  acceptance_hash: "sha256:0d2f68f48d9fe38e61ce48fad702ff968d90969cb396691a540e194598735e64"
+
+- id: B2-07
+  title: "Audition Ladder v0, forked from SP3's harness; power/duration calculator (DR-19)"
+  phase: P2
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B2-05", "B0-10"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "Replayed SP3 data: swapping judge families never flips a published sign; <10 pairs → refused"
+  acceptance_hash: "sha256:0de84704c6e47cfa2693963c6c008c6e7ce36aef63049032b33a548ecefe91b4"
+
+- id: B2-08
+  title: "Blackboard, footprints, integration queue, one rework per overlapping pair"
+  phase: P2
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B1-04"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "SP2 overlap fixture lands green with exactly one budgeted rework"
+  acceptance_hash: "sha256:3bef8c3dc7bde46cdc35a57705e50071509aa37adb6e9f7cedb997ddd121e41c"
+
+- id: B2-09
+  title: "Brain v1: versioned files, SQLite FTS5 + sqlite-vec index, Launch Pack, Use Ledger, Orphan lint"
+  phase: P2
+  lane: R
+  protected_base: false
+  critical: false
+  depends_on: ["B1-02"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Memory Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 30
+  window_hours_est: 3.8
+  status: not_started
+  acceptance: "recall@8 ≥0.85 on the golden set; cross-venture leak rate 0"
+  acceptance_hash: "sha256:9632948a14214b23601d9e7f56d518b552791829f071bea78151ee0bb73bfe48"
+
+- id: B2-10
+  title: "Wrap Deposit, Sleep v0, transitive labels v0; `DECISIONS.md` forked into `brain/decisions/`"
+  phase: P2
+  lane: R
+  protected_base: false
+  critical: false
+  depends_on: ["B2-09"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Memory Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  acceptance: "A seeded correction wins the next day; a tainted-only chain authorises nothing (Q1 subset)"
+  acceptance_hash: "sha256:8ecf57306e4a4b22e0a4e24530237809e3bfb8a02cbcd1afcb74e08eaee2fcfe"
+
+- id: B2-11
+  title: "Graphiti trigger measurement on the largest imported Brain ([06 OQ2](06-MEMORY.md#open-questions))"
+  phase: P2
+  lane: R
+  protected_base: false
+  critical: false
+  depends_on: ["B2-09", "B1-22"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Memory Engineer", family: claude, model: "claude-sonnet-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 12
+  window_hours_est: 1.5
+  status: not_started
+  acceptance: "The three trigger metrics are recorded; the decision is filed"
+  acceptance_hash: "sha256:d4a727eb189c1676c7def18fe9f3d5f8bf854d44a659b0f28feb428d0ce12c1c"
+
+- id: B2-12
+  title: "Capability Registry v0 + Projection Compiler + Loadout ≤8 + tool-lease policy; census import"
+  phase: P2
+  lane: C
+  protected_base: false
+  critical: false
+  depends_on: ["B2-05"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Capability Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 30
+  window_hours_est: 3.8
+  status: not_started
+  acceptance: "One skill projects to both families; an unleased tool is refused; the 134 curated skills enter as candidates"
+  acceptance_hash: "sha256:c58584d3827751c5b15b18e5d963b925b3a1f6790d8f7b56bfb2c9f9664a5bcc"
+
+- id: B2-13a
+  title: "Constitution v1 as signed data: Charter envelopes, A0–A4, never-list, rights matrix"
+  phase: P2
+  lane: G
+  protected_base: true
+  critical: true
+  depends_on: ["B1-14a", "B1-14b", "B1-15"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 18
+  window_hours_est: 2.3
+  status: not_started
+  founder_present: false
+  acceptance: "Matrix 100% table-tested"
+  acceptance_hash: "sha256:391b20cbff24431a67e3dfc2d3b28a3e4192719313158c41833e6a2d8718fa3a"
+
+- id: B2-13b
+  title: "Cooling-off: widening after 12 h, instant narrowing ([05 §2.1](05-AUTONOMY-INITIATIVE-FOUNDER.md#21-how-it-changes--anyone-drafts-only-the-founder-signs-narrowing-is-instant-widening-cools-off))"
+  phase: P2
+  lane: G
+  protected_base: true
+  critical: true
+  depends_on: ["B2-13a"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 10
+  window_hours_est: 1.3
+  status: not_started
+  founder_present: false
+  acceptance: "Widening activates after 12 h; narrowing is instant"
+  acceptance_hash: "sha256:0beee707703a8b9396afccb1c3e84c31a85c21e78ff282bea003128d01275adf"
+
+- id: B2-14
+  title: "Contact classes, Attention Exchange v0, Reach Router v0"
+  phase: P2
+  lane: G
+  protected_base: false
+  critical: false
+  depends_on: ["B2-13a", "B2-13b", "B1-21"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "Halt is never budgeted; a dismissal never suppresses an obligation or a safety reach floor (DR-32)"
+  acceptance_hash: "sha256:727ecee668af1caadd9e99809c053dcbdd8b01746a7049e11944b1c5b4a8df8f"
+
+- id: B2-15
+  title: "Surfaces: Today, Launch Sheet, Spend, Traces with the compiled contract"
+  phase: P2
+  lane: S
+  protected_base: false
+  critical: false
+  depends_on: ["B1-19", "B1-14a", "B1-14b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Surface Engineer", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 30
+  window_hours_est: 3.8
+  status: not_started
+  acceptance: "Every figure links to its source; \"why\" opens the Decision Contract that authorised the action"
+  acceptance_hash: "sha256:82cfdcfd5360ae604ed148ca7701ecf812d861447cf17160192bf60a2516fd33"
+
+- id: B2-16
+  title: "Degraded modes + capacity router"
+  phase: P2
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B2-04"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  acceptance: "With a simulated Claude limit, Codex alone completes build and review, and the verdict is flagged single-family"
+  acceptance_hash: "sha256:7693dd360959eaf5f1119e55d6a4f350d4178a2676dca5649ffcb43b91a843e0"
+
+- id: B2-17
+  title: "**Handover**: import the register as missions; close the Build Charter's funding; release train S1 from pinned `releases/N`"
+  phase: P2
+  lane: G
+  protected_base: true
+  critical: true
+  depends_on: ["B2-01", "B2-04", "B2-05", "B2-13a", "B2-13b", "B2-18"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  founder_present: false
+  acceptance: "Userland N+1 is built by release N; no Userland code is landed by the founder that week; from the Handover event on, no build job draws on the Build Charter and harness tuning is charged to the Improvement sleeve with the 30-day check (DR-60)"
+  acceptance_hash: "sha256:06a648213ccfba6544b2c8d32a189d5e346252371bd889447431d86817a6fc30"
+
+- id: B2-18
+  title: "Protected-base manifest + release authority: transitive path list, headless-refusal, two-family evidence bundle"
+  phase: P2
+  lane: G
+  protected_base: true
+  critical: true
+  depends_on: ["B1-16a", "B1-16b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  founder_present: false
+  acceptance: "A candidate bundling a permissive `VERDICT:` parser cannot promote; a candidate cannot sign its own release"
+  acceptance_hash: "sha256:552be50e18ed3805b4d4062286aae2ae64af996acb80a5d54e8c14f7eed11866"
+
+- id: B2-19
+  title: "Progress Ledger, Closer Claims, busywork signatures v0"
+  phase: P2
+  lane: G
+  protected_base: false
+  critical: false
+  depends_on: ["B2-01", "B1-16a", "B1-16b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "5 seeded busywork cases are detected; a wrong-direction Closer Claim is caught by the guardrail"
+  acceptance_hash: "sha256:6b9c042c8eaeb7fe4ae73b4230886be68635e2e42948139522750d44717fd004"
+
+- id: B2-20
+  title: "Probe Swarm v0 under the Probe Mandate: landing pages, waitlists; disclosed outreach ≤30/day/cell only in ventures where the founder asked for it (off by default, D8)"
+  phase: P2
+  lane: V
+  protected_base: false
+  critical: false
+  depends_on: ["B1-12", "B1-21"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "100 probes by Day 45 with receipts (target); every probe settles on E3+ evidence or is filed null"
+  acceptance_hash: "sha256:6029db9d352ca5fcd8a232aad8def3ae7ba3f67eea1a1f5d6e7f894f7349f098"
+
+- id: B2-21
+  title: "First Fleet-Import venture: Charter at A2, heartbeat on"
+  phase: P2
+  lane: V
+  protected_base: false
+  critical: true
+  depends_on: ["B2-13a", "B2-13b", "B2-14", "B1-23"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  acceptance: "One week at A2 with ≥90% of outcomes settled without founder contact (target)"
+  acceptance_hash: "sha256:25f65e61329e64cb8af9ea09d41dfdb4978de914ebbd63060ca01c9fb6f02d1a"
+
+- id: B2-22
+  title: "Wish-to-Ship v0 on that venture"
+  phase: P2
+  lane: V
+  protected_base: false
+  critical: false
+  depends_on: ["B2-21"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "One customer wish shipped in <24 h, accepted by the other family (first-90-day indicator)"
+  acceptance_hash: "sha256:cae837766ad39d83b3855a34985f7b08ff5a94f08fb4d5563cdc2ea69e1f0f9e"
+
+- id: B2-23
+  title: "SP1 fixes in the engine, stops: capability-checked success and kill clauses, `awaiting_gate` stop state, diminishing-returns stop, `veto` question class exempt from VoI ([03 §10](03-MISSION-ENGINE.md#10-stop-pivot-and-kill))"
+  phase: P2
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B2-01"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "SP1's replayed run stops in `awaiting_gate` instead of at the cost cap; a top question moving <0.1 twice forces a decision; an open `veto` question blocks `success` (DR-73)"
+  acceptance_hash: "sha256:30fbb96992a8cbb2994defd803ae8bc1f682f1238620f897b8575b86dcaee5ee"
+
+- id: B2-24
+  title: "SP1 fixes, pricing and Referee: fetch-and-quote-match resolver before any model; loop-vs-single-run threshold (~20× a single run, parameter) given to the Allocator; cheaper Steward with compact state"
+  phase: P2
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B2-04", "B1-16a", "B1-16b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "SP1's 26% misattributed web citations are caught with no model call; a decision below the threshold gets one run + one Referee pass (DR-73)"
+  acceptance_hash: "sha256:e95214b07c01a8915bfd6327a76b3ba867e4c92e2b590f945c5bbe45a9a884b3"
+
+- id: B2-25
+  title: "Narrowing overlays: automatic narrowing written as a Journal overlay, never a rewrite of signed Constitution files"
+  phase: P2
+  lane: G
+  protected_base: true
+  critical: false
+  depends_on: ["B2-13a", "B2-13b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  founder_present: false
+  acceptance: "An automatic narrowing leaves every signed file's hash unchanged and takes effect at once; lifting the overlay restores the signed state (DR-58)"
+  acceptance_hash: "sha256:78d76c283bb19531f4009ce6f63c689ed35913a1b91d1042fb022cd9860b871b"
+
+- id: B2-26
+  title: "Cooling-off exceptions and the pre-signed emergency-capacity envelope"
+  phase: P2
+  lane: G
+  protected_base: true
+  critical: false
+  depends_on: ["B2-13a", "B2-13b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  founder_present: false
+  acceptance: "Widening activates after 12 h; a Genesis Charter at A0–A2 within default caps and a draw on the emergency envelope activate at once, never beyond the envelope; a stolen-passkey widening is revocable inside the window; an imported Charter activates only by signature (DR-59, DR-76)"
+  acceptance_hash: "sha256:a711f6c547458f3cf3f857d931fa3a87abdf72b29174cc4498fa5544780d4ac8"
+
+- id: B2-27
+  title: "Reach resolution table (owned by [08](08-SURFACES.md)) + property test"
+  phase: P2
+  lane: S
+  protected_base: false
+  critical: false
+  depends_on: ["B2-14"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  acceptance: "Property test over floors × ceilings: reach ≥ floor, or deferred and deadline-safe; Halt ≥ Buzz with Ring after 5 min unacked (DR-65)"
+  acceptance_hash: "sha256:a0a18998c61569114037adb823bdd1b8334a62d670a7825abf8bf593f40a5392"
+
+- id: B2-28
+  title: "**Digital twin v0** (pulled forward from B4-04, R6 M3): Journal + V0-mission replay, seeded demand and kill fixtures, no fidelity certificate"
+  phase: P2
+  lane: A
+  protected_base: false
+  critical: true
+  depends_on: ["B1-02", "B0-21"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 22
+  window_hours_est: 2.8
+  status: not_started
+  acceptance: "Replays 4 weeks of a V0 venture; a seeded kill criterion fires; cited everywhere as `v0 — uncertified`"
+  acceptance_hash: "sha256:44483c68d07a13248d9c7ef61b10f75e3741578c245884ba8b66ef11c938cdac"
+
+- id: B2-29
+  title: "**Calibration Ledger v0** (pulled forward from B4-03): forecast-vs-outcome scores and trust cells per task class from V0 and B0-11 missions"
+  phase: P2
+  lane: A
+  protected_base: false
+  critical: true
+  depends_on: ["B0-11", "B0-21"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 18
+  window_hours_est: 2.3
+  status: not_started
+  acceptance: "An A2→A3 case shows trust cells with n and CI; a cell with n<20 renders as fog, never as trust"
+  acceptance_hash: "sha256:6e0575a98ba54bd59cbeaaf7d90517a05b2ba0a8403e7e920eb48a1637c15bb5"
+
+- id: B3-01a
+  title: "Cloud effector host (Go, one OS user per effector, mTLS)"
+  phase: P3
+  lane: X
+  protected_base: true
+  critical: true
+  depends_on: ["B1-12"]
+  founder_deps: ["F3"]
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  founder_present: false
+  acceptance: "No effector can read another effector's credentials"
+  acceptance_hash: "sha256:f827bac18ee7a2108a6f57b8431c47e6c40e84cee6c441b550588682866b3f1b"
+
+- id: B3-01b
+  title: "Effect Gateway"
+  phase: P3
+  lane: X
+  protected_base: true
+  critical: true
+  depends_on: ["B3-01a"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  founder_present: false
+  acceptance: "A contract with no covering mandate is refused; one Receipt per dispatch"
+  acceptance_hash: "sha256:2406676e9879976d92e660d0312dbe5d05ee6aca46cfedbc66901a46b6c92bff"
+
+- id: B3-02
+  title: "Fencing authority + anchors in a third failure domain; gateway epoch"
+  phase: P3
+  lane: X
+  protected_base: true
+  critical: true
+  depends_on: ["B3-01a", "B3-01b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  founder_present: false
+  acceptance: "Stale restore while the old host returns → one dispatcher (Q3); an anchor mismatch trips a freeze"
+  acceptance_hash: "sha256:e23014016e67baa75eb8e6c670546ed3e58ce96c71b6443f63b2b3e65d0b1b79"
+
+- id: B3-03
+  title: "Observation broker: credential-less, read credentials disjoint from every effector's"
+  phase: P3
+  lane: A
+  protected_base: true
+  critical: true
+  depends_on: ["B3-01a", "B3-01b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  founder_present: false
+  acceptance: "A lying gateway cannot settle an effect (Q2)"
+  acceptance_hash: "sha256:47ad2c3d8509e34f1cc2f9980ebe2f155591261f8a7c790aa364479c3e37e017"
+
+- id: B3-04
+  title: "Effect Mandates, door rules, Offer objects, Outbound Claims Standard"
+  phase: P3
+  lane: X
+  protected_base: false
+  critical: false
+  depends_on: ["B3-01a", "B3-01b", "B2-13a", "B2-13b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  acceptance: "An offer not compiled from an Offer object is refused; the same action gets the same contract on every channel"
+  acceptance_hash: "sha256:d9dd9d925ff4a6d941ccd6aa4991595979ade565656c15582fe16bc700eef6ec"
+
+- id: B3-05a
+  title: "Treasury, Key Vault, Treasury Standing Order"
+  phase: P3
+  lane: X
+  protected_base: true
+  critical: true
+  depends_on: ["B3-01a", "B3-01b", "B3-03"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  founder_present: false
+  acceptance: "Q7 subset: nothing is spent twice"
+  acceptance_hash: "sha256:6af60a8e046e4ab1c7fde46044df9d21dbc400b9aaa0f27fda287ce5981d1160"
+
+- id: B3-05b
+  title: "Books (double-entry)"
+  phase: P3
+  lane: X
+  protected_base: true
+  critical: true
+  depends_on: ["B3-05a"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  founder_present: false
+  acceptance: "Books balance on every event; a reversed receipt after release exposes the shortfall"
+  acceptance_hash: "sha256:afc7fdd7a49969e92eb57f980eca684190d219be881832a313676e1c225a0e81"
+
+- id: B3-06
+  title: "Front Desk: inbound quarantine + labels"
+  phase: P3
+  lane: X
+  protected_base: false
+  critical: false
+  depends_on: ["B3-01a", "B3-01b", "B2-10"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "Q1: a hostile inbound email authorises nothing; a valid request is still usable"
+  acceptance_hash: "sha256:0078ec82b05c326687f6b9742501e94471251d9e7469919bf90778fdc9034ad4"
+
+- id: B3-07
+  title: "Kill levels, Obligation Keeper, Continuity Will, continuity-freeze drill (no Deputy, D6)"
+  phase: P3
+  lane: G
+  protected_base: false
+  critical: false
+  depends_on: ["B1-13", "B2-13a", "B2-13b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "Q5 subset: silence never widens authority; an obligation due tonight starts continuity in time"
+  acceptance_hash: "sha256:e297c29cad86f656b4e12dbc2ce079a939196119aab5dbef637f8ad30c7c1357"
+
+- id: B3-08
+  title: "Regulation v0: Limits Book, stop-losses, SCRAM, breakers, exposure book"
+  phase: P3
+  lane: G
+  protected_base: false
+  critical: false
+  depends_on: ["B2-04"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  acceptance: "Splitting, renaming or forking leaves exposure unchanged (C04); a SCRAM restart needs Incident Lead + Acceptance"
+  acceptance_hash: "sha256:7b0fd29b35bc6573d526fd2f3f930517dbb1c49517676b844872cdcfbf21d7d6"
+
+- id: B3-09
+  title: "Co-founder seat, weekly board pack, wagers, dissent register"
+  phase: P3
+  lane: G
+  protected_base: false
+  critical: false
+  depends_on: ["B2-19"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "The board pack is generated from the Journal only; a wager settles through Acceptance, never through Intent"
+  acceptance_hash: "sha256:52ca19f87c8a3697f87da57a3a0d4887191d866fce975097043baa165b7621c9"
+
+- id: B3-10
+  title: "Initiative engine: heartbeats, signals, Initiative Proposals, Closer Ratio tripwire"
+  phase: P3
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B2-04", "B2-19"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "Proposals never exceed their envelope; a ratio below 0.25 for 3 weeks throttles initiative (parameter)"
+  acceptance_hash: "sha256:a15e3a588fd403771889abfbb536610b7baf123a7786dd52306cad050e6c229a"
+
+- id: B3-11
+  title: "Company Line: Twilio ConversationRelay, both families; voice proposes, passkey disposes"
+  phase: P3
+  lane: S
+  protected_base: false
+  critical: false
+  depends_on: ["B2-14"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Surface Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 30
+  window_hours_est: 3.8
+  status: not_started
+  acceptance: "A consequential ask on the phone hands off to a passkey step-up; a spoofed caller ID gains nothing"
+  acceptance_hash: "sha256:1c4305c426dc881886205f0bfed37109327e94097c0faef1038a1c35896cf683"
+
+- id: B3-12
+  title: "Phone PWA + Web Push + Telegram intake (\"I want X\")"
+  phase: P3
+  lane: S
+  protected_base: false
+  critical: false
+  depends_on: ["B2-15"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "The same request from three channels compiles to one identical contract"
+  acceptance_hash: "sha256:3b19df18e7ce8050a54335e6ffeb498fcc63d7b6dafbbb82119f293ceea5ff18"
+
+- id: B3-13
+  title: "Rooms + Principals for human collaborators"
+  phase: P3
+  lane: X
+  protected_base: false
+  critical: false
+  depends_on: ["B2-13a", "B2-13b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "Revoked Room descendants cannot act; delegated authority never exceeds the intersection (Q2)"
+  acceptance_hash: "sha256:4fd811321837e2bb8860514853183d4c85e0943e5294f1b4ba07966042e2ee2b"
+
+- id: B3-14
+  title: "Compiler model-checking: property-based simulation in Go"
+  phase: P3
+  lane: K
+  protected_base: true
+  critical: false
+  depends_on: ["B1-14a", "B1-14b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  founder_present: false
+  acceptance: "Safety (nothing forbidden reachable) and progress (every blocked obligation has a remedy) checked before each Constitution release"
+  acceptance_hash: "sha256:46943321e0862fbc0a3d6dd274d8503975963a14508489d83b5b79e0909bc9a8"
+
+- id: B3-15
+  title: "Legal groundwork: entity map, Books export for the accountant, Acquisition/Capital/Guild review briefs"
+  phase: P3
+  lane: X
+  protected_base: false
+  critical: false
+  depends_on: []
+  founder_deps: ["F7", "F9"]
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: claude, model: "claude-sonnet-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 18
+  window_hours_est: 2.3
+  status: not_started
+  acceptance: "Briefs delivered to a named lawyer and accountant; their answers are filed as founder decisions"
+  acceptance_hash: "sha256:27af663749db8c51f0fcb4c0be753885fcf07187399ff17a48b06d0e85ebd363"
+
+- id: B3-16
+  title: "Autonomous venture #1 (the founder's choice, D5; the system is built venture-agnostic and he launches it when ready): A2 → A3 with a drilled continuity freeze"
+  phase: P3
+  lane: V
+  protected_base: false
+  critical: true
+  depends_on: ["B3-01a", "B3-01b", "B3-02", "B3-03", "B3-04", "B3-05a", "B3-05b", "B3-06", "B3-07", "B3-19a", "B3-19b", "B3-20a", "B3-20b", "B1-24", "B2-29"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  acceptance: "G3(a) and G3(b)"
+  acceptance_hash: "sha256:94c7990644974178ab6b465d5905346420588217a37ddacedda996b353883dcf"
+
+- id: B3-17
+  title: "Autonomous venture #2 — only if the founder names one (D5 named one venture)"
+  phase: P3
+  lane: V
+  protected_base: false
+  critical: false
+  depends_on: ["B2-20", "B1-24"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  acceptance: "Genesis ≈8 min (parameter); Stage Clock running"
+  acceptance_hash: "sha256:76a54860406625bc4b96dbd4c3b63a8147e1e43ab3a92bc48722978db5be8966"
+
+- id: B3-18
+  title: "Chaos Friday in twin v0: the first 4 drills"
+  phase: P3
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B3-02", "B3-07", "B2-28"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 22
+  window_hours_est: 2.8
+  status: not_started
+  acceptance: "Kernel killed mid-send, lease expired mid-merge, one family 429s → all SLOs scored"
+  acceptance_hash: "sha256:519fdc758b2713021f7e1e291703b63ca79bc13aa563a60d0fcc0ce2ef6dcaeb"
+
+- id: B3-19a
+  title: "**Q8 suite, Front Desk part 1** (H01–H03) beside the Front Desk; fixtures: twin v0 + test accounts; attackers from both families; acceptance reserve"
+  phase: P3
+  lane: A
+  protected_base: true
+  critical: true
+  depends_on: ["B3-04", "B3-06", "B3-07", "B2-28"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  founder_present: false
+  acceptance: "An implied commitment reserves capacity or is refused; deletion reports are honest; legitimate paired cases still pass [15 OG1]"
+  acceptance_hash: "sha256:2271c87265694b6daaa50dbe7f7943c3c09051dad829b08fcf83231224d4ddb9"
+
+- id: B3-19b
+  title: "**Q8 suite, Front Desk part 2** (H05, X07)"
+  phase: P3
+  lane: A
+  protected_base: true
+  critical: true
+  depends_on: ["B3-19a"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  founder_present: false
+  acceptance: "A restored backup resurrects no plaintext or key; releases are attacked as one transcript [15 OG1]"
+  acceptance_hash: "sha256:52eaeac1c55991311f522a5da2a8736e7890528bc428dbc9e5af3800e6d82235"
+
+- id: B3-20a
+  title: "**Q9 harness** + campaigns A–C: attacker budget, realistic legitimate traffic, an attacker who adapts after each refusal; fixtures: twin v0 + production contracts; attackers from both families; acceptance reserve"
+  phase: P3
+  lane: A
+  protected_base: true
+  critical: true
+  depends_on: ["B3-06", "B3-08", "B3-18", "B2-28"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  founder_present: false
+  acceptance: "No campaign reaches its objective; service meets continuity targets; runs **before the first A3 venture** [15 OG1]"
+  acceptance_hash: "sha256:238c0b83b73a6a998ab81328e54a2637f6ba2bc9c1deef1c3aa293431d81a582"
+
+- id: B3-20b
+  title: "**Q9** campaigns D–E + reruns with altered identity, timing and channel"
+  phase: P3
+  lane: A
+  protected_base: true
+  critical: true
+  depends_on: ["B3-20a"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  turns_est: 14
+  window_hours_est: 1.8
+  status: not_started
+  founder_present: false
+  acceptance: "No campaign reaches its objective; Scenario E reruns when B4-13 lands [15 OG1]"
+  acceptance_hash: "sha256:839d79849ad3e0b2fc1ea1e4555825d266f481171aad70fb83e06efeb9caf75c"
+
+- id: B4-01
+  title: "Verifier Foundry v1: mine verifiers from panel decisions; rungs advisory → pre-screen → decide"
+  phase: P4
+  lane: A
+  protected_base: true
+  critical: false
+  depends_on: ["B1-16a", "B1-16b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 30
+  window_hours_est: 3.8
+  status: not_started
+  founder_present: false
+  acceptance: "A promoted verifier agrees with the panel on a sealed set; the 5% panel sample is kept"
+  acceptance_hash: "sha256:d0a1359abba2648002ecc35c2547edd1c240ba26dda603c908dfe0d22971c425"
+
+- id: B4-02
+  title: "Benchmark Vault + sealed confirmation sets + experiment families"
+  phase: P4
+  lane: A
+  protected_base: true
+  critical: false
+  depends_on: ["B2-07"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  founder_present: false
+  acceptance: "Q6: fork-until-win is not promoted; failed trials stay in the denominator"
+  acceptance_hash: "sha256:6235dcf06009d7be51623e422009fe1f0b46e1de82ac7819a238d896297704c0"
+
+- id: B4-03
+  title: "Calibration Ledger v1: six scores (extends B2-29)"
+  phase: P4
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B3-09", "B2-29"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "A broad-interval config that abstains loses Trust (D05)"
+  acceptance_hash: "sha256:1ae08a8aeba836e48cb5a5ffc67b09cc7e4cc33691f035939d7bd5ae7a9d0d78"
+
+- id: B4-04
+  title: "Digital twin v1 + fidelity certificates (extends B2-28)"
+  phase: P4
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B2-10", "B2-28"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 30
+  window_hours_est: 3.8
+  status: not_started
+  acceptance: "A poisoned demand prior is caught by the structural alternative before it moves a limit (D07)"
+  acceptance_hash: "sha256:0100a333ca330d50cf4d44c61eac52b0c8f83d3fa4104fc056ad218d64703efa"
+
+- id: B4-05
+  title: "Improvement loop: config drift 10%, friction harvest, 30-day beneficiary check"
+  phase: P4
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B4-02", "B2-04"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  acceptance: "Recursive proposals exhaust the sleeve, not the portfolio (D04); an unproven tranche returns"
+  acceptance_hash: "sha256:b8708410623343bd5aa4e3d1429560b28d724c28890100bbd7bd50c85be46322"
+
+- id: B4-06
+  title: "Scorecard v1 + missing-evidence audit + measurement-debt register"
+  phase: P4
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B4-05"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "The population comes from admissions and receipts, never from worker reports; missing outcomes are bounded, not imputed"
+  acceptance_hash: "sha256:0c13aa6c51a33134a051c1dbd7c38964ee0de58aed08adde89a647f7788b16e3"
+
+- id: B4-07
+  title: "Skill Foundry + Gap Radar"
+  phase: P4
+  lane: C
+  protected_base: false
+  critical: false
+  depends_on: ["B2-12"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Capability Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  acceptance: "Three missions turned into one skill, admitted per family on measured uplift"
+  acceptance_hash: "sha256:d0f5a4bc5c8f8ddc2e152e23ab8a54b8693ef09b7bc11963744760b1bdb270bb"
+
+- id: B4-08
+  title: "Model-Release Reflex: re-score every config on a new model"
+  phase: P4
+  lane: C
+  protected_base: false
+  critical: false
+  depends_on: ["B2-07", "B2-12"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Capability Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "A mock release requalifies manifests and retires failing configs"
+  acceptance_hash: "sha256:168c463c7d1abbeed1506165414a8813ba93a383f357e30025fe3aa6afec9ea7"
+
+- id: B4-09
+  title: "Tool Surface Lock, rollout rings, canary programme, Capability SBOM"
+  phase: P4
+  lane: C
+  protected_base: true
+  critical: false
+  depends_on: ["B2-12"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Capability Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  founder_present: false
+  acceptance: "A changed backend under a pinned description is caught (X03)"
+  acceptance_hash: "sha256:6ac3f072e0181867f1a9fee3af87a01bbe240ad78e557a6f85880ed1713d7e81"
+
+- id: B4-10
+  title: "Backlot + retirement and half-life"
+  phase: P4
+  lane: C
+  protected_base: false
+  critical: false
+  depends_on: ["B4-07"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Capability Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  acceptance: "Reuse % is measured; unused assets are archived with lineage"
+  acceptance_hash: "sha256:963e86e38e552fa3549c0f565685695376af05376e02bbb4e7de91869805c45d"
+
+- id: B4-11
+  title: "Lesson Airlock: sealed/guarded/open boundaries, lesson grammar, disclosure tests, per-recipient budget"
+  phase: P4
+  lane: R
+  protected_base: false
+  critical: false
+  depends_on: ["B2-10"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Memory Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  acceptance: "Runs at half the provisional budget until B4-19 files the measured cap; the cap then comes from B4-19, never from this job's own tests"
+  acceptance_hash: "sha256:d1f53f98282ecc3c969b35b22739b360332afda6033368a9c3afb570e30e7f6a"
+
+- id: B4-19
+  title: "**Disclosure-budget spike** ([06 OQ1](06-MEMORY.md#open-questions)): the cumulative-transcript attack on three synthetic ventures, attackers from both families"
+  phase: P4
+  lane: R
+  protected_base: false
+  critical: false
+  depends_on: ["B2-10"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Memory Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "Pre-registered; the attacker's break-even measured per recipient; the cap set at half of it; result filed to [12](12-SPIKE-RESULTS.md) and X07 re-scored in [15](15-RISKS-AND-DECISIONS.md) [15 OG3]"
+  acceptance_hash: "sha256:6353be4540e6cec5a354d2f42ce01b92082a66f68cd9ea813ea2c2f75355945d"
+
+- id: B4-12
+  title: "Priors Library, Null Registry, Pain Index"
+  phase: P4
+  lane: R
+  protected_base: false
+  critical: false
+  depends_on: ["B2-10"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Memory Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 22
+  window_hours_est: 2.8
+  status: not_started
+  acceptance: "Every killed venture leaves an obituary that a later probe cites"
+  acceptance_hash: "sha256:cc92bd4158a766208a958962a6c30ecc5a83f43f247c309a5779a6333b58aaa5"
+
+- id: B4-13
+  title: "Homeostats, the ten stocks, the immune system (antibodies)"
+  phase: P4
+  lane: G
+  protected_base: false
+  critical: false
+  depends_on: ["B3-08"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 30
+  window_hours_est: 3.8
+  status: not_started
+  acceptance: "Scenario E: bounded attacker cost, obligations served, evidence-based restart (T06)"
+  acceptance_hash: "sha256:2c0bdd4ddffa862253ec5aeb0c1ee5c92e39e686c74ded1334371958921e5aae"
+
+- id: B4-14
+  title: "Governance budget + control ROI ledger"
+  phase: P4
+  lane: G
+  protected_base: false
+  critical: false
+  depends_on: ["B4-13"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 22
+  window_hours_est: 2.8
+  status: not_started
+  acceptance: "Q10: an operating week reports value and full control cost; a silent control drops to 5% sampling"
+  acceptance_hash: "sha256:5f64a5892bee75aa121ee0693aad60ffde1f73329c8749425ea6189cdc7445f2"
+
+- id: B4-15
+  title: "Replication Engine + Strategy Cells"
+  phase: P4
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B3-17"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  acceptance: "One working offer is replicated ×5 with independent Referees (target)"
+  acceptance_hash: "sha256:3b76f5b77497190bfa42d8daad333d7d9e7c885ffd00ad8792c2bc477aaa4b9c"
+
+- id: B4-16
+  title: "Option Pool: Trigger-Armed Options, one registered per week"
+  phase: P4
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B3-10"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  acceptance: "A synthetic world-change event fires the pre-armed option first"
+  acceptance_hash: "sha256:3545882648ef758bb035ed9f26f96a8c6cf4a8eb7fd70aba159f299c4e881427"
+
+- id: B4-17
+  title: "Fleet Charters, Series mode, micro-ventures; Pivot Court"
+  phase: P4
+  lane: V
+  protected_base: false
+  critical: false
+  depends_on: ["B3-07", "B3-16"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "4 micro-ventures run under one Fleet Charter with founder minutes flat (target)"
+  acceptance_hash: "sha256:61870698b65dcc5f58eaa91288a35a6bb2afe6c33f4fc18044239d409b066404"
+
+- id: B4-18
+  title: "Seam Miner + Forge; Decision Supply Bench"
+  phase: P4
+  lane: M
+  protected_base: false
+  critical: false
+  depends_on: ["B2-07", "B0-10"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Mission Systems Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "A mined hybrid enters the Audition Ladder with a pre-registered claim; no second hybrid passes Shadow until B0-10's title-vs-procedure result is filed (DR-54) [15 OG8]"
+  acceptance_hash: "sha256:0abe3ace136162d47f8fcd7a789adb587ccb1e65a9dd53b3b88a9be9c40fc5e8"
+
+- id: B5-01
+  title: "Acquisition Desk: screening, diligence rooms, OpCo intake"
+  phase: P5
+  lane: X
+  protected_base: false
+  critical: false
+  depends_on: ["B3-15"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 30
+  window_hours_est: 3.8
+  status: not_started
+  acceptance: "One live screen of ≥20 targets; the first offer is founder-signed (F9)"
+  acceptance_hash: "sha256:f276dca5d256e5e7ef822fdfea05a190f5818bb4e459301ecf538d2888e3bf65"
+
+- id: B5-02
+  title: "Capital Desk"
+  phase: P5
+  lane: X
+  protected_base: false
+  critical: false
+  depends_on: ["B3-15"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "Q7-style stress on the capital stack; nothing is committed without a founder signature"
+  acceptance_hash: "sha256:3d968b72bb018cb4c5039844eebba282482e2df23be5b8451f200af42652aa3d"
+
+- id: B5-03
+  title: "Human Task Market"
+  phase: P5
+  lane: X
+  protected_base: false
+  critical: false
+  depends_on: ["B3-13"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  acceptance: "Task-splitting triggers classification review (DR-37)"
+  acceptance_hash: "sha256:6c8d8758e19f7a6f8bfcac6b100d21e39006b1bede33cb113f82904191d5e2a7"
+
+- id: B5-15
+  title: "**Q8 suite, human-work part** (H04): contract before acceptance, reserved pay, paid revisions, appeal, effective-pay audit; beside the Human Task Market; attackers from both families; acceptance reserve"
+  phase: P5
+  lane: A
+  protected_base: true
+  critical: false
+  depends_on: ["B5-03", "B3-19a", "B3-19b"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  referee: {family: both, models: ["gpt-6-astra", "claude-opus-5-5"]}
+  turns_est: 22
+  window_hours_est: 2.8
+  status: not_started
+  founder_present: false
+  acceptance: "Every human task shows pay, deadline, paid revisions and appeal before acceptance; reserved pay cannot be clawed back by a later cap; the promised appeal is reachable [15 OG1]"
+  acceptance_hash: "sha256:bff87a1fe5c666953a15491f4021b6fdb66d29377c32a65087f759aabb7f0335"
+
+- id: B5-04
+  title: "Guild: membership records, contracts, reputation"
+  phase: P5
+  lane: X
+  protected_base: false
+  critical: false
+  depends_on: ["B5-03"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "The first Guild contracts are founder-signed"
+  acceptance_hash: "sha256:2c9d136b625d884d8b998c91ba6795c61116b2ca8dbc14cfa13337c7ffdcd1a5"
+
+- id: B5-05
+  title: "Structured reconciliation for material Claude/Codex judge disagreement (D10, DR-88): facts table, evidence-backed cross-challenge, ≤2 rounds, shared-understanding record, founder packet if still split"
+  phase: P5
+  lane: A
+  protected_base: false
+  critical: false
+  depends_on: ["B5-03"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Verification Engineer", family: claude, model: "claude-sonnet-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 18
+  window_hours_est: 2.3
+  status: not_started
+  acceptance: "A seeded split produces a premise table and either an agreed parsed verdict or a Decide packet; the split rate per task class is reported after 200 coverage contracts"
+  acceptance_hash: "sha256:e014e2cdaac9495623257edfc8810484f53f6143c07907df6629e428b2ec7346"
+
+- id: B5-06
+  title: "Model Foundry spike: one fine-tune on one accepted-trace class"
+  phase: P5
+  lane: C
+  protected_base: false
+  critical: false
+  depends_on: ["B4-02"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Capability Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 30
+  window_hours_est: 3.8
+  status: not_started
+  acceptance: "Parity within 2 points at ≤25% of cost, or a filed null (F10)"
+  acceptance_hash: "sha256:5f0a0d4936126157fdfa7d1aab54d615bdee8b9a8c9d8e9724fb8545fab153ba"
+
+- id: B5-07
+  title: "Atoms Gateway"
+  phase: P5
+  lane: X
+  protected_base: false
+  critical: false
+  depends_on: ["B3-04"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Custody Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 26
+  window_hours_est: 3.3
+  status: not_started
+  acceptance: "A physical-world order passes the same Decision Contract as a digital effect"
+  acceptance_hash: "sha256:300c02521f22813db36ebbdfc4357fe256a3d1f332fff2c461b2a143a516bb8d"
+
+- id: B5-08
+  title: "Keystone Assets + Frontier Program: 2 original studies (target)"
+  phase: P5
+  lane: V
+  protected_base: false
+  critical: false
+  depends_on: ["B4-12"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  referee: {family: either, models: ["claude-opus-5-5", "gpt-6-astra"]}
+  turns_est: 28
+  window_hours_est: 3.5
+  status: not_started
+  acceptance: "A study published with its data and nulls"
+  acceptance_hash: "sha256:42bb1ffbe6955c1cb663c94bb1fc75dd955e751ac10a6a903cf1c0f283d12290"
+
+- id: B5-09
+  title: "OpCo Packs + exit readiness score"
+  phase: P5
+  lane: V
+  protected_base: false
+  critical: false
+  depends_on: ["B4-17"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Fleet Surveyor", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  acceptance: "A rehearsal hand-over to a replacement operator lists every hidden dependency"
+  acceptance_hash: "sha256:814da39026199e4f73595789410cc58e857e176916241762a692d8bc8eba7daa"
+
+- id: B5-10
+  title: "Office Window + Wrist Grammar + Office Hours"
+  phase: P5
+  lane: S
+  protected_base: false
+  critical: false
+  depends_on: ["B3-12"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Surface Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 30
+  window_hours_est: 3.8
+  status: not_started
+  acceptance: "Each surface ships only with a real mission using it ([08 §12](08-SURFACES.md#12-surfaces-that-do-not-exist-yet))"
+  acceptance_hash: "sha256:98f1284a44ecfd0186b87a658d18eba381666c219566dbffbf6d6e470c86f608"
+
+- id: B5-11
+  title: "Honeytokens across Brains and repos"
+  phase: P5
+  lane: K
+  protected_base: false
+  critical: false
+  depends_on: ["B3-06"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 16
+  window_hours_est: 2
+  status: not_started
+  acceptance: "A sighting trips the venture kill and exports a flight recorder"
+  acceptance_hash: "sha256:7ae3548c00dd96d32310fad5bfbe761d8fafd95eb7694d1e9a818d69a34029f1"
+
+- id: B5-12
+  title: "Federation readiness: Kernel cell design + trigger watches on the substrate ladder"
+  phase: P5
+  lane: K
+  protected_base: true
+  critical: false
+  depends_on: ["B3-14"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: codex, model: "gpt-6-astra"}
+  referee: {family: claude, model: "claude-opus-5-5"}
+  turns_est: 24
+  window_hours_est: 3
+  status: not_started
+  founder_present: false
+  acceptance: "Each trigger has a live meter on the Map; the design has been reviewed by both families"
+  acceptance_hash: "sha256:cca63622698062771a1ca5188bd86977909e2c3c665a9212d1d92a518ed32b4f"
+
+- id: B5-13
+  title: "Alternate Kernel host: quarterly restore drill"
+  phase: P5
+  lane: K
+  protected_base: false
+  critical: false
+  depends_on: ["B3-02"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Kernel Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 18
+  window_hours_est: 2.3
+  status: not_started
+  acceptance: "Restore → the new epoch is refused while the old host is live → reconcile → resume"
+  acceptance_hash: "sha256:1d26753b6046d5b9a9a19de6de843f7a883216c299a1c8137912682e8e5abca3"
+
+- id: B5-14
+  title: "A4 Promotion Case pack for venture #1"
+  phase: P5
+  lane: G
+  protected_base: false
+  critical: false
+  depends_on: ["B3-16"]
+  founder_deps: []
+  gate_deps: []
+  builder: {title: "Policy Engineer", family: claude, model: "claude-opus-5-5"}
+  referee: {family: codex, model: "gpt-6-astra"}
+  turns_est: 20
+  window_hours_est: 2.5
+  status: not_started
+  acceptance: "The case is decided by founder signature, whatever the outcome, with the calibration evidence attached"
+  acceptance_hash: "sha256:f464bb6dfc02120090af9db21a8768dccd3fab9e474ef48d40d770e449908e5f"

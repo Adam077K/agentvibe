@@ -1,0 +1,334 @@
+# Done-test register, B0-17b (docs/vision-v3/14-BUILD-PLAN.md §6 P0, B0-17).
+# Each frozen done-test file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run: go -C kernel test -count=1 -tags donetest ./internal/launcher/... ./internal/outbox/...
+# Frozen red against ErrNotImplemented on 2026-10-01; re-frozen after the B0-17b review.
+#
+# B1-08 done test: --dangerously-skip-permissions refused before exec (only pinned argv templates
+#   run); an unattended 03:00 launch succeeds; the 121st launch in a rolling hour is refused.
+# B1-12 done test: Q3 subset: worker processes SIGKILLed at 4 crash points -> one effect, recovered
+#   from disk; uncertain never auto-retries, at_most_once never re-sends even on a lookup of Absent.
+# B1-12 out of scope: the two-launcher race of gate G1(b) is the job:// lease (09a §19, two runners
+#   claim one job): B1-05, frozen by B0-17a, not here.
+#
+# RE-FREEZE r2 2026-10-02 (B1-12): 2026-10-02 re-freeze r2 after Opus review (late-receipt double
+# effect, 3 mutants). Added kernel/internal/outbox/outbox_r2_donetest_test.go; the round-1 file is
+# unchanged (hash identical). Base 78d5ac2. Mutants applied to store.go in $TMPDIR copies only; the
+# two round-1 tests stayed green on every one, so each survived before. Killed:
+#   F1  late Receipt refused after an Absent resolve (78d5ac2 itself: legalFrom[Confirmed] lacks
+#       Failed; 2 effects)                               -> LateReceiptAfterAbsentIsOneEffect
+#   M2a Dispatch re-sends a Confirmed Operation          -> ConfirmedIsNeverDispatchedAgain
+#   M2b lookup error resolved to Failed                  -> LookupErrorIsNotProofOfAbsence
+#   M2c keyStream drops Target                           -> TargetIsPartOfTheBusinessKey
+# Positive control: adding Failed to legalFrom[Confirmed] in a copy turns all ten package tests
+# green, so the F1 test is satisfiable. LateReceiptAfterAbsentIsOneEffect FAILS against 78d5ac2,
+# by design. NOT asserted (a design decision, not this brief's): a next Dispatch that runs BEFORE
+# the late Receipt lands still double-sends unless the in-flight attempt is fenced (a lease, or
+# Absent not accepted as proof while an attempt may be in flight).
+#
+# RE-FREEZE r3 2026-10-02 (B1-12): 2026-10-02 re-freeze r3 after Opus review of f38dc0d (timeout-
+# before-landing double effect, hung call never escalates, r2 late-receipt test survives lock
+# removal, global-lock mutant). Added kernel/internal/outbox/outbox_r3_donetest_test.go; rounds 1-2
+# unchanged (hashes identical). Base f38dc0d. All edits to store.go in $TMPDIR copies only.
+#   T1 TimeoutBeforeLandingIsOneEffect   FAILS on f38dc0d (2 effects)  green under control C-lag
+#   T2 KilledBeforeLandingIsOneEffect    FAILS on f38dc0d (2 effects)  green under control C-lag
+#   T3 HungCallReachesHumanByTheDeadline FAILS on f38dc0d (dispatching) green under control C-hung
+#   T4 OperationsDoNotBlockEachOther     kills M-global-lock (one lock file for every Operation),
+#                                        alone on base C-lag+C-hung
+#   T5 NoSecondSendWhileInFlight        kills M-no-lock (flock skipped) on f38dc0d; on base
+#                                        C-lag+C-hung the lag window is an equivalent guard and T5
+#                                        passes, while T3 and T4 still kill M-no-lock there
+# Controls (not proposals): C-lag treats Absent less than 30s after the attempt began as Unknown;
+# C-hung records Human for a locked Dispatching attempt past UncertainDeadline. With both, all 18
+# package tests pass (rounds 1-3 and store_test.go), so T1-T5 are satisfiable together.
+# OPEN: (1) canon gives no number for visibility_lag_s and does not say whether the Provider
+# (outbox.go Presence doc) or the outbox applies it; T1/T2 read at zero elapsed time, so any positive
+# outbox-side window passes, and round 1 caps it below 70s at a 30s lag. (2) canon gives no number
+# for the deadline (§7 "deadline before proof"); T3 uses the implementation's UncertainDeadline.
+# Observed, not ours: with the lock removed, store_test.go's TestRedispatchBeforeLateReceiptIsRefused
+# hangs until the package timeout rather than failing.
+#
+# RE-FREEZE r4 2026-10-02 (B1-12): 2026-10-02 re-freeze r4 after Opus review of ee19236 (founder
+# ruling B unenforced, lag <= 0 re-sends at once, six surviving mutants). Added
+# kernel/internal/outbox/outbox_r4_donetest_test.go; rounds 1-3 unchanged (hashes identical). Base
+# ee19236. Rulings A and B: docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md (section B's
+# quote corrected in this change: the founder's ruling covers hung calls only; 24h UncertainDeadline
+# stays for answered-but-unclear). 15 min and 2 min are literals in the test, not the store.go constants.
+# All store.go edits in $TMPDIR copies only. FAIL on ee19236, by design:
+#   SilentPastFifteenMinutesIsNeverResent/times_out_after_20_minutes (2 calls), /worker_dies (2 sends)
+#   NonPositiveLagUsesTheDefault/declared_0s (2 effects)
+# Controls (not proposals), all three together turn all package tests green, twice:
+#   C-TO   a call answering ambiguously >= HungDeadline after the attempt began is recorded Human
+#   C-DEAD resolve: a Dispatching, sent, unanswered attempt >= HungDeadline old goes Human, not Failed
+#   C-LAG0 declared lag must be > 0, else DefaultVisibilityLag
+# Mutants on base C-TO+C-DEAD+C-LAG0; each killed by exactly the named test, all others green:
+#   zero lag accepted (>= 0)         -> NonPositiveLagUsesTheDefault/declared_0s
+#   negative lag accepted            -> NonPositiveLagUsesTheDefault/declared_{0s,-1ns,-1h}
+#   uncertain-extends-window removed -> LagWindowRunsFromTheTimeout
+#   lagFrom = began                  -> LagWindowRunsFromTheSend (killed worker, 10 min slow to send)
+#   hung branch state guard removed  -> AnsweredAttemptIsNotTreatedAsHung
+#   markSent guard removed           -> NoSendAfterHandedToHuman (0 provider calls)
+#   HungDeadline 20m (bonus)         -> SilentPastFifteenMinutesIsNeverResent/still_hung
+#   C-TO dropped / C-DEAD dropped    -> .../times_out_after_20_minutes / .../worker_dies
+# NOT killed: fold's sent guard removed alone. Unreachable through the API: markSent checks the same
+# condition (Dispatching, same attempt, not yet sent) under the journal lock before it appends, so no
+# such record can be written; killing it needs a forged journal. With markSent's guard also removed
+# it is killed by NoSendAfterHandedToHuman. Not addressed (not in the brief): review LOW, the lag on
+# the wall clock (store.go:558).
+#
+# RE-FREEZE r5 2026-10-02 (B1-12): 2026-10-02 re-freeze r5 founder ruling dead-worker. Added
+# kernel/internal/outbox/outbox_r5_donetest_test.go; rounds 1-4 unchanged (hashes identical). Base
+# 87059ac (Opus re-review PASS; local ref, GitHub 502). Ruling C recorded in
+# docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md. All store.go edits in $TMPDIR copies.
+# FAILS on 87059ac, by design: DeadWorkerRetriesOnce/second_death_on_the_re-send (3 sends; ruling C
+# allows one retry). Control (not a proposal): count Failed outcomes of sent, unanswered attempts and
+# refuse a second Absent->Failed for them (Human). With it all package tests pass, twice.
+# Mutants on that control, each killed by exactly the named test, all others green:
+#   answered not reset per attempt (store.go:264)  -> AnswerBelongsToItsAttempt
+#   hung gate ignores sent (store.go:572)          -> UnsentAttemptIsNotHung
+#   Dispatch boundary > instead of >= (433)        -> FifteenMinuteBoundary/call_times_out_at_15m0s
+#   Dispatch boundary at 15m-1ns (433)             -> FifteenMinuteBoundary/call_times_out_at_14m59.999999999s
+#   reconcile boundary > instead of >= (572)       -> FifteenMinuteBoundary/dead_worker_reconciled_at_15m0s
+#   reconcile boundary at 15m-1ns (572)            -> FifteenMinuteBoundary/dead_worker_reconciled_at_14m59.999999999s
+# EQUIVALENT, not killed, with reasons:
+#   markSent's `|| s.sent` (store.go:447): only the Dispatch that journaled attempt n calls markSent for
+#     it, under the attempt lock and before any other writer can append sent for n (expect_seq CAS), so
+#     s.sent is never true there. Survived on the control base as predicted.
+#   fold's sent guard (store.go:247): unreachable from the API (round 4); confirmed by the reviewer.
+# RE-FREEZE r6 2026-10-03 (B1-08): 2026-10-03 founder ruling B1-07 ignore-user-config. One line in
+#   launcher_donetest_test.go: codexTokens gains a trailing "--ignore-user-config"
+#   (docs/vision-v3/_process/DR-B1-07-CODEX-RULINGS-2026-10-02.md ruling 4; 09a §8.2 updated with it).
+#   Every codex assertion renders codexTokens, so each now expects the flag; the -s index rows (3, 4)
+#   are unchanged. Nothing else in B1-08 changed. The launcher is still the stub on this base, so
+#   the file is red as before ("launcher: not implemented"); it compiles and vets.
+# RE-FREEZE r7 2026-10-03 (B1-08): 2026-10-03 founder superseded ruling 4. Line 34 of
+#   launcher_donetest_test.go: codexTokens ends "--ignore-rules" in place of r6's "--ignore-user-config",
+#   because --ignore-user-config stops -p loading the pinned profile (codex-cli 0.154.0, measured;
+#   DR-B1-07 "Round 2"). --ignore-rules keeps the profile and drops user and project execpolicy .rules
+#   files. 09a §8.2 is changed with it. Nothing else in B1-08 changed. The launcher is still the stub on
+#   this base, so the file stays red as before.
+# RE-FREEZE r8 2026-10-03 (B1-08): 2026-10-03 re-freeze r3 after review. The Opus review FAILED
+#   build/b1-08 @ 29abadd because the frozen tests killed 2 of its 23 mutants. These are the
+#   orchestrator's decisions, fail-safe and within canon: 09a §8.5 per_launch_requires, §9 I1-I4,
+#   §10 'sub'|'api'. Branch build/b1-08-tests-r3 is 29abadd plus interface plumbing in
+#   launcher.go, with declarations only and no behaviour:
+#     ErrSpec, ErrLease; LeaseVerifier and GrantStatus (Deps.Leases, Deps.Grant, both required);
+#     ReceiptSink.Since; Exec.Run(ctx, path, digest, argv, env); ArgvTemplate.Pinned;
+#     Grant.EnvAllow; Request.Env.
+#   launcher_test.go (the implementer's) only follows the new signatures.
+#   launcher_donetest_test.go is re-frozen with its fakes on the new interfaces (Run, Since, and an
+#   accept-all lease and grant) and with provider mode "sub", not "subscription" (OPEN 1). No
+#   assertion changed.
+#   Added launcher_r3_donetest_test.go:
+#     R3_DepsRequired: no verifier or grant status is ErrDeps; a forbidden flag with no '-' is
+#       ErrGrant (:187).
+#     R3_UnattendedIsHeadless: unattended without headless is ErrSpec; unattended needs I2+; I4 is
+#       accepted and I5 and I0 are refused (:258).
+#     R3_LeaseVerified: Verify gets (job, lease, the launcher's clock). A forged lease, another
+#       job's lease, an expired lease, one expiring now, a revoked lease, a stale fence, and one
+#       expired by the launcher's clock are each ErrLease.
+#     R3_DoubleLaunchRefused: a running job's second launch is ErrLease.
+#     R3_LeaseVerifiedUnderAdmitLock: no second Verify while the first holds the lock.
+#     R3_SlotRules: -C clean, absolute, not /; Pinned <profile> for codex -p and claude
+#       --setting-sources; --max-budget-usd a decimal of at most 2 places, > 0, within the cap.
+#     R3_RateSurvivesRestart: a new launcher over the same log refuses the 121st. A launch exactly
+#       an hour old is out of the window and one a nanosecond younger is in it (:324). An unreadable
+#       log never admits.
+#     R3_ExecGetsPinnedDigestAndAllowListedEnv: Exec receives the pinned digest, closing the TOCTOU
+#       window because Exec hashes and execs the same file. Its env is exactly the allow-listed
+#       names, sorted, never nil, and never inherits KERNEL_SECRET. Unknown names, names holding =,
+#       an empty name and NUL values are ErrSpec.
+#     R3_GrantLiveAtEveryAdmit: after a revocation the next launch is ErrGrant.
+#     R3_ProviderModeSubOnly: only "sub" is accepted; "api" is ErrUndecided.
+#     R3_ReviewMutants: a failed receipt releases its slots (:310); -s=v and -sv are
+#       ErrForbiddenFlag (:223); a cancelled context (:273); a slot of -, -- or -x (:239); an empty
+#       JobID (:252).
+#   Results on 29abadd plus the plumbing: 10 r3 tests FAIL, and every test except
+#   R3_ReviewMutants does. The 3 frozen tests and R3_ReviewMutants pass.
+#   Proof, $TMPDIR only: a reference passes every B108 test (-race -count=3). Mutants: 28 of 28
+#   killed, including the review's 8 survivors and 20 for items 1-8.
+#
+# RE-FREEZE r4 2026-10-03 (B1-08): 2026-10-03 re-freeze r4 after review. The Opus review FAILED
+# build/b1-08 @ 75980d5 (code afed458, on the r3 tests at 92ac55d). Branch build/b1-08-tests-r4 from
+# 75980d5; a builder who did not write r1-r3. Every call is the orchestrator's, fail-safe.
+# Added launcher_r4_donetest_test.go:
+#   R4_LeaseConsumedAtAdmit (HIGH :430): Deps.State is required. Running jobs and consumed leases
+#     persist there under a file lock, keyed by job and lease. A relaunch on the same lease is
+#     ErrLease, ever, including after a restart. So is a second launcher while the job runs, on
+#     the same lease or a new one, and a launcher after a restart while the job still runs. A slot
+#     is freed only by a recorded end: Launch records one when Exec.Run returns, and End records
+#     one for a dead launcher's job, refusing the wrong lease. Two launchers racing one lease
+#     admit exactly one.
+#   R4_EverySlotHasARule (HIGH :291): rules are keyed by the slot's flag. New refuses a slot whose
+#     flag has no rule, a slot with no flag before it, a pinned flag with no pin, and absent or
+#     unclean roots (Grant.WorktreeRoot, Grant.JobRoot). The three admitted examples are refused:
+#     --disallowedTools without Agent and Task, --settings /tmp/x.json, and -C /Users/adamks. Also
+#     refused: --allowedTools holding Agent or Task, job files outside JobRoot or not ".json", a
+#     bad --session-id or --agent. TemplateOf(claude) is the full line with --setting-sources
+#     pinned to project, and New accepts it.
+#   R4_CodexRulesKeyedByFlag (item 5): a renamed -C slot keeps the worktree rule, including one
+#     named <B>. A -c value, slot or literal, must be exactly on Grant.ConfigAllow, so
+#     -c sandbox_mode=danger-full-access is refused.
+#     CLEARED in the r5 merge re-freeze below (was "TODO(B1-07 r4)": sync with build/b1-07-tests-r4). Codex is moving to --ignore-user-config,
+#     every setting as -c, and no -p (founder ruling 2026-10-03). Pin codex's profile and -c list
+#     then; TemplateOf(codex) is pinned on Tokens and Digest only until it lands.
+#   R4_ReceiptLogFailsClosed (HIGH :433): CreateReceiptLog is the only creation, and OpenReceiptLog
+#     refuses a log never created. A log that is deleted, emptied, truncated mid-record or at a
+#     record boundary, has a byte flipped, or has garbage appended refuses every launch, at once,
+#     2h and 48h later, and in a restarted launcher. After ReestablishReceiptLog the hour counts as
+#     full: refused at +59m, admitted at +1h1s. The count is never 0.
+#   R4_HeadlessFromArgv (MED :354): claude's bare -p is headless. Non-headless or attended with -p
+#     is ErrSpec.
+#   R4_BudgetGuards (:314): "05", "00", "007" and 2^62+1, whose cents wrap to 100 without the
+#     12-digit guard, are ErrSpec.
+# Contract, launcher.go, declarations and fail-closed stubs only, afed458's behaviour untouched:
+#   Grant.WorktreeRoot/JobRoot/ConfigAllow, Deps.State, Launcher.End, ErrState,
+#   Create/Open/ReestablishReceiptLog.
+# Earlier rounds, edited only where the rulings contradict them (their hashes move):
+#   launcher_donetest_test.go: grant() pins <profile> and carries the two roots; the rig carries a
+#     State dir; the rate test launches a new job each time, since a lease now admits one launch.
+#   launcher_r3_donetest_test.go: the rigs carry a State dir. "attended interactive at I1" is now
+#     ErrSpec, where it read nil, per item 4.
+# ON 75980d5 plus the contract stubs: 6 FAIL. They are R3_UnattendedIsHeadless and R4_
+# LeaseConsumedAtAdmit, EverySlotHasARule, CodexRulesKeyedByFlag, ReceiptLogFailsClosed and
+# HeadlessFromArgv. R4_BudgetGuards passes there, because afed458 has both guards and this only
+# pins them; every r1 and other r3 test passes too.
+# Proof, $TMPDIR only: a reference passes every B108 test. Mutants: 26 of 26 killed, one or more
+# per item, among them the review's two :314 survivors.
+# GAP: a state.json deleted by hand reads as no history. The persisted state has no anchor of its
+# own; the receipt log does.
+# RE-FREEZE r9 2026-10-03 (B1-08): 2026-10-03 founder ruling B1-07 round 4, profile superseded
+#   (DR-B1-07-CODEX-RULINGS-2026-10-02.md, "Round 4"). codexTokens is the locked line: no -p,
+#   --ignore-user-config and --ignore-rules, 17 -c settings; 09a §8.2 matches. launcher_r3: the
+#   <profile> pin applies to claude only; "codex -p not the pinned profile" is replaced by a changed
+#   -c, an extra -c and -p appended, each ErrArgvNotPinned. Mutants 2 of 2 killed (literal -c values
+#   not compared; length check loosened). Package passes on 75980d5 (-race -count=2).
+# MERGE RE-FREEZE 2026-10-03 (B1-08 r5): 2026-10-03 merge re-freeze r4 + B1-07 r4 codex shape.
+#   build/b1-08-tests-r5 = r4 (1af7bc7) + build/b1-07 (9faaaef, the round-4 adapter) + the
+#   codex-r4 sync (d86ed85). The two re-freezes above collided: B0-17b.yml conflicted, and the
+#   auto-merged launcher_donetest/r3 files hashed to neither side. Resolved so BOTH intents hold:
+#   - r9's codex line, unchanged: codexTokens has no -p, has --ignore-user-config, and its 17 locked
+#     settings are literal -c values. launcher_r3's claude-only <profile> pin and its three
+#     ErrArgvNotPinned cases are kept as d86ed85 wrote them.
+#   - r4's assertions, all kept. Where they named the old codex line they are restated on the new
+#     one: grant() drops the codex <profile> pin and sets ConfigAllow to the locked -c values
+#     (lockedConfig). R4_CodexRulesKeyedByFlag renames the new line's slots. "codex -p not
+#     pinned" becomes "a codex -p slot not pinned" (ErrGrant).
+#   - r4's TODO "sync B1-07 r4" is CLEARED: TemplateOf(codex) is the full locked line with no -p
+#     and no pin, New accepts it, a launch on it runs, and a locked -c value missing from
+#     ConfigAllow is ErrGrant. launcher.go's rule comment says the same.
+#   On 75980d5 plus the r4 contract stubs, the same 6 FAIL as r4 (R3_UnattendedIsHeadless and five
+#   R4 tests); every r9 assertion passes there.
+#   Proof, $TMPDIR only: the r4 reference passes every B108 test on the merged files. Mutants: r4's
+#   26 and r9's 2 codex-shape mutants (literal -c values not compared; length check loosened),
+#   28 of 28 killed.
+# RE-FREEZE r6 2026-10-03 (B1-08): 2026-10-03 re-freeze r6 after review, plus the B1-07 r5 sync.
+#   The Opus review FAILED f9f54d6 (the implementation on 7275a72). Root cause: lease consumption
+#   and the launch count lived in launcher-local files that can be deleted or forked. Branch
+#   build/b1-08-tests-r6 from f9f54d6, merged with build/b1-07-tests-r5 @ b2d33a4. Orchestrator calls:
+#   1 LeaseVerifier.Consume(job, lease) is the authoritative store's compare-and-set, called as the
+#     last check under the admit lock. Refused: a lease consumed elsewhere, the same lease from a
+#     launcher with another State dir, and the lease after state.json is deleted. A launch refused
+#     by a cap or a slot rule consumes nothing.
+#   2 The receipt log's genesis is pinned (Grant.ReceiptGenesis). CreateReceiptLog(path, pinned)
+#     returns a unique genesis and is refused once one is pinned. OpenReceiptLog(path, genesis)
+#     refuses a re-created or forked log. FounderResetReceiptLog(path, prior, {By, Reason, At}) is
+#     the only reset; it is recorded in the new genesis, and the hour after it counts as full. The
+#     journal (internal/journal) MAY be imported by the launcher: ALLOWED_MODULES governs only
+#     third-party modules, and writers.go only files outside kernel/. The pinned-genesis log was
+#     chosen because the journal is just as local.
+#   3 Grant.State pins the one State location; New refuses any other (a missing, relative,
+#     unclean or different pin).
+#   4 MED-sec :260/:272: -C must be WorktreeRoot/<JobID> or inside it, and job files must be in
+#     JobRoot/<JobID>/; a JobID that is not one clean segment is refused.
+#   5 Survivors: :251, :252, :287 (leading -, whitespace), :577 (state.json without its maps is
+#     ErrState, never a panic), and receiptlog.go:108 (an emptied log). The final-newline half of
+#     :108 is EQUIVALENT: read() slices off the last byte, so a missing newline already breaks the
+#     last record's hash.
+#   B1-07 r5 sync (b2d33a4): the launcher codex line drops features={} and ends with the 103
+#     measured feature pins (codexFeatures, mirrored from codex_r5_donetest_test.go).
+#     Grant.EnvAllow must lie within HOME, CODEX_HOME, PATH and LANG; AV_JOB is no longer passed
+#     and is now refused. 09a §8.2 is updated to match.
+#   Earlier rounds, edited only where r6 demands it: every New wraps its grant in pinned(g, d);
+#   the fakes gain Consume (r3Leases does a real CAS); fixture paths are scoped to each launch's
+#   job (renderJob); the env fixtures use the B1-07 allowlist. Contract: launcher.go declarations
+#   and fail-closed stubs. r4's receipt-log functions are kept, unexported, in receiptlog.go.
+#   launcher_test.go (the implementer's) no longer compiles until it gives okLease a Consume and
+#   moves to the r6 receipt-log signatures.
+#   ON f9f54d6 plus the stubs (launcher_test.go shimmed only to compile): 7 FAIL. They are
+#   R4_EverySlotHasARule (TemplateOf(codex) is still the pre-r5 adapter line, which B1-07 owns),
+#   R4_ReceiptLogFailsClosed and R6_ConsumeIsAuthoritative, StateIsPinned,
+#   ReceiptLogPinnedGenesis, PathsScopedToThisJob and EnvAllowlistIsB107s. R6_ReviewSurvivors
+#   passes there; it pins guards f9f54d6 already has.
+#   Proof, $TMPDIR only: an r6 reference (f9f54d6 plus an overlay, the adapter given the r5 line)
+#   passes every B108 test. Mutants: 23 killed, 1 equivalent (above).
+#
+# RE-FREEZE r7 2026-10-03 (B1-08): 2026-10-03 re-freeze r7 threat-model ruling
+#   (docs/vision-v3/_process/DR-B1-08-THREAT-MODEL-2026-10-03.md). Added
+#   launcher_r7_donetest_test.go; base 51c0df3 (implementation 160381f + the DR). Pins:
+#   1 New refuses (ErrGrant) a State dir equal to, inside or containing WorktreeRoot, JobRoot,
+#     the CODEX_HOME pin or any Grant.TmpRoots entry, after symlink resolution
+#     (longest existing prefix);
+#   2 launcher.go:528: HOME, CODEX_HOME, PATH take only Grant.EnvPinned's value, else ErrSpec;
+#   3 launcher.go:191: New refuses unless Deps.Receipts is a GenesisReporter whose Genesis() is
+#     exactly Grant.ReceiptGenesis (non-empty);
+#   4 Deps.Journal required; one JournalStream/JournalLaunchType event (Data = Receipt JSON) per
+#     admitted launch; trailing-hour receipts and journal launch records must agree, else ErrState
+#     before Consume; a failed journal append never execs.
+#   Contract (declarations only): Grant.EnvPinned, Grant.TmpRoots, Deps.Journal,
+#   GenesisReporter, JournalStream, JournalLaunchType, fileLog.Genesis accessor. Earlier files
+#   edited only where r7 demands it: pinned() calls r7Pinned (env/tmp pins, genesis, a journal
+#   shared per receipt sink); r3 RateSurvivesRestart seeds that journal (r7Seed); r6
+#   StateIsPinned's positive case builds through pinned. launcher_test.go (the implementer's)
+#   needs Deps.Journal and a GenesisReporter sink once implemented.
+#   ON 160381f plus the declarations: 4 FAIL, every earlier B108 test passes. They are
+#   R7_StateOutOfWorkerReach, R7_EnvTakesOnlyPinnedValues, R7_ReceiptGenesisChecked,
+#   R7_JournalAnchor.
+#   Proof, $TMPDIR only: an r7 reference passes every B108 test. Mutants, 19 killed, 0 survived:
+#   item 1 (no check; lexical only; inside-only; TmpRoots skipped; CODEX_HOME skipped; prefix
+#   without "/"; no longest-prefix resolution), item 2 (no check; unpinned allowed; HOME only),
+#   item 3 (no check; non-reporter allowed; empty pin allowed), item 4 (journal optional; no
+#   append; no count check; one-sided count; append error ignored; count after Consume).
+# RE-FREEZE 2026-10-03 (B1-08h): 2026-10-03 re-freeze B1-08h founder ruling: HOME required (F3,
+#   option a). While EnvPinned holds a HOME pin, a request without HOME at its pin is ErrSpec. The
+#   rigs now send HOME at r7's pin ("/h"); no assertion is weakened. Edited, nothing else:
+#   launcher_donetest_test.go: grant() gains EnvAllow ["HOME"]; request() gains Env {HOME: /h}.
+#   launcher_r3_donetest_test.go: r3Rig.req sends HOME; R3_ExecGetsPinnedDigestAndAllowListedEnv
+#     sends and expects HOME in its exact env, and its "no env" case becomes "HOME alone" (exactly
+#     ["HOME=/h"], never nil); its five ErrSpec env cases carry HOME so only the named fault refuses.
+#   launcher_r4_donetest_test.go: r4Rig.req sends HOME.
+#   launcher_r6_donetest_test.go: R6_EnvAllowlistIsB107s "AV_JOB passed" carries HOME.
+#   launcher_r7_donetest_test.go: unchanged. On d715c18 every edited test still passes.
+#   The new rule's test is TestB108_H_F3_RequestCarriesPinnedHome (build/done-tests/B1-08h.yml).
+# RE-FREEZE 2026-10-03 (B1-08h r3): 2026-10-03 orchestrator ruling: HOME pin required. New refuses
+#   (ErrGrant) a grant with no EnvPinned["HOME"]. One edit, launcher_r7_donetest_test.go,
+#   R7_EnvTakesOnlyPinnedValues: "HOME with no pin" and "HOME with an empty pin table" were
+#   launch-time ErrSpec on grants New must now refuse; they assert ErrGrant at New instead (the
+#   refusal moves earlier, nothing is admitted that was refused). CODEX_HOME/PATH cases unchanged.
+#   On d715c18 those two cases FAIL (New accepts); the rest of the test passes.
+register: B0-17b
+jobs:
+  - id: B1-08
+    files:
+      - path: kernel/internal/launcher/launcher_donetest_test.go
+        sha256: 29316394da3dc48097c6a9aee5a2274afb8fe5953a2b3ad8274ff6df2e615109
+      - path: kernel/internal/launcher/launcher_r3_donetest_test.go
+        sha256: 9a722361b9e3b4a08522287379ca551d42ca90e3f40c24a4310c93c9ff4aa546
+      - path: kernel/internal/launcher/launcher_r4_donetest_test.go
+        sha256: 2014f84db5410eac14b641504721c66d6b0bb0126b7e64f52839a26bf340a7ae
+      - path: kernel/internal/launcher/launcher_r6_donetest_test.go
+        sha256: a04fdd193f7440b2a7ba15b5b803c697a2b507b621e7d7e6e63c365d45ad2087
+      - path: kernel/internal/launcher/launcher_r7_donetest_test.go
+        sha256: 828f506438bd3efb06a644235975bd3bd63f1aca0bc8c207459aa9e3a4484145
+  - id: B1-12
+    files:
+      - path: kernel/internal/outbox/outbox_donetest_test.go
+        sha256: 55b7b239cec0793b2a44cb66bea374a98de66f6bbade1dda6b621bd2a804b9d1
+      - path: kernel/internal/outbox/outbox_r2_donetest_test.go
+        sha256: d3e65a0424acab1036ab671897d059bde56f5fa20761fcea66f759f61bae136c
+      - path: kernel/internal/outbox/outbox_r3_donetest_test.go
+        sha256: 6f956dec5fe6d568f87f851b9a2554b8adb083222b04b4a72707241fdc7b2c18
+      - path: kernel/internal/outbox/outbox_r4_donetest_test.go
+        sha256: 0a2a6937e73582a09ee40536b51ebc8fc8c0d0a5c486568ecbd38f3ea669eb92
+      - path: kernel/internal/outbox/outbox_r5_donetest_test.go
+        sha256: a48b2f07064d794ac940309f7b3ac12b7db7aab96d7d81ebd231d1a93ff49ab6

@@ -1,0 +1,11 @@
+{
+  "subject": "99db437efe02b2dd3b5ea44b115b0922f26cf6318ff3f16539f7009cbb23a77e",
+  "base": "aa1dcd7c5c24bae72da0e7e605378da7d04fd761",
+  "tier": "lite",
+  "tier_driver": "build/done-tests/B1-02.yml",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "B1-26 Opus reviewer PASS at 8f42429 after r1-r4 frozen tests by a separate test builder; founder ordered the merge",
+  "recorded_at": "2026-10-02T15:17:45.701Z"
+}

@@ -742,7 +742,7 @@ twin_run:
   falsifiers: ["pilot conversion < 2% at n ≥ 150", "median delivery slip > 1.5 d"]
   structural_alternatives: [queue-model-v1-simple]            # D07
   effects: shadow_only                                        # own signing identity
-  labels: [synthetic, non_exportable]                         # DR-50, below semantics
+  label: {origin: synthetic, exportable: false, retention: {class: synthetic, hold: none}}   # DR-50, semantics below; wire names per 09a §12
   clock: {business_time: 7d, elapsed: 46m}                    # both always reported
 ```
 
