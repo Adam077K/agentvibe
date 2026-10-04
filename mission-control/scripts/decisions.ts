@@ -107,12 +107,25 @@ export interface DecisionOptions {
   now?: () => number;
   /**
    * True when the wait should end now because the mission was stopped (or the runner is shutting
-   * down). The question is expired so it leaves "pending", and withDecisions returns null WITHOUT
-   * putting the card back on Waiting: the caller settles the card as `stopped`.
+   * down). The question is expired so it leaves "pending", and withDecisions returns `{ interrupted: true }`
+   * WITHOUT putting the card back on Waiting: the caller settles the card as `stopped`.
    */
   interrupted?: () => boolean;
   /** Where the runner's events go: one line of text plus structured data, shown as a receipt. */
   note?: (text: string, data: Record<string, unknown>) => void;
+}
+
+/**
+ * What withDecisions returns when the wait was cut short by a stop. A value of its own, so the caller
+ * learns it was a stop from the return and not by re-reading the board: that read can fail, and then
+ * a bare `null` (which also means "timed out, card back on Waiting") left the card `working` for ever.
+ */
+export interface Interrupted {
+  interrupted: true;
+}
+
+export function isInterrupted(x: unknown): x is Interrupted {
+  return typeof x === 'object' && x !== null && (x as Interrupted).interrupted === true;
 }
 
 function timeoutFromEnv(): number {
@@ -122,8 +135,9 @@ function timeoutFromEnv(): number {
 
 /**
  * Run the Builder; while it ends on a DECISION line, ask, wait, and run it again with the answers.
- * Returns the last round (files and cost accumulated across rounds), or null when the wait timed
- * out — in which case the card is already back on Waiting and the caller must stop.
+ * Returns the last round (files and cost accumulated across rounds); null when the wait timed
+ * out — in which case the card is already back on Waiting and the caller must stop; or `Interrupted`
+ * when a stop ended the wait, in which case the card is untouched and the caller settles it `stopped`.
  *
  * A run that was refused or failed is returned as-is: only a clean finish can be asking a question.
  */
@@ -131,7 +145,7 @@ export async function withDecisions<T extends BuilderRound>(
   missionId: string,
   run: (extraPrompt: string[]) => Promise<T>,
   opts: DecisionOptions = {},
-): Promise<T | null> {
+): Promise<T | Interrupted | null> {
   const file = opts.file ?? decisionsPath();
   const pollMs = opts.pollMs ?? DEFAULT_POLL_MS;
   const timeoutMs = opts.timeoutMs ?? timeoutFromEnv();
@@ -166,7 +180,7 @@ export async function withDecisions<T extends BuilderRound>(
     if (settled === 'interrupted') {
       appendMissionLine({ type: 'decision_expired', id: needed.id, at: now() } satisfies DecisionExpired, file);
       note('stopped while waiting for the founder; decision expired', { by: 'runner', decisionId: needed.id, expired: true, stopped: true });
-      return null;
+      return { interrupted: true };
     }
     if (settled?.status !== 'answered') {
       const expired: DecisionExpired = { type: 'decision_expired', id: needed.id, at: now() };
@@ -186,7 +200,7 @@ export async function withDecisions<T extends BuilderRound>(
 
     note(`founder answered: ${settled.choice}`, { by: 'founder', decisionId: needed.id, choice: settled.choice });
     answered.push({ question: asked.question, choice: settled.choice });
-    if (interrupted()) return null; // answered, then stopped before the Builder resumed: do not relaunch it
+    if (interrupted()) return { interrupted: true }; // answered, then stopped before the Builder resumed: do not relaunch it
     const next = await run(decisionPromptLines(answered));
     // Files written before the question still count, and so does what they cost.
     next.files = [...new Set([...round.files, ...next.files])];
