@@ -11,6 +11,8 @@ import (
 	"io"
 	"os"
 	"slices"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"testing"
@@ -78,8 +80,13 @@ func gone(t *testing.T, pid int, what string) {
 	t.Fatalf("%s: pid %d still exists", what, pid)
 }
 
-// LOW 1: when the leader cannot be identified after Start, the worker is killed and Run fails: the
-// group-escape hole must not silently return.
+// The escaper leaves its process group at once (joins its parent's), then records its pid and sleeps.
+// Run through /usr/bin/perl in place: warm and protected, so it has left before any scan.
+const escapeScript = `setpgrp(0, getpgrp(getppid())); open(F, ">>", $ENV{FX_PIDS}); print F "$$\n"; close(F); sleep 100;`
+
+// LOW 1: when the leader cannot be identified after Start, the worker is killed and Run fails at once,
+// not at the wall. An escaper is the worker, because an unseeded tree cannot find one outside its
+// group: with the fail-closed branch removed, Run runs on to the wall and returns ErrWall.
 func TestFix2_LookupFailureKillsWorker(t *testing.T) {
 	var pid int
 	old := lookup
@@ -89,10 +96,28 @@ func TestFix2_LookupFailureKillsWorker(t *testing.T) {
 	}
 	defer func() { lookup = old }()
 	e := iExec(t)
-	err := e.Run(WithLimits(context.Background(), Limits{Wall: time.Minute, Idle: time.Minute, Stdout: io.Discard}),
-		"/bin/sh", fileSum(t, "/bin/sh"), []string{"-c", "sleep 100"}, []string{})
-	if err == nil {
-		t.Fatal("Run succeeded although the leader could not be identified")
+	pids := t.TempDir() + "/pids"
+	done := make(chan error, 1)
+	go func() {
+		done <- e.Run(WithLimits(context.Background(), Limits{Wall: 100 * time.Second, Idle: 100 * time.Second, Stdout: io.Discard}),
+			"/usr/bin/perl", fileSum(t, "/usr/bin/perl"), []string{"-e", escapeScript}, []string{"FX_PIDS=" + pids})
+	}()
+	defer func() {
+		if b, err := os.ReadFile(pids); err == nil {
+			for _, f := range strings.Fields(string(b)) {
+				if n, err := strconv.Atoi(f); err == nil && n > 1 {
+					syscall.Kill(n, syscall.SIGKILL)
+				}
+			}
+		}
+	}()
+	select {
+	case err := <-done:
+		if err == nil || errors.Is(err, ErrWall) {
+			t.Fatalf("Run returned %v; want a prompt failure that is not the wall backstop", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Run did not return within 5s: the unidentified leader was left running to the wall")
 	}
 	if pid == 0 {
 		t.Fatal("lookup was never asked about the leader")
