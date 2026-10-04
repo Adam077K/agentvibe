@@ -9,7 +9,7 @@ import path from 'node:path';
 import { createMissionsApi } from '../server/routes/missions.ts';
 import { createApp } from '../server/app.ts';
 import { appendMissionLine } from '../server/index-cache.ts';
-import { boardPath, eventsPath, foldBoard, foldTeam, readBoardLines, type TeamEvent } from '../server/missions.ts';
+import { STOP_REQUESTED, boardPath, eventsPath, foldBoard, foldTeam, readBoardLines, type MissionLine, type TeamEvent } from '../server/missions.ts';
 
 let dir: string;
 beforeEach(() => {
@@ -134,5 +134,95 @@ describe('/api/missions', () => {
       if (prev === undefined) delete process.env.MC_MISSIONS_DIR;
       else process.env.MC_MISSIONS_DIR = prev;
     }
+  });
+});
+
+describe('POST /api/missions/:id/stop', () => {
+  const ID = '33333333-3333-4333-8333-333333333333';
+  const f = () => boardPath(dir);
+  const seed = (...lines: Partial<MissionLine>[]) => {
+    appendMissionLine({ id: ID, ts: 1, status: 'waiting', title: 'T', goal: 'G' }, f());
+    lines.forEach((l, i) => appendMissionLine({ id: ID, ts: 2 + i, ...l }, f()));
+  };
+  const mission = () => foldBoard(readBoardLines(f())).find((m) => m.id === ID)!;
+
+  test.each(['queued', 'working'] as const)('a %s mission: appends one stop_requested line, answers 202, status is unchanged', async (status) => {
+    seed({ status });
+    const before = readBoardLines(f()).length;
+    const r = await post(createMissionsApi(dir), `/${ID}/stop`);
+    expect(r.status).toBe(202);
+    expect(await r.json()).toMatchObject({ ok: true, id: ID, status, stopRequested: true });
+    const lines = readBoardLines(f());
+    expect(lines).toHaveLength(before + 1);
+    expect(lines.at(-1)).toMatchObject({ id: ID, status: STOP_REQUESTED });
+    expect(mission()).toMatchObject({ status, stopRequested: true });
+  });
+
+  test.each(['waiting', 'done', 'failed', 'stopped'] as const)('a %s mission is refused (409) and nothing is appended', async (status) => {
+    if (status === 'waiting') seed();
+    else seed({ status: 'working' }, { status });
+    const before = readBoardLines(f()).length;
+    const r = await post(createMissionsApi(dir), `/${ID}/stop`);
+    expect(r.status).toBe(409);
+    expect(readBoardLines(f())).toHaveLength(before);
+  });
+
+  test('a second stop while the first is pending is accepted but appends nothing', async () => {
+    seed({ status: 'working' });
+    const api = createMissionsApi(dir);
+    expect((await post(api, `/${ID}/stop`)).status).toBe(202);
+    const n = readBoardLines(f()).length;
+    const again = await post(api, `/${ID}/stop`);
+    expect(again.status).toBe(202);
+    expect(await again.json()).toMatchObject({ alreadyRequested: true });
+    expect(readBoardLines(f())).toHaveLength(n);
+  });
+
+  test('a stop_requested line missing its id or ts is not a board line at all', () => {
+    // `a && b && status-in-list || status === stop_requested` let the right arm through alone.
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(f(), [{ status: STOP_REQUESTED }, { ts: 1, status: STOP_REQUESTED }, { id: ID, status: STOP_REQUESTED }, { id: 7, ts: 1, status: STOP_REQUESTED }].map((l) => JSON.stringify(l)).join('\n') + '\n');
+    expect(readBoardLines(f())).toEqual([]);
+  });
+
+  test('a non-UUID id is 400 and never reaches path.join; an unknown id is 404', async () => {
+    const api = createMissionsApi(dir);
+    expect((await post(api, '/..%2F..%2Fetc/stop')).status).toBe(400);
+    expect((await post(api, '/00000000-0000-4000-8000-000000000000/stop')).status).toBe(404);
+    expect(fs.existsSync(f())).toBe(false);
+  });
+
+  test('under the shipped app a cross-site POST is refused (403) and appends nothing', async () => {
+    seed({ status: 'working' });
+    const prev = process.env.MC_MISSIONS_DIR;
+    process.env.MC_MISSIONS_DIR = dir;
+    try {
+      const app = createApp();
+      const n = readBoardLines(f()).length;
+      const x = await app.request(`/api/missions/${ID}/stop`, { method: 'POST', headers: { 'sec-fetch-site': 'cross-site' } });
+      expect(x.status).toBe(403);
+      expect(readBoardLines(f())).toHaveLength(n);
+      expect((await app.request(`/api/missions/${ID}/stop`, { method: 'POST', headers: { 'sec-fetch-site': 'same-origin' } })).status).toBe(202);
+    } finally {
+      if (prev === undefined) delete process.env.MC_MISSIONS_DIR;
+      else process.env.MC_MISSIONS_DIR = prev;
+    }
+  });
+
+  test('server/** never signals a process: the stop route appends a request and the runner does the killing', () => {
+    const root = path.resolve(import.meta.dir, '..', 'server');
+    const files: string[] = [];
+    const walk = (d: string) => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        if (e.isDirectory()) walk(path.join(d, e.name));
+        else if (e.name.endsWith('.ts')) files.push(path.join(d, e.name));
+      }
+    };
+    walk(root);
+    // Comments are stripped crudely (block, then line): this is the cheap guard, and the
+    // behavioural half is the route test above, which finds no process to signal.
+    const code = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    const offenders = files.filter((p) => /\.kill\s*\(|\bkillpg\b/.test(code(fs.readFileSync(p, 'utf8'))));
+    expect(offenders.map((p) => path.relative(root, p))).toEqual([]);
   });
 });
