@@ -672,6 +672,21 @@ describe('reconcile and fold', () => {
     expect(mission(ID).stopRequested).toBeUndefined();
   });
 
+  test('a relaunch starts a clean attempt: the cost a refused run left on the card does not survive into the next one', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'working' });
+    put({ id: ID, ts: 3, status: 'waiting', error: 'refused_subagent', costUsd: 0.42 });
+    expect(mission(ID)).toMatchObject({ status: 'waiting', costUsd: 0.42 }); // the refused card still shows what it cost
+    put({ id: ID, ts: 4, status: 'queued' });
+    expect(mission(ID).costUsd).toBeUndefined();
+    put({ id: ID, ts: 5, status: 'working', runnerPid: 1 });
+    put({ id: ID, ts: 6, status: 'done', verdict: 'PASS' }); // a final line that carries no cost
+    expect(mission(ID)).toMatchObject({ status: 'done', verdict: 'PASS' });
+    expect(mission(ID).costUsd).toBeUndefined();
+    put({ id: ID, ts: 7, status: 'failed', costUsd: 0.1 });
+    expect(mission(ID).costUsd).toBe(0.1); // a line that does carry one still sets it
+  });
+
   test('a stop request never moves the status: one landing after `done` leaves it done', () => {
     put(waiting(ID));
     put({ id: ID, ts: 2, status: 'working' });

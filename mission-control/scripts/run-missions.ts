@@ -945,7 +945,7 @@ export async function runMission(m: Mission, deps: RunnerDeps = REAL_DEPS) {
 
 async function runClaimed(m: Mission, deps: RunnerDeps, stop: StopWatch) {
   const emit = emitter(m.id);
-  emit(RUNNER, { kind: 'status', text: `claimed by runner pid ${process.pid}; workdir ${WORKDIR}` });
+  emit(RUNNER, { kind: 'status', text: `claimed by runner pid ${process.pid}; workdir ${WORKDIR}`, data: { claimed: true } });
   // Asked to stop while still queued (or between claim and launch): nothing is ever launched.
   if (await settleIfStopped(m, stop, emit, [])) return;
   console.log(`[runner] mission ${m.id} "${m.title}" — builder starting`);

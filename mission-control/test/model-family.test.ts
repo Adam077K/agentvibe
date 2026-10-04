@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { appendMissionLine } from '../server/index-cache.ts';
-import { boardPath, eventsPath, foldBoard, foldTeam, readBoardLines, readLaunchReceipts, type Mission, type TeamEvent } from '../server/missions.ts';
+import { boardPath, eventsPath, foldBoard, foldTeam, readBoardLines, readEvents, readLaunchReceipts, type Mission, type TeamEvent } from '../server/missions.ts';
 import { familyOf, stampFamily } from '../server/model-family.ts';
 import { appendLaunchCsv, LAUNCH_CSV_HEADER, runMission, type LaunchRow, type RunFn, type RunnerDeps } from '../scripts/run-missions.ts';
 
@@ -191,6 +191,42 @@ describe('the board carries the family of the model that ran, and the mismatch',
     expect(referee).toMatchObject({ family: 'claude', model: 'claude-opus-5', slotMismatch: { slotFamily: 'codex', family: 'claude' } });
     expect(builder.slotMismatch).toBeUndefined();
     expect(builder.family).toBe('claude');
+  });
+
+  test('a mismatch from an earlier run does not ride onto the card of a clean relaunch', async () => {
+    const m = seedMission();
+    const out = path.join(dir, 'out.md');
+    fs.writeFileSync(out, 'hello\n');
+    const claude = [
+      { type: 'assistant', parent_tool_use_id: null, message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: out } }] } },
+      { type: 'user', parent_tool_use_id: null, message: { content: [{ type: 'tool_result', tool_use_id: 't1', is_error: false, content: 'ok' }] } },
+      { type: 'result', subtype: 'success', is_error: false, num_turns: 1, total_cost_usd: 0.01, result: 'done' },
+    ];
+    const codex = [{ type: 'item.completed', item: { type: 'agent_message', text: 'VERDICT: {"verdict":"PASS","reasons":["ok"]}' } }];
+    const run: RunFn = async (bin, _a, _c, onLine) => {
+      for (const l of bin.includes('codex') ? codex : claude) onLine(JSON.stringify(l));
+      return { code: 0, stderr: '' };
+    };
+    // Attempt 1: a Claude model in the Codex referee seat.
+    await runMission(m, { run, logLaunch: () => {}, models: { claude: 'claude-sonnet-5', codex: 'claude-opus-5' } });
+    const first = foldTeam(m.id, readEvents(m.id, dir)).agents.find((a) => a.agent === 'referee')!;
+    expect(first.slotMismatch).toBeDefined();
+    // Attempt 2: the same mission relaunched, now with the right model in each seat.
+    appendMissionLine({ id: m.id, ts: Date.now() + 10, status: 'queued' }, boardPath(dir));
+    await runMission(foldBoard(readBoardLines(boardPath(dir))).find((x) => x.id === m.id)!, { run, logLaunch: () => {}, models: { claude: 'claude-sonnet-5', codex: 'gpt-6-astra' } });
+    const second = foldTeam(m.id, readEvents(m.id, dir));
+    expect(second.agents.find((a) => a.agent === 'referee')!.model).toBe('gpt-6-astra');
+    for (const a of second.agents) expect(a.slotMismatch).toBeUndefined();
+  });
+
+  test('foldTeam: a runner claim ends the previous attempt\'s mismatches, and a mismatch raised after it still lands', () => {
+    const base = { title: 'T', model: 'm', family: 'claude' } as const;
+    const mismatch = (ts: number): TeamEvent => ({ ts, agent: 'runner', title: 'Runner', model: '-', family: '-', kind: 'slot_model_mismatch', data: { role: 'referee', slotFamily: 'codex', family: 'claude' } });
+    const claim = (ts: number): TeamEvent => ({ ts, agent: 'runner', title: 'Runner', model: '-', family: '-', kind: 'status', text: 'claimed', data: { claimed: true } });
+    const referee = (ts: number): TeamEvent => ({ ts, agent: 'referee', ...base, kind: 'status', status: 'working' });
+    expect(foldTeam('m', [referee(1), mismatch(2), claim(3), referee(4)]).agents[0]!.slotMismatch).toBeUndefined();
+    expect(foldTeam('m', [referee(1), mismatch(2), claim(3), referee(4), mismatch(5)]).agents[0]!.slotMismatch).toEqual({ slotFamily: 'codex', family: 'claude' });
+    expect(foldTeam('m', [referee(1), mismatch(2)]).agents[0]!.slotMismatch).toBeDefined(); // no claim, no clear
   });
 
   test('a clean run puts no mismatch on any card', async () => {
