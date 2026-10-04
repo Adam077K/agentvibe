@@ -31,8 +31,7 @@
 //     never the presented Host echoed back — returned before any other middleware, route,
 //     static file or SSE stream runs.
 //
-// THIS FILE IS THE HG-1 SEAM, NOT THE IMPLEMENTATION. `hostVerdict` allows everything and
-// `hostGuard` passes everything through; the failing tests are the specification.
+// An exact lookup in a fixed list. No regex, no URL parsing of the Host header, no environment.
 
 import type { MiddlewareHandler } from 'hono';
 import { CLIENT_PORT, PORT } from '../config.ts';
@@ -55,6 +54,26 @@ export interface HostVerdict {
   reason: string;
 }
 
+/** One constant body for every refusal: never route data, never the presented Host. */
+const REFUSAL_BODY = 'Misdirected Request: this server answers only to localhost, 127.0.0.1 and [::1].';
+
+/**
+ * The authority of a request URL, as written: what sits between `://` and the first `/`, `?`
+ * or `#`. `null` when the URL has none (a relative target, or no URL at all). Userinfo is left
+ * in, so it can never match an allowed entry.
+ */
+function urlAuthority(requestUrl: string): string | null {
+  const at = requestUrl.indexOf('://');
+  if (at < 1) return null;
+  const rest = requestUrl.slice(at + 3);
+  let end = rest.length;
+  for (const stop of ['/', '?', '#']) {
+    const i = rest.indexOf(stop);
+    if (i >= 0 && i < end) end = i;
+  }
+  return rest.slice(0, end);
+}
+
 /**
  * The whole decision as a pure function of the Host header and the request URL.
  *
@@ -62,19 +81,29 @@ export interface HostVerdict {
  * literal string (possibly empty, possibly comma-joined from duplicates) when it does.
  */
 export function hostVerdict(
-  _hostHeader: string | null | undefined,
-  _requestUrl: string,
-  _allowed: string[] = allowedHosts()
+  hostHeader: string | null | undefined,
+  requestUrl: string,
+  allowed: string[] = allowedHosts()
 ): HostVerdict {
-  return { allow: true, reason: 'HG-1 seam: no Host check is implemented yet.' };
+  if (hostHeader !== null && hostHeader !== undefined && !allowed.includes(hostHeader.toLowerCase())) {
+    return { allow: false, reason: 'Host header is not a loopback name of this server.' };
+  }
+  const authority = urlAuthority(requestUrl);
+  if (authority === null) return { allow: false, reason: 'Request URL carries no authority.' };
+  if (!allowed.includes(authority.toLowerCase())) {
+    return { allow: false, reason: 'Request URL authority is not a loopback name of this server.' };
+  }
+  return { allow: true, reason: 'Host and URL authority are loopback names of this server.' };
 }
 
 /**
  * Applied FIRST in server/app.ts — above crossSiteGuard, every route, mountClient and /events.
  * On a refusal it answers 421 and does not call next().
  */
-export function hostGuard(_allowed: string[] = allowedHosts()): MiddlewareHandler {
-  return async (_c, next) => {
+export function hostGuard(allowed: string[] = allowedHosts()): MiddlewareHandler {
+  return async (c, next) => {
+    const verdict = hostVerdict(c.req.header('host'), c.req.url, allowed);
+    if (!verdict.allow) return c.text(REFUSAL_BODY, 421);
     await next();
   };
 }
