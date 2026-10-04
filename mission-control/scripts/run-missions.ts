@@ -97,16 +97,27 @@ export const LAUNCH_CSV_HEADER = 'ts,worker,model,mission,seconds,cost_usd,exit,
  */
 export function appendLaunchCsv(file: string, row: LaunchRow): void {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  if (!fs.existsSync(file)) fs.writeFileSync(file, LAUNCH_CSV_HEADER + '\n');
+  let eol = '\n';
+  if (!fs.existsSync(file)) fs.writeFileSync(file, LAUNCH_CSV_HEADER + eol);
   else {
     const text = fs.readFileSync(file, 'utf8');
     const nl = text.indexOf('\n');
     const head = nl < 0 ? text : text.slice(0, nl);
-    if (head === 'ts,worker,model,mission,seconds,cost_usd,exit') fs.writeFileSync(file, LAUNCH_CSV_HEADER + text.slice(head.length));
+    if (head.endsWith('\r')) eol = '\r\n';
+    // Migrate by temp file + rename in the same directory: a reader (or a crash) sees the old file or
+    // the new one, never a half-written one. Only the header changes. OLD ROWS KEEP THEIR 7 FIELDS --
+    // the family column is simply absent for them, and a reader must treat a short row as family-unknown.
+    // Known limit: another runner appending between our read and the rename loses that row; the
+    // per-mission lock does not cover this file.
+    if (head.replace(/\r$/, '') === 'ts,worker,model,mission,seconds,cost_usd,exit') {
+      const tmp = `${file}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`;
+      fs.writeFileSync(tmp, LAUNCH_CSV_HEADER + (eol === '\r\n' ? '\r' : '') + text.slice(head.length));
+      fs.renameSync(tmp, file);
+    }
   }
   fs.appendFileSync(
     file,
-    [new Date().toISOString(), row.worker, row.model, row.mission, row.seconds.toFixed(1), row.cost, String(row.exit), familyOf(row.model)].join(',') + '\n',
+    [new Date().toISOString(), row.worker, row.model, row.mission, row.seconds.toFixed(1), row.cost, String(row.exit), familyOf(row.model)].join(',') + eol,
   );
 }
 
@@ -152,7 +163,10 @@ function emitter(id: string) {
   const file = eventsPath(id);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   return (who: Who, e: Omit<TeamEvent, 'ts' | 'agent' | 'title' | 'model' | 'family'> & { model?: string }) => {
-    const ev: TeamEvent = { ts: Date.now(), agent: who.agent, title: who.title, model: e.model ?? who.model, family: who.family, ...e } as TeamEvent;
+    // family follows the model id that ran, not the slot (DR-83). The runner is not a model: it keeps its marker.
+    const model = e.model ?? who.model;
+    const family = who.slot === 'unknown' ? who.family : familyOf(model);
+    const ev: TeamEvent = { ts: Date.now(), agent: who.agent, title: who.title, ...e, model, family } as TeamEvent;
     fs.appendFileSync(file, JSON.stringify(ev) + '\n');
   };
 }
@@ -237,9 +251,12 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
   ].join('\n');
   const launchId = randomUUID();
   const model = deps.models?.claude ?? CLAUDE_MODEL;
+  // The seat, speaking as the model that actually ran: events carry ITS id and family, not the slot default.
+  const B = { ...BUILDER, model };
+  const S = { ...SUBAGENT, model };
   const args = builderArgs(prompt, model);
   const argvHash = createHash('sha256').update(args.join('\u0000')).digest('hex');
-  emit(BUILDER, { kind: 'status', status: 'starting', model, text: `claude -p (${model}) in ${WORKDIR}` });
+  emit(B, { kind: 'status', status: 'starting', model, text: `claude -p (${model}) in ${WORKDIR}` });
   const stamp = stampLaunch(emit, BUILDER, 'builder', model, launchId);
   const writes = createWriteTracker();
   let cost: number | undefined;
@@ -283,30 +300,30 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
           resultSubtype: null,
           parentLaunchId: launchId,
         });
-        emit(SUBAGENT, { kind: 'status', status: 'starting', text: `Builder subagent (parent tool_use ${parentId})` });
+        emit(S, { kind: 'status', status: 'starting', text: `Builder subagent (parent tool_use ${parentId})` });
       }
       if (j.type === 'assistant') {
         for (const c of j.message?.content ?? []) {
-          if (c.type === 'text' && c.text?.trim()) emit(SUBAGENT, { kind: 'message', text: clip(c.text.trim()) });
+          if (c.type === 'text' && c.text?.trim()) emit(S, { kind: 'message', text: clip(c.text.trim()) });
         }
       }
       return;
     }
     if (j.type === 'system' && j.subtype === 'init') {
-      emit(BUILDER, { kind: 'status', status: 'working', model: j.model, text: `session ${j.session_id}`, data: { session_id: j.session_id } });
+      emit(B, { kind: 'status', status: 'working', model: j.model, text: `session ${j.session_id}`, data: { session_id: j.session_id } });
     } else if (j.type === 'assistant') {
       for (const c of j.message?.content ?? []) {
-        if (c.type === 'text' && c.text?.trim()) emit(BUILDER, { kind: 'message', text: clip(c.text.trim()) });
+        if (c.type === 'text' && c.text?.trim()) emit(B, { kind: 'message', text: clip(c.text.trim()) });
         if (c.type === 'tool_use') {
           if (NESTED_AGENT_TOOL.test(String(c.name ?? ''))) {
             refused = true;
             refusalTool = c.name;
-            emit(BUILDER, { kind: 'status', status: 'failed', text: `${REFUSED_SUBAGENT}: Builder called ${c.name}, which is disallowed` });
+            emit(B, { kind: 'status', status: 'failed', text: `${REFUSED_SUBAGENT}: Builder called ${c.name}, which is disallowed` });
             continue;
           }
           const fp = c.input?.file_path ?? c.input?.path ?? c.input?.pattern ?? '';
           writes.onToolUse(c);
-          emit(BUILDER, { kind: 'tool', text: `${c.name} ${clip(String(fp), 120)}` });
+          emit(B, { kind: 'tool', text: `${c.name} ${clip(String(fp), 120)}` });
         }
       }
     } else if (j.type === 'user') {
@@ -317,7 +334,7 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
       isError = !!j.is_error;
       turns = typeof j.num_turns === 'number' ? j.num_turns : null;
       resultSubtype = j.subtype ?? null;
-      emit(BUILDER, {
+      emit(B, {
         kind: 'result',
         status: isError ? 'failed' : 'finished',
         costUsd: cost,
@@ -338,12 +355,12 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
     // The result line may have drawn the Builder `finished`; a refused run must not end that way,
     // and a child card must not be left `starting` after the process that carried it has exited.
     const why = refusalTool ? `Builder called ${refusalTool}` : 'a nested agent ran';
-    emit(BUILDER, { kind: 'status', status: 'failed', text: `${REFUSED_SUBAGENT}: ${why}` });
-    for (const [parentId] of children) emit(SUBAGENT, { kind: 'status', status: 'failed', text: `${REFUSED_SUBAGENT}: nested agent under tool_use ${parentId}` });
+    emit(B, { kind: 'status', status: 'failed', text: `${REFUSED_SUBAGENT}: ${why}` });
+    for (const [parentId] of children) emit(S, { kind: 'status', status: 'failed', text: `${REFUSED_SUBAGENT}: nested agent under tool_use ${parentId}` });
     emit(RUNNER, { kind: 'receipt', text: `builder ${REFUSED_SUBAGENT} (${refusalTool ?? 'nested agent'}); card not advanced`, data: { by: 'builder', refused: true, launchId, children: children.size } });
     return { ok: false, files: [] as string[], summary, cost, refused: true };
   }
-  if (code !== 0 && !isError) emit(BUILDER, { kind: 'status', status: 'failed', text: `exit ${code}: ${clip(stderr)}` });
+  if (code !== 0 && !isError) emit(B, { kind: 'status', status: 'failed', text: `exit ${code}: ${clip(stderr)}` });
   const files = [...writes.files()].map((f) => path.resolve(WORKDIR, f));
   for (const f of files) {
     const h = sha256File(f);
@@ -389,12 +406,13 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
     `VERDICT: {"verdict":"PASS"|"FAIL","reasons":["short reason", "..."]}`,
   ].join('\n');
   const model = deps.models?.codex ?? CODEX_MODEL;
+  const R = { ...REFEREE, model };
   const args = ['exec', '--json', '--skip-git-repo-check', '-s', 'read-only', '-m', model, '-C', WORKDIR, '-o', outFile, prompt];
   const launchId = randomUUID();
   const argvHash = createHash('sha256').update(args.join('\u0000')).digest('hex');
   let unparsed = 0;
   fs.rmSync(outFile, { force: true }); // a relaunch must not read the dead run's last message
-  emit(REFEREE, { kind: 'status', status: 'starting', model, text: `codex exec (${model}) read-only` });
+  emit(R, { kind: 'status', status: 'starting', model, text: `codex exec (${model}) read-only` });
   const stamp = stampLaunch(emit, REFEREE, 'referee', model, launchId);
   const t0 = Date.now();
   let lastMessage = '';
@@ -407,14 +425,14 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
       return;
     }
     const item = j.item ?? {};
-    if (j.type === 'thread.started') emit(REFEREE, { kind: 'status', status: 'working', text: `thread ${j.thread_id}`, data: { thread_id: j.thread_id } });
-    else if (j.type === 'item.started' && item.type === 'command_execution') emit(REFEREE, { kind: 'tool', text: `$ ${clip(String(item.command), 160)}` });
+    if (j.type === 'thread.started') emit(R, { kind: 'status', status: 'working', text: `thread ${j.thread_id}`, data: { thread_id: j.thread_id } });
+    else if (j.type === 'item.started' && item.type === 'command_execution') emit(R, { kind: 'tool', text: `$ ${clip(String(item.command), 160)}` });
     else if (j.type === 'item.completed' && item.type === 'agent_message') {
       lastMessage = String(item.text ?? '');
-      emit(REFEREE, { kind: 'message', text: clip(lastMessage, 400) });
-    } else if (j.type === 'item.completed' && item.type === 'reasoning' && item.text) emit(REFEREE, { kind: 'message', text: `(thinking) ${clip(String(item.text), 160)}` });
-    else if (j.type === 'turn.completed') emit(REFEREE, { kind: 'result', text: `tokens in ${j.usage?.input_tokens ?? '?'} / out ${j.usage?.output_tokens ?? '?'}`, data: { usage: j.usage } });
-    else if (j.type === 'turn.failed' || j.type === 'error') emit(REFEREE, { kind: 'status', status: 'failed', text: clip(JSON.stringify(j)) });
+      emit(R, { kind: 'message', text: clip(lastMessage, 400) });
+    } else if (j.type === 'item.completed' && item.type === 'reasoning' && item.text) emit(R, { kind: 'message', text: `(thinking) ${clip(String(item.text), 160)}` });
+    else if (j.type === 'turn.completed') emit(R, { kind: 'result', text: `tokens in ${j.usage?.input_tokens ?? '?'} / out ${j.usage?.output_tokens ?? '?'}`, data: { usage: j.usage } });
+    else if (j.type === 'turn.failed' || j.type === 'error') emit(R, { kind: 'status', status: 'failed', text: clip(JSON.stringify(j)) });
   });
   const secs = (Date.now() - t0) / 1000;
   deps.logLaunch({ worker: 'codex', model, mission: m.id, seconds: secs, cost: '', exit: code });
@@ -431,8 +449,8 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
     }
   }
   const verdict = parseVerdict(lastMessage);
-  if (verdict) emit(REFEREE, { kind: 'verdict', status: 'finished', text: `${verdict.verdict}: ${verdict.reasons.join('; ')}`, data: verdict });
-  else emit(REFEREE, { kind: 'status', status: 'failed', text: `no VERDICT line (exit ${code}) ${clip(stderr)}` });
+  if (verdict) emit(R, { kind: 'verdict', status: 'finished', text: `${verdict.verdict}: ${verdict.reasons.join('; ')}`, data: verdict });
+  else emit(R, { kind: 'status', status: 'failed', text: `no VERDICT line (exit ${code}) ${clip(stderr)}` });
   emit(RUNNER, { kind: 'receipt', text: `referee exit ${code}, ${secs.toFixed(1)}s`, data: { by: 'referee', exit: code, seconds: secs, lastMessageFile: outFile } });
   return { code, verdict };
 }
