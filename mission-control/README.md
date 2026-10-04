@@ -35,11 +35,13 @@ cross-site guard. A path under `/api` or `/events` that no route claims is a JSO
 method, never the page. Served files carry `X-Content-Type-Options: nosniff` and
 `Content-Security-Policy: frame-ancestors 'none'`.
 
-The client root is confined in layers. The HTTP layer normalises a literal `/../x`, `/%2e%2e/x`
-or `/..\x` onto a harmless path, which is then a plain `404`. A `..` hidden behind `%2f` or
-`%5c` (`/..%2fx`) survives to the handler, which refuses it with a `400`, as it does a NUL, a
-backslash or malformed percent-encoding. Last, a file whose real path leaves `client/dist` (a
-symlink) is a `404`. `test/static.test.ts` pins each layer, including `safeSegments` directly.
+The client root is confined in layers. The HTTP layer normalises a literal `/../x`, `/%2e%2e/x` or
+`/..\x` onto an ordinary path inside the root before the handler sees it, so it never escapes:
+`/../fleet` is just `/fleet` and gets the app page, and `/../package.json` is `/package.json`,
+which is not in `client/dist` and so a `404`. A `..` hidden behind `%2f` or `%5c` (`/..%2fx`)
+survives to the handler, which refuses it with a `400`, as it does a NUL, a backslash or malformed
+percent-encoding. Last, a file whose real path leaves `client/dist` (a symlink) is a `404`.
+`test/static.test.ts` pins each layer, including `safeSegments` directly.
 
 **Developing the client** still uses two processes: `bun run server` on 4300 plus `bun run dev`
 on 4301, which proxies `/api` and `/events` to 4300.
