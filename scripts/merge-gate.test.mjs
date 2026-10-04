@@ -307,6 +307,174 @@ test('the subject changes when a reviewed byte changes', () => {
   assert.notEqual(after, before, 'the subject did not move when the diff did — the binding is not a binding');
 });
 
+test('the subject does not depend on core.abbrev — a local verdict must hold on the runner', () => {
+  // `git diff` abbreviates the blob hashes on its `index` lines to core.abbrev=auto: 7 characters
+  // locally, 8 on the GitHub runner, more as the repository grows. A verdict recorded locally
+  // failed CI on PR #166 (reason=absent) with no byte of the change different. The subject now
+  // diffs with --full-index.
+  const { proj } = fixture();
+  git(proj, ['switch', '-q', BRANCH]);
+  const subjectAt = (abbrev) => {
+    if (abbrev === null) git(proj, ['config', '--unset-all', 'core.abbrev']);
+    else git(proj, ['config', 'core.abbrev', String(abbrev)]);
+    return verdict(['subject', '--repo', proj, '--ref', BRANCH]).stdout.trim();
+  };
+  const rawDiffAt = (abbrev) => {
+    git(proj, ['config', 'core.abbrev', String(abbrev)]);
+    return git(proj, ['diff', 'main..' + BRANCH]);
+  };
+
+  // The premise: without --full-index these two configurations really do produce different bytes.
+  // If they did not, the equality below would hold of a verdict.mjs that had never been fixed.
+  assert.notEqual(rawDiffAt(7), rawDiffAt(12), 'core.abbrev no longer changes the diff, so this test proves nothing');
+
+  const dflt = subjectAt(null);
+  assert.match(dflt, /^[0-9a-f]{64}$/);
+  assert.equal(subjectAt(7), dflt, 'subject differs under core.abbrev=7');
+  assert.equal(subjectAt(12), dflt, 'subject differs under core.abbrev=12');
+});
+
+// ── The subject is a function of content alone — every pin, executed ────────────────────────
+//
+// `--full-index` fixed core.abbrev and nothing else. `git diff` output also follows color.ui,
+// diff.noprefix, diff.external, textconv drivers, diff.algorithm, diff.renames,
+// diff.context, diff.orderFile, core.quotePath, diff.suppressBlankEmpty, diff.interHunkContext, and
+// GIT_DIFF_OPTS / GIT_EXTERNAL_DIFF / GIT_CONFIG_* in the environment. Each case below sets ONE of
+// them and asserts two things: (1) PREMISE — a plain `git diff --full-index` really does differ under
+// it, so the case could not pass vacuously; (2) the subject is byte-identical to the unperturbed one.
+
+/** A repository whose diff exercises every output-shaping option the subject pins. */
+function subjectFixture() {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'subject-pin-'));
+  tmpRoots.push(root);
+  const up = path.join(root, 'up');
+  const proj = path.join(root, 'proj');
+  const w = (dir, f, body) => fs.writeFileSync(path.join(dir, f), body);
+  const lines = (n, f = (i) => `line${i}`) => Array.from({ length: n }, (_, i) => f(i + 1)).join('\n') + '\n';
+
+  fs.mkdirSync(up);
+  git(up, ['init', '-q', '-b', 'main']);
+  git(up, ['config', 'user.email', 'fixture@example.test']);
+  git(up, ['config', 'user.name', 'fixture']);
+  w(up, 'old-name.txt', 'alpha\nbeta\ngamma\ndelta\n');
+  w(up, 'tracked.txt', lines(30));
+  w(up, 'blank.txt', 'a\n\nb\nc\n');
+  w(up, 'algo.txt', '{\n  a;\n}\n\n{\n  b;\n}\n\n{\n  c;\n}\n');
+  // Found by search: a pair of files on which patience and myers print different diffs.
+  w(up, 'algo2.txt', 'a\nc\nd\nc\nb\nd\nd\nc\nd\nb\n');
+  git(up, ['add', '-A']);
+  git(up, ['commit', '-qm', 'base']);
+
+  git(root, ['clone', '-q', up, proj]);
+  git(proj, ['config', 'user.email', 'fixture@example.test']);
+  git(proj, ['config', 'user.name', 'fixture']);
+  git(proj, ['switch', '-qc', BRANCH]);
+  git(proj, ['mv', 'old-name.txt', 'new-name.txt']);
+  w(proj, 'tracked.txt', lines(30, (i) => (i === 5 || i === 20 ? `CHANGED${i}` : `line${i}`)));
+  w(proj, 'blank.txt', 'a\n\nB\nc\n');
+  w(proj, 'algo.txt', '{\n  a;\n}\n\n{\n  x;\n}\n\n{\n  b;\n}\n\n{\n  c;\n}\n');
+  w(proj, 'algo2.txt', 'b\nc\nc\nb\na\nb\nd\nb\nc\nb\nc\n');
+  w(proj, 'a.txt', 'first\n');
+  w(proj, 'z.txt', 'last\n');
+  w(proj, 'é.txt', 'accent\n');
+  git(proj, ['add', '-A']);
+  git(proj, ['commit', '-qm', 'work']);
+  git(proj, ['switch', '-q', 'main']);
+  return { root, proj };
+}
+
+function execIn(proj, cmd, args, env) {
+  return execFileSync(cmd, args, { cwd: proj, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env });
+}
+const rawDiff = (proj, env) => execIn(proj, 'git', ['diff', '--full-index', `origin/main..${BRANCH}`], env);
+const subjectOf = (proj, env) => run('node', [VERDICT, 'subject', '--repo', proj, '--ref', BRANCH], REPO, env).stdout.trim();
+
+/** An executable that prints junk, standing in for diff.external / GIT_EXTERNAL_DIFF / a textconv. */
+function junkScript(root, name, body) {
+  const f = path.join(root, name);
+  fs.writeFileSync(f, `#!/bin/sh\n${body}\n`, { mode: 0o755 });
+  return f;
+}
+
+const SUBJECT_PINS = [
+  { name: 'color.ui=always', config: () => [['color.ui', 'always']] },
+  { name: 'diff.noprefix', config: () => [['diff.noprefix', 'true']] },
+  { name: 'core.quotePath=false', config: () => [['core.quotePath', 'false']] },
+  { name: 'diff.suppressBlankEmpty', config: () => [['diff.suppressBlankEmpty', 'true']] },
+  { name: 'diff.interHunkContext', config: () => [['diff.interHunkContext', '20']] },
+  { name: 'diff.context=0', config: () => [['diff.context', '0']] },
+  { name: 'diff.renames=false', config: () => [['diff.renames', 'false']] },
+  { name: 'diff.algorithm=patience', config: () => [['diff.algorithm', 'patience']] },
+  { name: 'diff.indentHeuristic=false', config: () => [['diff.indentHeuristic', 'false']] },
+  {
+    name: 'diff.orderFile',
+    config: (root) => {
+      const f = path.join(root, 'order');
+      fs.writeFileSync(f, 'z.txt\n');
+      return [['diff.orderFile', f]];
+    },
+  },
+  {
+    name: 'diff.external',
+    config: (root) => [['diff.external', junkScript(root, 'ext.sh', 'echo EXTERNAL-JUNK')]],
+  },
+  {
+    name: 'textconv via core.attributesFile',
+    config: (root) => {
+      const attrs = path.join(root, 'attrs');
+      fs.writeFileSync(attrs, '*.txt diff=shout\n');
+      return [
+        ['core.attributesFile', attrs],
+        ['diff.shout.textconv', junkScript(root, 'tc.sh', 'tr a-z A-Z < "$1"')],
+      ];
+    },
+  },
+  // git reads only the lowercase `-u<n>` form from GIT_DIFF_OPTS; `-U0` is silently ignored (premise-checked).
+  { name: 'GIT_DIFF_OPTS=-u0', env: () => ({ GIT_DIFF_OPTS: '-u0' }) },
+  { name: 'GIT_EXTERNAL_DIFF', env: (root) => ({ GIT_EXTERNAL_DIFF: junkScript(root, 'genv.sh', 'echo ENV-EXTERNAL-JUNK') }) },
+  // The two cases below inject config through a channel the command-line pins cannot outrank for an
+  // option the command line does NOT pin: core.attributesFile marking every .txt `-diff` (printed as
+  // "Binary files differ"). Only the scrubbed environment keeps them out, so they fail without it.
+  {
+    name: 'GIT_CONFIG_COUNT injection',
+    env: (root) => {
+      const attrs = path.join(root, 'binary-attrs');
+      fs.writeFileSync(attrs, '*.txt -diff\n');
+      return { GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'core.attributesFile', GIT_CONFIG_VALUE_0: attrs };
+    },
+  },
+  {
+    name: 'user-level ~/.gitconfig',
+    env: (root) => {
+      const home = path.join(root, 'home');
+      fs.mkdirSync(home);
+      const attrs = path.join(root, 'binary-attrs');
+      fs.writeFileSync(attrs, '*.txt -diff\n');
+      fs.writeFileSync(path.join(home, '.gitconfig'), `[diff]\n\tnoprefix = true\n[color]\n\tui = always\n[core]\n\tattributesFile = ${attrs}\n`);
+      return { HOME: home, XDG_CONFIG_HOME: home };
+    },
+  },
+];
+
+for (const pin of SUBJECT_PINS) {
+  test(`the subject does not move under ${pin.name}`, () => {
+    const { root, proj } = subjectFixture();
+    const clean = { ...process.env };
+    const baseline = subjectOf(proj, clean);
+    assert.match(baseline, /^[0-9a-f]{64}$/);
+    const rawClean = rawDiff(proj, clean);
+
+    for (const [k, v] of pin.config?.(root) ?? []) git(proj, ['config', k, v]);
+    const env = { ...process.env, ...(pin.env?.(root) ?? {}) };
+
+    // PREMISE: the perturbation really changes what plain git prints. Without this the equality
+    // below would hold of a subject that pinned nothing.
+    assert.notEqual(rawDiff(proj, env), rawClean, `${pin.name} no longer changes the raw diff, so this case proves nothing`);
+
+    assert.equal(subjectOf(proj, env), baseline, `subject moved under ${pin.name}`);
+  });
+}
+
 test('the tier on a verdict comes from the classifier, not from a merge strategy', () => {
   const { proj } = fixture();
   const rec = recordAndCommit(proj);

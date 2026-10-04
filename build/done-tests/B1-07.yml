@@ -1,0 +1,183 @@
+# Done-test register, B1-07 (docs/vision-v3/14-BUILD-PLAN.md §6 row B1-07, "WorkerAdapter `codex`:
+# `exec`, `--output-schema`, `-o`, `--ephemeral`"; acceptance "Fixtures; empty stdout (known
+# detached-TTY bug) → `unresolved`, never `pass`").
+# Canon: 09a §8.1 (codex-cli 0.154.0 surface), §8.2 (contract, pinned codex line), §8.4 (nested
+# agents), §8.5 (forbidden flags), §8.7 (model_id), §8.8 (UNPARSED); sibling B1-06 and
+# docs/vision-v3/_process/DR-B1-06-ADAPTER-RULINGS-2026-10-02.md; founder rulings in
+# docs/vision-v3/_process/DR-B1-07-CODEX-RULINGS-2026-10-02.md.
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest -run B1_07 ./internal/adapter/
+# kernel/internal/adapter/codex.go (the stub) and adapter.go are NOT registered: they are what the
+# job implements. adapter.go gains LaunchSpec.CodexProfile, ResultPath, BinaryDigest, ProfileDigest
+# and ExitInfo.ResultFile, ResultFileRead (a string, so ExitInfo stays comparable for B1-06).
+# Evidence, no model turn run: the installed codex-cli 0.154.0 (`codex exec --help`), the serde
+# strings of its native binary (sha256 4f85982624b3898c8991cb80c0981b2aa71070e3537046c9a95950318a95afcc),
+# and the recorded --json runs in docs/03-system-design/final-v2/research/codex-in-the-pane.md
+# and docs/03-system-design/final-v2/review/codex-rehearsal.md. usage-limit.jsonl and
+# unknown-event.jsonl are illustrative (ruling E: unmeasured); only "never adjudicates" is pinned.
+#
+# Round 1, 2026-10-02 (f111312): 16 tests, 12 fixtures, 44 of 45 mutants killed. Six canon gaps were
+# refused with ErrUndecided and listed OPEN.
+#
+# RE-FREEZE r2 2026-10-02: 2026-10-02 founder rulings B1-07. codex_donetest_test.go is re-frozen;
+# the 12 fixtures are unchanged (hashes identical). ErrUndecided is gone: every gap is ruled.
+#   1+3. BinaryDigest must equal the adapter's grant digest and ProfileDigest must equal
+#        init_expect (the pinned profile hash), each "sha256:" + 64 lowercase hex, else ErrSpec;
+#        a malformed pin is no pin; Watch with no well-formed pin never adjudicates; a tool
+#        lease in the spec is ErrSpec (the profile holds it). New TestB1_07_PinnedHashes.
+#   2.   FundedTeam is ErrSpec, always; a collab_tool_call never adjudicates.
+#        New TestB1_07_NestedAgentsAndLeaseRefused (replaces TestB1_07_UndecidedRefused).
+#   4.   Template = the 09a codex line + "--ignore-user-config", exactly once.
+#        FOLLOW-UP: 09a §8.2 and the frozen B1-08 launcher test's codexTokens must add it.
+#   5.   ExitInfo.ResultFile (the -o file) must equal the stream's last agent_message byte for
+#        byte; missing on either side, or different, is unresolved(unparsed).
+#        New TestB1_07_ResultFileMustMatch. The other tests supply the file a lenient reader
+#        would find, so ruling 5 never masks another rule.
+#   6.   Unchanged: rate limits and unrecognised signals never adjudicate; the shape is unpinned.
+# Red 18 of 18 against the stub. Reference in $TMPDIR passes the package (-race -count=3).
+# Mutants: 55 of 56 killed, including all 14 new ones (template without the flag; binary unchecked,
+# form only, equality only; profile unchecked, form only, equality only; -o unchecked, read flag
+# ignored, trimmed, JSON-compacted, file used as Output; Watch pin unchecked, pin "" only). The
+# equality-only binary mutant survived at first; the "a malformed pin is no pin" case was added and
+# kills it. Survivor unchanged and equivalent: trailing-not-counted (order checks refuse each event).
+#
+#
+# RE-FREEZE r3 2026-10-03: 2026-10-03 founder superseded ruling 4. The Opus review FAILED the
+# implementation at 2592de6. Its HIGH finding, measured on codex-cli 0.154.0, was that
+# --ignore-user-config stops -p from loading the profile. New founder ruling: load the profile, drop
+# the flag, and honour the user config. Orchestrator fail-safe: the profile must set every required key
+# (DR-B1-07, "Round 2").
+#   codex_donetest_test.go is re-frozen with these changes: the template is the canon line plus
+#   --ignore-rules (not --ignore-user-config); cxSpec carries Worktree and CodexProfileTOML;
+#   cxProfileDigest is the sha256 of cxProfileTOML; the -C slot-source rows move Worktree with Cwd;
+#   the good -o paths are outside the worktree; and the other accepted pin pair uses its own profile.
+#   Added codex_r2_donetest_test.go:
+#     R2_ProfileLoadsAndRulesIgnored: no --ignore-user-config; -p <profile> and --ignore-rules once.
+#     R2_ProfileRequiredKeys: each of the 17 keys omitted, only in a comment, upper case or a lookalike
+#       is ErrSpec; so are a nested key at top level, a top-level key under another table, a duplicate
+#       key, a duplicate table, an empty profile, and profile bytes that differ from the pin.
+#     R2_WorktreeBounds: -C equal to /, above, a sibling, a shared prefix, containing .. or ., with a //
+#       or a trailing /, or a worktree that is missing, relative or "/".
+#     R2_ResultPathOutsideAndNoSymlink: -o inside the worktree, unclean, a symlink (live, dangling or
+#       pointing into the worktree), or under a symlinked directory.
+#     R2_CodexHomePinned: CODEX_HOME absent or exactly the pin; the pin must be clean, absolute and
+#       outside the worktree.
+#     R2_ReviewMutants: the review's survivors at :280 (answer dupFree), :167 (abort), :215
+#       (turn.failed order and reason), :222 (item id) and :235-236 (Children exact).
+#   On 2592de6 unchanged, 8 tests FAIL: TemplateAndContract and PinnedArgv (the flag), and all six
+#   R2 tests. ReviewMutants fails only on turn.failed before turn.started or thread.started (:215).
+#   Proof, $TMPDIR only: 2592de6 plus the fixes passes the package (-race -count=3). Mutants: 27 of 28
+#   killed. N1-N19 cover the new rules and S1-S5 the review's five survivors. The survivor,
+#   "CODEX_HOME trailing slash trimmed", is equivalent, because the clean-path rule refuses
+#   "/h/codex/" first.
+#   default_permissions is NOT required. Measured: the built-in ":workspace" puts /tmp back, and a
+#   user-config value did not override the profile's sandbox_mode (DR-B1-07, "Round 2").
+#
+# RE-FREEZE r4 2026-10-03: 2026-10-03 re-freeze r3 after re-review. The Opus re-review PASSED b0f1e27
+# on the security and adversarial lenses (no critical or high finding) and raised 4 MED findings and
+# 1 surviving mutant (DR-B1-07, "Round 3"). Branch build/b1-07-tests-r3 = b0f1e27 + origin/main
+# (the 11,000 kernel budget). The r1 and r2 test files and the fixtures are unchanged (hashes
+# identical). LaunchSpec gains Home. Added codex_r3_donetest_test.go:
+#   R3_ProfileIsParsedAsTOML: a required key only inside a """/''' string (closing delimiter on a
+#     key-shaped line, the review's case), a comment, an inline table, a one-line string, a
+#     multi-line array, an array of tables or a sub-table is missing; a duplicate key (quoted, or
+#     dotted against a table), a bare-word, unterminated or missing value, or an unterminated """
+#     is ErrSpec. No Go TOML library is in the offline module cache: behaviour is pinned, not a library.
+#   R3_PathsResolvedBeforeComparison: -C through a symlink to / or the worktree's parent; -o and
+#     CODEX_HOME by real path while the worktree is named by an alias; CODEX_HOME through a symlink
+#     into the worktree; -o, CODEX_HOME and HOME in another letter case (case-insensitive FS only).
+#   R3_HomePinned: Env[HOME] absent, or exactly the pinned Home (clean, not /, outside the worktree).
+#     Measured: with CODEX_HOME unset, codex 0.154.0 loads $HOME/.codex; it does not load XDG config.
+#   R3_LstatErrorRefuses: ENOTDIR and EACCES under -o refuse (the review's survivor at :96).
+# On b0f1e27 unchanged, 3 tests FAIL: R3_ProfileIsParsedAsTOML, R3_PathsResolvedBeforeComparison and
+# R3_HomePinned. R3_LstatErrorRefuses passes, because the code was right and the gap was the test.
+# Proof, $TMPDIR only: b0f1e27 plus the fixes passes the package (-race -count=3). Mutants: 11 of 12
+# killed (line scan as on b0f1e27; no value grammar; -C, -o and CODEX_HOME lexical only; path compared
+# by string, not file identity; HOME unchecked, allowed in the worktree, allowed at /, or its pin
+# ignored; Lstat errors ignored). The survivor, "no multi-line guard", is equivalent: the value grammar
+# already refuses a """ or ''' opening.
+#
+# RE-FREEZE r5 2026-10-03: 2026-10-03 founder ruling B1-07 round 4, profile superseded. The Opus
+# review FAILED 763ed2c (HIGH x2, codex 0.154.0, no model turn): user-config MCP servers survive the
+# profile's mcp_servers = {} and one launched; a trusted <worktree>/.codex/config.toml overrides the
+# profile (network on, MCP launched). Ruling: always --ignore-user-config; no -p, no profile file;
+# every locked setting a -c; pin sha256 of the whole argv (init_expect) and of the binary.
+# Measured first (DR-B1-07 "Round 4"), throwaway HOME/CODEX_HOME: control, both MCP markers
+# created, project model and network applied; locked line + --strict-config, neither marker, default
+# model, `sandbox: workspace-write [workdir]`, approval never. Login under --ignore-user-config:
+# `codex login status` reads CODEX_HOME/auth.json; `exec` sent a FAKE key (server: invalid_api_key),
+# and with no auth.json `Missing bearer`. So auth survives; .codex/config.toml is proven ignored.
+#   Re-frozen codex_donetest_test.go (cxTokens = the locked line; no profile fields; cxPin), r2
+#   (profile helpers and two profile tests removed), r3 (R3_ProfileIsParsedAsTOML removed). Added
+#   codex_r4_donetest_test.go: R4_LockedLine (17 -c keys pinned, no -p, both ignore flags once),
+#   R4_ArgvAndBinaryPinned (extra/changed/removed/reordered -c, -p, --strict-config, r3 line: ErrSpec),
+#   R4_ProfileFieldsRefused, R4_DanglingSymlinkRefused (the :227 gap).
+#   codex_profile.go is dead code under this ruling: the implementer deletes it.
+# On 763ed2c unchanged, 13 tests FAIL. Reference in TMPDIR passes the package (-race -count=3).
+# Mutants 9 of 9 killed: -p back, no --ignore-user-config, network on, hooks dropped, argv pin
+# unchecked, profile fields accepted, :227 dangling as missing, extra --strict-config, binary unchecked.
+#
+# RE-FREEZE r6 2026-10-03: 2026-10-03 re-freeze r5 after review. The Opus review PASSED 9faaaef on
+# security with two MED-security findings; orchestrator fail-safe calls (DR-B1-07 "Round 5"):
+#   1. Env is an allowlist: HOME, CODEX_HOME, PATH, LANG; any other key is ErrSpec (AV_JOB too).
+#      PATH entries are clean, absolute, outside the worktree after resolution, none empty.
+#      Measured with env -i: PATH is required (node launcher); one of HOME/CODEX_HOME is required.
+#   2. features={} is a no-op (measured). Every non-removed feature of `codex features list`
+#      (103) is pinned as -c features.<name>=<bool>, false except shell_tool and unified_exec
+#      (unified_exec cannot be turned off, measured). multi_agent and multi_agent_v2 are false.
+#   3. mcp_tool_call and web_search items are UNPARSED (the lock failed).
+#   4. The review's gaps: a non-string agent_message then a valid one; -C through an alias.
+#   r1-r3 Env fixtures move from AV_JOB to LANG; r4's cxLocked drops "features" ({} is gone).
+#   Added codex_r5_donetest_test.go (7 tests).
+# On 9faaaef, 19 tests FAIL: every Argv-success test (the pinned line changed), the r5 Env,
+# feature, multi_agent, item and -C tests. R5_NonStringMessageThenValid passes (the gap was the test).
+# Reference in TMPDIR passes the package (-race -count=3). Mutants 16 of 16 killed; one more,
+# "PATH entry not cleanAbs", is equivalent (outsideWorktree already requires cleanAbs).
+# adapter.go:121-125 still carries -p/profile comments: the implementer removes them.
+#
+# OPEN (not decided here):
+# 1. (r6) 09a §8.2 and B1-08's codexTokens must carry the feature pins (follow-up; build/b1-08-tests-codex-r4 has r5's line).
+# 2. Who measures BinaryDigest and ProfileDigest, and when (launcher/runner, B1-08/B1-09).
+# 3. Whether codex writes -o with a trailing newline is unmeasured; byte equality would then make
+#    every run UNPARSED, and the per-family UNPARSED rate (09a §8.8) shows it.
+# 4. Rate-limit shape (ruling E / ruling 6): measure, then re-freeze.
+# 5. The pseudo-TTY (09a §8.8) merges stderr into stdout, and a banner line is UNPARSED. CRLF passes.
+register: B1-07
+jobs:
+  - id: B1-07
+    files:
+      - path: kernel/internal/adapter/codex_donetest_test.go
+        sha256: 85b74d7ad33d3295c794a9e7790c6ea5e08d74829d72372b09cf0a34ca898d01
+      - path: kernel/internal/adapter/codex_r2_donetest_test.go
+        sha256: 8fd0822f69772b6bc3c1279e199e9db0cdfe11d0b95929037584b1ff34ad9ef4
+      - path: kernel/internal/adapter/codex_r3_donetest_test.go
+        sha256: 2d934a95cf988a92166d51bb5915e5ea6b66413d278b18cf328d7a16c026f8bb
+      - path: kernel/internal/adapter/codex_r4_donetest_test.go
+        sha256: a1131a744168e79ec72eee663e374f7147ae322cec805a2650656f92de059413
+      - path: kernel/internal/adapter/codex_r5_donetest_test.go
+        sha256: cc1fa3eb5cf3883ad9b8e7f25fba1fb4ce6b6c6a534895081e2329420c921306
+      - path: kernel/internal/adapter/testdata/codex/collab-spawn.jsonl
+        sha256: 3ffd0b33825a5f58b07a180e81c3750bb6003e72225f5c2b37cbd6ebb9519878
+      - path: kernel/internal/adapter/testdata/codex/empty.jsonl
+        sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+      - path: kernel/internal/adapter/testdata/codex/malformed.jsonl
+        sha256: 3b266e4be82ecf1fa4ab37b990d301b132938b5b557d70db1a2defb4dc862ce9
+      - path: kernel/internal/adapter/testdata/codex/no-message.jsonl
+        sha256: a6fd22d8202873503fa872a4a954a26cf67b5366e74b4ce237e233bcc00dec49
+      - path: kernel/internal/adapter/testdata/codex/reconnect-then-success.jsonl
+        sha256: 434160fb55eee5223fd0ce3bbfb01dd91fda7baa70a4eda85779d58d9ab846a8
+      - path: kernel/internal/adapter/testdata/codex/success.jsonl
+        sha256: 17d68c11f6528f560a060749fabe8b937c4c56d5a600f0674b3c8a9114273d4a
+      - path: kernel/internal/adapter/testdata/codex/trailing.jsonl
+        sha256: bfccfc3bbb5215a6150abadcb4fd791ef64053a418b3dd52dddfc6b59c29682a
+      - path: kernel/internal/adapter/testdata/codex/truncated.jsonl
+        sha256: 4e77e244ab6aab99d7e3d4588579818521e6dda73a8637be57b4ae201dacde9d
+      - path: kernel/internal/adapter/testdata/codex/turn-failed.jsonl
+        sha256: 808603f639a30977cd40922830d1e8180b07b9dea723f7c5258f8440b2f94752
+      - path: kernel/internal/adapter/testdata/codex/two-messages.jsonl
+        sha256: 1174ecf541b211c8187cc2d811f72579380ae9c3a44ee96f4dfc95d3bbfe6e36
+      - path: kernel/internal/adapter/testdata/codex/unknown-event.jsonl
+        sha256: 46faa02b0ab34136418908ebcc19d5a1394a528cb3cce56abca9c88e71453231
+      - path: kernel/internal/adapter/testdata/codex/usage-limit.jsonl
+        sha256: ed7515cf095b2a4bb36236a20df1d6b899d58caeb02cb95df26d5c55bae6f26a

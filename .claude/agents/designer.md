@@ -2,7 +2,7 @@
 name: designer
 description: |
   Engine. The only producing engine with a perception loop — render, look at what rendered, iterate. Builds and refines screens against a written design system. Replaces product-designer and design-polisher.
-model: claude-opus-5
+model: claude-opus-5-5
 effort: xhigh
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 mcpServers: [playwright]

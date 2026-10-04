@@ -93,6 +93,30 @@ describe('/api/missions', () => {
     expect(b[0]).toMatchObject({ status: 'done', verdict: 'FAIL', verdictReasons: ['claim unsupported'] });
   });
 
+  test('a stale error does not outlive the relaunch: refused -> queued -> working -> done PASS carries none', () => {
+    const f = boardPath(dir);
+    appendMissionLine({ id: 'a', ts: 1, status: 'waiting', title: 'T', goal: 'G' }, f);
+    appendMissionLine({ id: 'a', ts: 2, status: 'working' }, f);
+    appendMissionLine({ id: 'a', ts: 3, status: 'waiting', error: 'refused_subagent' }, f);
+    // Back in Waiting the reason is still shown: that is what the founder reads before relaunching.
+    expect(foldBoard(readBoardLines(f))[0]).toMatchObject({ status: 'waiting', error: 'refused_subagent' });
+    appendMissionLine({ id: 'a', ts: 4, status: 'queued' }, f);
+    expect(foldBoard(readBoardLines(f))[0]!.error).toBeUndefined();
+    appendMissionLine({ id: 'a', ts: 5, status: 'working' }, f);
+    appendMissionLine({ id: 'a', ts: 6, status: 'done', verdict: 'PASS' }, f);
+    const m = foldBoard(readBoardLines(f))[0]!;
+    expect(m).toMatchObject({ status: 'done', verdict: 'PASS' });
+    expect(m.error).toBeUndefined();
+  });
+
+  test('an error written on the same line as working or a terminal status is kept', () => {
+    const f = boardPath(dir);
+    appendMissionLine({ id: 'a', ts: 1, status: 'waiting', title: 'T', goal: 'G' }, f);
+    appendMissionLine({ id: 'a', ts: 2, status: 'queued' }, f);
+    appendMissionLine({ id: 'a', ts: 3, status: 'failed', error: 'builder failed' }, f);
+    expect(foldBoard(readBoardLines(f))[0]).toMatchObject({ status: 'failed', error: 'builder failed' });
+  });
+
   test('mounted in the shipped app under the cross-site guard', async () => {
     const prev = process.env.MC_MISSIONS_DIR;
     process.env.MC_MISSIONS_DIR = dir;

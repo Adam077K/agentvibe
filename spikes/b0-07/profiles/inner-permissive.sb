@@ -1,0 +1,4 @@
+(version 1)
+;; B0-07: inner profile a worker would apply to ITSELF — fully permissive,
+;; standing in for "Claude Code / Codex sandbox its own tool calls with Seatbelt".
+(allow default)

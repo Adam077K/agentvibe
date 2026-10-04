@@ -1,0 +1,1701 @@
+{
+  "cases": [
+    {
+      "name": "label.min",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1); optional fields absent",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.full",
+      "cite": "09a-ENGINEERING.md:592-609 (LabelV1); every optional field present",
+      "value": {
+        "schema": "label/1",
+        "origin": "customer",
+        "dclass": "D2",
+        "boundary": "sealed",
+        "venture": "v_keel",
+        "retention": {
+          "class": "personal",
+          "hold": "legal",
+          "deadline": "2027-03-31T00:00:00Z"
+        },
+        "permission": "none",
+        "exportable": true,
+        "taint": "untrusted",
+        "provenance": {
+          "sources": [
+            {
+              "ref": "email:msg_01",
+              "quote": "please refund to the new account",
+              "accessed": "2026-10-01T09:00:00Z",
+              "system_of_record": "gmail"
+            },
+            {
+              "ref": "crm:acct_77"
+            }
+          ],
+          "derived_from": [
+            "rec_01",
+            "rec_02"
+          ],
+          "author": {
+            "title": "Support Agent",
+            "family": "codex",
+            "mission": "m_support_7"
+          },
+          "human_principal": {
+            "id": "person_acme_ap",
+            "role": "customer"
+          }
+        },
+        "consent_scope": "cs_panel_3",
+        "confidence": {
+          "rung": "E3",
+          "p": 0.62
+        },
+        "subjects": [
+          "subj_ana",
+          "subj_ben"
+        ],
+        "revocation_epoch": 4
+      }
+    },
+    {
+      "name": "label.origin-founder",
+      "cite": "09a-ENGINEERING.md:595 (origin)",
+      "value": {
+        "schema": "label/1",
+        "origin": "founder",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.origin-system_of_record",
+      "cite": "09a-ENGINEERING.md:595 (origin)",
+      "value": {
+        "schema": "label/1",
+        "origin": "system_of_record",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.origin-internal",
+      "cite": "09a-ENGINEERING.md:595 (origin)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.origin-public_web",
+      "cite": "09a-ENGINEERING.md:595 (origin)",
+      "value": {
+        "schema": "label/1",
+        "origin": "public_web",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.origin-customer",
+      "cite": "09a-ENGINEERING.md:595 (origin)",
+      "value": {
+        "schema": "label/1",
+        "origin": "customer",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.origin-counterparty",
+      "cite": "09a-ENGINEERING.md:595 (origin)",
+      "value": {
+        "schema": "label/1",
+        "origin": "counterparty",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.origin-synthetic",
+      "cite": "09a-ENGINEERING.md:595 (origin)",
+      "value": {
+        "schema": "label/1",
+        "origin": "synthetic",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "synthetic",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.dclass-D0",
+      "cite": "09a-ENGINEERING.md:596 (dclass)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D0",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.dclass-D1",
+      "cite": "09a-ENGINEERING.md:596 (dclass)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.dclass-D2",
+      "cite": "09a-ENGINEERING.md:596 (dclass)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D2",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.dclass-D3",
+      "cite": "09a-ENGINEERING.md:596 (dclass)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D3",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.dclass-D4",
+      "cite": "09a-ENGINEERING.md:596 (dclass)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D4",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.boundary-open",
+      "cite": "09a-ENGINEERING.md:597 (boundary)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "open",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.boundary-guarded",
+      "cite": "09a-ENGINEERING.md:597 (boundary)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.boundary-sealed",
+      "cite": "09a-ENGINEERING.md:597 (boundary)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "sealed",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.venture-portfolio",
+      "cite": "09a-ENGINEERING.md:598 (venture: portfolio)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "portfolio",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.venture-founder",
+      "cite": "09a-ENGINEERING.md:598 (venture: 'founder', founder 2026-10-01); DR-LABEL-RECONCILE:107 (decision G)",
+      "value": {
+        "schema": "label/1",
+        "origin": "founder",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "founder",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.retention-class-journal_metadata",
+      "cite": "09a-ENGINEERING.md:599 (retention.class)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "journal_metadata",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.retention-class-operational",
+      "cite": "09a-ENGINEERING.md:599 (retention.class)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.retention-class-personal",
+      "cite": "09a-ENGINEERING.md:599 (retention.class)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "personal",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.retention-class-client",
+      "cite": "09a-ENGINEERING.md:599 (retention.class)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "client",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.retention-class-synthetic",
+      "cite": "09a-ENGINEERING.md:599 (retention.class)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "synthetic",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.retention-hold-none",
+      "cite": "09a-ENGINEERING.md:600 (retention.hold)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.retention-hold-obligation",
+      "cite": "09a-ENGINEERING.md:600 (retention.hold)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "obligation"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.retention-hold-legal",
+      "cite": "09a-ENGINEERING.md:600 (retention.hold)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "legal"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.retention-hold-safety",
+      "cite": "09a-ENGINEERING.md:600 (retention.hold)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "safety"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.retention-hold-pinned",
+      "cite": "09a-ENGINEERING.md:600 (retention.hold)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "pinned"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.permission-none",
+      "cite": "09a-ENGINEERING.md:602 (permission)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "none",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.permission-informs",
+      "cite": "09a-ENGINEERING.md:602 (permission)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.permission-may_authorise",
+      "cite": "09a-ENGINEERING.md:602 (permission)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "may_authorise",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.exportable-true",
+      "cite": "09a-ENGINEERING.md:603 (exportable)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": true,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.taint-clean",
+      "cite": "09a-ENGINEERING.md:604 (taint)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.taint-untrusted",
+      "cite": "09a-ENGINEERING.md:604 (taint)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "untrusted",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.taint-quarantined",
+      "cite": "09a-ENGINEERING.md:604 (taint)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "quarantined",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.author-family-claude",
+      "cite": "09a-ENGINEERING.md:614 (author.family)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.author-family-codex",
+      "cite": "09a-ENGINEERING.md:614 (author.family)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "codex"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.author-family-founder",
+      "cite": "09a-ENGINEERING.md:614 (author.family)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "founder"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.author-family-human",
+      "cite": "09a-ENGINEERING.md:614 (author.family)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "human"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.author-family-system",
+      "cite": "09a-ENGINEERING.md:614 (author.family)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "system"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.principal-role-founder",
+      "cite": "09a-ENGINEERING.md:615,618-621 (PrincipalRef.role); DR-LABEL-RECONCILE:47-49 (decision 6)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "human_principal": {
+            "id": "person_founder",
+            "role": "founder"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.principal-role-collaborator",
+      "cite": "09a-ENGINEERING.md:615,618-621 (PrincipalRef.role); DR-LABEL-RECONCILE:47-49 (decision 6)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "human_principal": {
+            "id": "person_collaborator",
+            "role": "collaborator"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.principal-role-contractor",
+      "cite": "09a-ENGINEERING.md:615,618-621 (PrincipalRef.role); DR-LABEL-RECONCILE:47-49 (decision 6)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "human_principal": {
+            "id": "person_contractor",
+            "role": "contractor"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.principal-role-customer",
+      "cite": "09a-ENGINEERING.md:615,618-621 (PrincipalRef.role); DR-LABEL-RECONCILE:47-49 (decision 6)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          },
+          "human_principal": {
+            "id": "person_customer",
+            "role": "customer"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.confidence-E0",
+      "cite": "09a-ENGINEERING.md:607 (confidence.rung; p optional)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "rung": "E0"
+        }
+      }
+    },
+    {
+      "name": "label.confidence-E1",
+      "cite": "09a-ENGINEERING.md:607 (confidence.rung; p optional)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "rung": "E1"
+        }
+      }
+    },
+    {
+      "name": "label.confidence-E2",
+      "cite": "09a-ENGINEERING.md:607 (confidence.rung; p optional)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "rung": "E2"
+        }
+      }
+    },
+    {
+      "name": "label.confidence-E3",
+      "cite": "09a-ENGINEERING.md:607 (confidence.rung; p optional)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "rung": "E3"
+        }
+      }
+    },
+    {
+      "name": "label.confidence-E4",
+      "cite": "09a-ENGINEERING.md:607 (confidence.rung; p optional)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "rung": "E4"
+        }
+      }
+    },
+    {
+      "name": "label.confidence-E5",
+      "cite": "09a-ENGINEERING.md:607 (confidence.rung; p optional)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "rung": "E5"
+        }
+      }
+    },
+    {
+      "name": "label.confidence-p-zero",
+      "cite": "09a-ENGINEERING.md:607 (p: 0 is a value, not an absence)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0,
+        "confidence": {
+          "rung": "E1",
+          "p": 0
+        }
+      }
+    },
+    {
+      "name": "label.sourceref-min",
+      "cite": "09a-ENGINEERING.md:617 (SourceRef; quote/accessed/system_of_record optional)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [
+            {
+              "ref": "web:https://example.com/pricing"
+            }
+          ],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.mission-present",
+      "cite": "09a-ENGINEERING.md:614 (author.mission optional)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude",
+            "mission": "m_12"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.distinct-D0-sealed",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:632 (sealed is a boundary, not a class)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D0",
+        "boundary": "sealed",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.distinct-D3-open",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:631 (D3 leaves boundary unchanged)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D3",
+        "boundary": "open",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.distinct-deadline-hold-none",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:601 (deadline computed, never a class)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "client",
+          "hold": "none",
+          "deadline": "2026-12-31T00:00:00Z"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.distinct-personal-no-deadline",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 09a-ENGINEERING.md:601 (deadline optional, never implied)",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "personal",
+          "hold": "pinned"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.distinct-all-unusual",
+      "cite": "09a-ENGINEERING.md:589-590 (seven distinct fields, none inferred from another); 00-CANON.md:515 (DR-68)",
+      "value": {
+        "schema": "label/1",
+        "origin": "public_web",
+        "dclass": "D0",
+        "boundary": "sealed",
+        "venture": "v_keel",
+        "retention": {
+          "class": "client",
+          "hold": "legal",
+          "deadline": "2028-01-01T00:00:00Z"
+        },
+        "permission": "none",
+        "exportable": true,
+        "taint": "quarantined",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "claude"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "label.human-principal-not-origin",
+      "cite": "09a-ENGINEERING.md:605 (human provenance is a field, never an origin); 00-CANON.md:515",
+      "value": {
+        "schema": "label/1",
+        "origin": "counterparty",
+        "dclass": "D1",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "operational",
+          "hold": "none"
+        },
+        "permission": "informs",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel Engineer",
+            "family": "human"
+          },
+          "human_principal": {
+            "id": "person_notary",
+            "role": "contractor"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "subject": "09d9fc4901f6a1c60431ec6dd16f1f57380077e8310b4d9c7dbb0e556289e283",
+  "base": "18430c907a9ddba3a4b27d8433a3f01d49032485",
+  "tier": "lite",
+  "tier_driver": "kernel/internal/secretscan/bypass_test.go",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "secretscan Opus reviewer PASS at a36f1b9 (rule) and 65a09b4 (mutant tests by a separate test builder); founder ordered the merge",
+  "recorded_at": "2026-10-02T15:03:41.561Z"
+}
