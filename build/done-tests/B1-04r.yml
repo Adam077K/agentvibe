@@ -65,6 +65,126 @@
 #   Red 22 of 22 on the stubs. Satisfiability, against a COPY of the red team's reference with its
 #   probes removed (-race -count=2): everything passes except the two new validations the reference
 #   predates (AddHot "file#" accepted; MaxWait -1s accepted), each a one-line guard.
+#
+# RE-FREEZE r4 2026-10-04: follow-up LC-1, "Receive accepts any covering token" (HANDOFF-BUILD-3 §6).
+#   NEW file fence_cover_donetest_test.go; fence_r_donetest_test.go and the B1-04 file unchanged.
+#   Holes measured by probe on main c367d15: holding repo://a/**, Receive accepted repo://a/../b/x.ts#f,
+#   ./../, //../, %2e%2e and %2E%2E traversal, repo://a/, repo://a/#f, repo://a/src/#f, repo://a/x.ts
+#   (no symbol), repo://a/x.ts# , repo://a/**, repo://a/**/x.ts#f, repo://a/src/*.ts#f, and names with
+#   \n or \xff; a job holding repo://** landed in repository b; Acquire grants repo://** and repo:///**
+#   and a job holding the non-canonical repo://a/../b/x.ts#f landed it by exact match. Pinned green:
+#   repo://ab/x under repo://a/**, case variants, NFC vs NFD.
+#   Contract: a touched resource is accepted only when CANONICAL and covered by a current token for
+#   this job; a non-canonical one is refused and named, never normalised. Rulings C1-C6 are in the
+#   file header: C1 shape repo://<repo>/<path>#<anchor> (Push.Touched "file#symbol", hot.go's empty
+#   anchor refusal); C2 no empty or dot segment, %2e/%2E included (RFC 3986 §2.3, §6.2.2.2); C3 no
+#   '*' in the path (B1-14a r3 ruling 3), "#*" kept; C4 validResource's bytes, compared byte for byte
+#   (B1-14a r3: no case folding); C5 repo://** and repo:///** cover nothing, a glob does not cover its
+#   own root; C6 a shape refusal never wraps ErrStaleToken. Whether Acquire may grant those names is
+#   NOT decided: the tests accept either a refused Acquire or a refused Receive.
+#   NOT frozen (needs a ruling): a glob held by one job and a symbol under it held by another are
+#   both granted, and both jobs' pushes of that symbol are accepted (fence.go "Open, NOT decided").
+#   Red 4 of 5 on c367d15 (ByteExact is a green pin); every other lease test passes, tagged, untagged
+#   and -race. A scratch reference ($TMPDIR, not committed) passes everything, -race -count=2.
+#   Mutants: 22 of 22 killed (Clean-then-judge, ".." only, ".." substring, presented side only,
+#   exact match exempt, %2e not %2E, every '*' refused, '*' allowed, no '#', empty anchor, no byte
+#   check, any /** trusted, repo:///** only, bare prefix, case fold, Unicode normalise, ASCII only,
+#   empty segment, reported as stale, whole push named, repo ignored, glob covers its root).
+#   Note for the implementer: hot.go's touches() calls covers(); the reference changed covers(), so a
+#   requested repo://** stops pulling in hot resources. No frozen test depends on that either way.
+#
+# RE-FREEZE r5 2026-10-04: red-team r1 of LC-1 @6c030a5 returned GAPS (13 of 37 mutants survived,
+#   9 real, plus 1 over-specified assertion). fence_cover_donetest_test.go 3a3ecacd... -> 1761d852...
+#   Rulings, orchestrator ceo-1, 2026-10-04:
+#   R1 hot.go touches() uses the SAME glob predicate as Receive: a glob covering nothing in Receive
+#      (repo://**, repo:///**, repo://x**) pulls no hot resource into a grant. Supersedes r4's
+#      "No frozen test depends on that either way" note.
+#   R2 The anchor is a symbol name: non-empty; no '/', '\', '#', '%', C0 or C1 control, no "..";
+#      '*' only as the whole anchor. Split at the FIRST '#', so a second '#' is refused. Grep before
+#      freezing: every repo:// anchor in kernel code and tests (#f #* #<header> #<eof> #+Region
+#      #total #config #keep #Cart #computeTotal ...) satisfies R2 except the hot resource
+#      repo://x/src/a.ts#b#c in fence_r_donetest_test.go (HotSetValidationAndOrder), which is only
+#      AddHot-ed and acquired there, never pushed; R2 judges touched names only. job:// anchors
+#      (#fence=1, #<token>) are another scheme and untouched.
+#   R3 A path or repository segment holding '\' or %2f %2F %5c %5C is refused, fail closed; any
+#      other percent-encoding is byte-literal.
+#   Gaps closed: (1) the repository segment is held to C2 (repo://../, %2e%2e, ., empty, *, a#f;
+#   a held repo://../** and friends cover nothing); (2) every case mix of %2e; (3) repo://a/**/,
+#   repo://a**, repo://a/*, repo://a/**/** are exact names, refusing repo://a/x.ts#f and
+#   repo://ab/x.ts#f as ErrUndeclared (new GlobSpelling); (4) repo://a/100%25.md#*, a%2ex and
+#   %2e%2ex are ACCEPTED; (5) repo://b#f no longer pinned to ErrUndeclared (C6). New tests:
+#   GlobSpelling (green pin on c367d15), HotUsesSameRule (R1).
+#   Red 5 of 7 on c367d15 (ByteExact, GlobSpelling are green pins); every other lease test passes,
+#   tagged, untagged, -race. Scratch reference ($TMPDIR, not committed) passes all four configs
+#   (-race -count=2 tagged). Mutants 47 of 47 killed: the 22 of r4, 12 for the survivor classes
+#   (repo segment unchecked / empty only / literal dots only / '*'; the r4 fixed dot list; mixed
+#   case; "**" without slash; trailing "/" trimmed; "/*" one level; any %, any %2e, decoded ".."
+#   prefix refused), 2 for R1, 9 for R2, 3 for R3.
+#
+# RE-FREEZE r5 addendum 2026-10-04: the red-team's own r5 material ($TMPDIR ref_final.go,
+#   fence.go.patched, mut/ with 36 mutants and gen.py), treated as untrusted: scanned first (imports
+#   strings and unicode/utf8 only; gen.py reads one file and writes into its own directory).
+#   fence_cover_donetest_test.go 1761d852... -> 1fb4ae06...: HotUsesSameRule is now a table of
+#   eleven glob/hot cases, adding repo://x/src/** vs hot repo://x/src#h (a glob does not cover its
+#   own root), repo://x/** vs repo://x#h, and repo://../** and repo://*/** vs a hot file under them
+#   (a non-canonical glob covers nothing, R1 + C5). Nothing else changed.
+#   Their reference predates R2/R3 and C5's canonical-directory rule, so on r5 it fails exactly the
+#   R2/R3 cases. Ported (R2 anchor check, R3 separators, C5 directory check; every gen.py pattern
+#   intact; the port removed again from C5a/C5b/C5d, whose point is a weaker directory check) it
+#   passes every lease test, tagged and untagged: a second, independent implementation satisfies r5.
+#   Their 36 mutants against the ported base: 33 killed (C5a and C5d did not build as generated,
+#   an unused variable; repaired with "_ = rest"; C5d and C5g needed the new HotUsesSameRule cases).
+#   3 survive, none a contract violation: C6b (a shape refusal wraps ErrUndeclared: C6 allows it,
+#   and the builder's reference does it too); C4e (controls checked in the path only: the anchor's
+#   are refused by R2 anyway, so it is equivalent once R2 holds); C4d (C1 controls refused in the
+#   PATH too: an over-refusal of a name the contract does not rule on). C4d needs a ruling, see
+#   OPEN below.
+#   Correction: r5 said "Mutants 47 of 47". The builder's set is 48 (22 + 12 + 2 + 9 + 3), and all
+#   48 are killed, re-run on this file.
+#   OPEN (orchestrator): is a C1 control (U+0080-U+009F) in a PATH segment canonical? validResource
+#   admits it; R2 refuses it in the anchor. Refusing it (fail closed) makes C4d the correct
+#   behaviour and is a one-line change to the reference; admitting it needs a positive control.
+#
+# RE-FREEZE r6 2026-10-04: ruling R4, orchestrator ceo-1, 2026-10-04. A C1 control character
+#   (U+0080-U+009F) is NOT canonical in any segment of a touched name: repository, path or anchor.
+#   Fails closed; matches R2. Closes the r5 addendum's OPEN question.
+#   fence_cover_donetest_test.go 1fb4ae06... -> 9f82931e...: ShapeRefused adds path segments holding
+#   U+0085, U+009F and U+0080 (written as escapes); ExactNonCanonicalRefused adds the repository
+#   segment with U+0085 and U+009F. Nothing else changed.
+#   Red-team C4d (C1 refused everywhere) is now the correct behaviour: their ported reference with
+#   C4d's control check passes every lease test, and their r5 ported base (the inverse) fails
+#   ShapeRefused and ExactNonCanonicalRefused. Builder reference gains one loop; its r5 form (the
+#   inverse, R4a) is killed by the same two tests. Builder mutants: 48 of 49 killed; R2h (anchor
+#   checked for C0 only) is now equivalent, since R4 refuses C1 across the whole name.
+#   Red 5 of 7 on c367d15 (ByteExact, GlobSpelling green pins); every other lease test passes,
+#   tagged, untagged, -race. Reference passes all four configs (-race -count=2 tagged).
+#
+# RE-FREEZE r6, part 2, 2026-10-04 (a second commit: r6 part 1, R4, was already pushed at 5ed5bec,
+#   and amending it would need a force-push). fence_cover_donetest_test.go 9f82931e... -> b1cc317f...
+#   Ruling R5 (orchestrator ceo-1, 2026-10-04): R1's "same predicate as Receive" binds repo://
+#   names only. A glob of any other scheme keeps the pre-LC-1 touches() rule, so db://x/** still
+#   pulls db://x/t#<header> into a grant (verified passing on c367d15 before freezing). Rationale:
+#   pulling a hot resource in is the conservative direction, and Receive judges repo:// only.
+#   The r5 red-team's 4 new survivors, folded in:
+#   (1) percent-normalised compare: ByteExact refuses repo://a/lib/%43onfig.ts#f against a held
+#       Config.ts#f and repo://a/sr%63/x.ts#f against a held src/**, both ErrUndeclared.
+#   (2) "#*": settled before freezing. It is the whole-file resource NAME, not a wildcard: SP2
+#       lib.mjs (branch vision/v3-sp2-collision) "everything else is leased whole-file (#*)" and
+#       touchedResources emits file#* or file#<symbol>; SP2 fence-hook.mjs matches touched
+#       resources exactly (fence[r]); fence.go covers() matches a non-glob exactly. No B1-04r or
+#       B1-14a ruling, hot.go line or test treats #* as covering #f. New StarAnchorIsLiteral: a
+#       holder of x.ts#* pushing x.ts#f or x.ts#<header>, and a holder of y.ts#f pushing y.ts#*,
+#       get ErrUndeclared.
+#   (3) R3 in the repository segment: ExactNonCanonical adds repo://a%2fb/x.ts#f, repo://a%5Cb/x.ts#f.
+#   (4) R1 asymmetry: HotUsesSameRule adds AddHot repo://../src/config.ts#<header> with Acquire
+#       repo://../**: AddHot or Acquire refuses, or the grant does not carry it.
+#   Red 5 of 8 on c367d15 (ByteExact, GlobSpelling, StarAnchorIsLiteral are green pins); every other
+#   lease test passes, tagged, untagged, -race. Reference passes all four configs (-race -count=2
+#   tagged). Builder mutants 59 of 60 killed, the new ones: percent-decoded compare (both sides;
+#   touched only), #* covering its symbols (file compare; prefix), a symbol covering its file#*,
+#   R3 skipped in the repo segment, repo segment admitting encoded separators, glob dir checking
+#   only empty and '*', non-repo globs pulling nothing, non-repo glob as a bare prefix. The one
+#   survivor, R2h, is equivalent under R4.
 register: B1-04r
 jobs:
   - id: B1-04
@@ -73,3 +193,5 @@ jobs:
         sha256: f501c6f389f40fae0528641f4d2f9b8a506393b06e09b4e6ea38217afbd76529
       - path: kernel/internal/lease/testdata/sp2/b0-greedy.json
         sha256: 4c49c99136af858d19056aa377f75ea6871d0e736ac2319ecee981f8a558380e
+      - path: kernel/internal/lease/fence_cover_donetest_test.go
+        sha256: b1cc317f51c91c245e03ed51aa315a23ffa3047d97ced88261046f582ce2de19
