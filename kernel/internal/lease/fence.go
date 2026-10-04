@@ -793,16 +793,29 @@ func covers(p, t string) bool {
 	if p == t {
 		return true
 	}
+	pre, ok := globPrefix(p)
+	return ok && below(pre, t, false)
+}
+
+// globPrefix returns "<dir>/" for a presented glob "<dir>/**" whose dir is a canonical repository
+// directory, and false for every other spelling.
+func globPrefix(p string) (string, bool) {
 	dir, ok := strings.CutSuffix(p, "/**")
 	if !ok || !strings.HasPrefix(dir, repoScheme) || !canonSegs(dir[len(repoScheme):]) {
-		return false
+		return "", false
 	}
-	rest, ok := strings.CutPrefix(t, dir+"/")
+	return dir + "/", true
+}
+
+// below reports whether t lies strictly below the glob prefix pre. A caller that has already judged t
+// canonical passes canon to skip re-checking its segments.
+func below(pre, t string, canon bool) bool {
+	rest, ok := strings.CutPrefix(t, pre)
 	if !ok {
 		return false
 	}
 	file, _, _ := strings.Cut(rest, "#")
-	return canonSegs(file)
+	return canon || canonSegs(file)
 }
 
 // canonSegs reports whether s is a "/"-joined run of canonical segments: each non-empty, not a dot
@@ -867,6 +880,13 @@ func (v *repoVerifier) Receive(ctx context.Context, p Push) error {
 		presented = append(presented, r)
 	}
 	sort.Strings(presented)
+	// A glob's prefix is computed once per presented resource, not once per touched name.
+	prefix := make(map[string]string, len(presented))
+	for _, r := range presented {
+		if pre, ok := globPrefix(r); ok {
+			prefix[r] = pre
+		}
+	}
 
 	var foreign, malformed, undeclared, stale []string
 	seen := map[string]bool{}
@@ -878,7 +898,7 @@ func (v *repoVerifier) Receive(ctx context.Context, p Push) error {
 		// Only repo:// is judged here. The other verifiers of 09a §6 are a logged follow-up, and a
 		// resource this verifier cannot judge is refused, never waved through.
 		if !strings.HasPrefix(t, repoScheme) {
-			foreign = append(foreign, t)
+			foreign = append(foreign, strconv.Quote(t))
 			continue
 		}
 		// A name storage would not have produced is refused, never normalised and then judged.
@@ -888,12 +908,12 @@ func (v *repoVerifier) Receive(ctx context.Context, p Push) error {
 		}
 		var cover []string
 		for _, r := range presented {
-			if covers(r, t) {
+			if pre, glob := prefix[r]; r == t || (glob && below(pre, t, true)) {
 				cover = append(cover, r)
 			}
 		}
 		if len(cover) == 0 {
-			undeclared = append(undeclared, t)
+			undeclared = append(undeclared, strconv.Quote(t))
 			continue
 		}
 		ok := false
@@ -913,7 +933,7 @@ func (v *repoVerifier) Receive(ctx context.Context, p Push) error {
 			why = append(why, fmt.Sprintf("presented %d, %s", p.Tokens[r], cur))
 		}
 		if !ok {
-			stale = append(stale, fmt.Sprintf("%s (%s)", t, strings.Join(why, "; ")))
+			stale = append(stale, fmt.Sprintf("%q (%s)", t, strings.Join(why, "; ")))
 		}
 	}
 	if len(foreign)+len(malformed)+len(undeclared)+len(stale) == 0 {
