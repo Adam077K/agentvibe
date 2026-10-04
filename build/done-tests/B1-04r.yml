@@ -158,6 +158,33 @@
 #   checked for C0 only) is now equivalent, since R4 refuses C1 across the whole name.
 #   Red 5 of 7 on c367d15 (ByteExact, GlobSpelling green pins); every other lease test passes,
 #   tagged, untagged, -race. Reference passes all four configs (-race -count=2 tagged).
+#
+# RE-FREEZE r6, part 2, 2026-10-04 (a second commit: r6 part 1, R4, was already pushed at 5ed5bec,
+#   and amending it would need a force-push). fence_cover_donetest_test.go 9f82931e... -> b1cc317f...
+#   Ruling R5 (orchestrator ceo-1, 2026-10-04): R1's "same predicate as Receive" binds repo://
+#   names only. A glob of any other scheme keeps the pre-LC-1 touches() rule, so db://x/** still
+#   pulls db://x/t#<header> into a grant (verified passing on c367d15 before freezing). Rationale:
+#   pulling a hot resource in is the conservative direction, and Receive judges repo:// only.
+#   The r5 red-team's 4 new survivors, folded in:
+#   (1) percent-normalised compare: ByteExact refuses repo://a/lib/%43onfig.ts#f against a held
+#       Config.ts#f and repo://a/sr%63/x.ts#f against a held src/**, both ErrUndeclared.
+#   (2) "#*": settled before freezing. It is the whole-file resource NAME, not a wildcard: SP2
+#       lib.mjs (branch vision/v3-sp2-collision) "everything else is leased whole-file (#*)" and
+#       touchedResources emits file#* or file#<symbol>; SP2 fence-hook.mjs matches touched
+#       resources exactly (fence[r]); fence.go covers() matches a non-glob exactly. No B1-04r or
+#       B1-14a ruling, hot.go line or test treats #* as covering #f. New StarAnchorIsLiteral: a
+#       holder of x.ts#* pushing x.ts#f or x.ts#<header>, and a holder of y.ts#f pushing y.ts#*,
+#       get ErrUndeclared.
+#   (3) R3 in the repository segment: ExactNonCanonical adds repo://a%2fb/x.ts#f, repo://a%5Cb/x.ts#f.
+#   (4) R1 asymmetry: HotUsesSameRule adds AddHot repo://../src/config.ts#<header> with Acquire
+#       repo://../**: AddHot or Acquire refuses, or the grant does not carry it.
+#   Red 5 of 8 on c367d15 (ByteExact, GlobSpelling, StarAnchorIsLiteral are green pins); every other
+#   lease test passes, tagged, untagged, -race. Reference passes all four configs (-race -count=2
+#   tagged). Builder mutants 59 of 60 killed, the new ones: percent-decoded compare (both sides;
+#   touched only), #* covering its symbols (file compare; prefix), a symbol covering its file#*,
+#   R3 skipped in the repo segment, repo segment admitting encoded separators, glob dir checking
+#   only empty and '*', non-repo globs pulling nothing, non-repo glob as a bare prefix. The one
+#   survivor, R2h, is equivalent under R4.
 register: B1-04r
 jobs:
   - id: B1-04
@@ -167,4 +194,4 @@ jobs:
       - path: kernel/internal/lease/testdata/sp2/b0-greedy.json
         sha256: 4c49c99136af858d19056aa377f75ea6871d0e736ac2319ecee981f8a558380e
       - path: kernel/internal/lease/fence_cover_donetest_test.go
-        sha256: 9f82931ed77f619404aa67a3c6c47509613d8a26376b38c0e176e9dc8fe69723
+        sha256: b1cc317f51c91c245e03ed51aa315a23ffa3047d97ced88261046f582ce2de19
