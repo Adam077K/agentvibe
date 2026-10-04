@@ -65,6 +65,33 @@
 #   Red 22 of 22 on the stubs. Satisfiability, against a COPY of the red team's reference with its
 #   probes removed (-race -count=2): everything passes except the two new validations the reference
 #   predates (AddHot "file#" accepted; MaxWait -1s accepted), each a one-line guard.
+#
+# RE-FREEZE r4 2026-10-04: follow-up LC-1, "Receive accepts any covering token" (HANDOFF-BUILD-3 §6).
+#   NEW file fence_cover_donetest_test.go; fence_r_donetest_test.go and the B1-04 file unchanged.
+#   Holes measured by probe on main c367d15: holding repo://a/**, Receive accepted repo://a/../b/x.ts#f,
+#   ./../, //../, %2e%2e and %2E%2E traversal, repo://a/, repo://a/#f, repo://a/src/#f, repo://a/x.ts
+#   (no symbol), repo://a/x.ts# , repo://a/**, repo://a/**/x.ts#f, repo://a/src/*.ts#f, and names with
+#   \n or \xff; a job holding repo://** landed in repository b; Acquire grants repo://** and repo:///**
+#   and a job holding the non-canonical repo://a/../b/x.ts#f landed it by exact match. Pinned green:
+#   repo://ab/x under repo://a/**, case variants, NFC vs NFD.
+#   Contract: a touched resource is accepted only when CANONICAL and covered by a current token for
+#   this job; a non-canonical one is refused and named, never normalised. Rulings C1-C6 are in the
+#   file header: C1 shape repo://<repo>/<path>#<anchor> (Push.Touched "file#symbol", hot.go's empty
+#   anchor refusal); C2 no empty or dot segment, %2e/%2E included (RFC 3986 §2.3, §6.2.2.2); C3 no
+#   '*' in the path (B1-14a r3 ruling 3), "#*" kept; C4 validResource's bytes, compared byte for byte
+#   (B1-14a r3: no case folding); C5 repo://** and repo:///** cover nothing, a glob does not cover its
+#   own root; C6 a shape refusal never wraps ErrStaleToken. Whether Acquire may grant those names is
+#   NOT decided: the tests accept either a refused Acquire or a refused Receive.
+#   NOT frozen (needs a ruling): a glob held by one job and a symbol under it held by another are
+#   both granted, and both jobs' pushes of that symbol are accepted (fence.go "Open, NOT decided").
+#   Red 4 of 5 on c367d15 (ByteExact is a green pin); every other lease test passes, tagged, untagged
+#   and -race. A scratch reference ($TMPDIR, not committed) passes everything, -race -count=2.
+#   Mutants: 22 of 22 killed (Clean-then-judge, ".." only, ".." substring, presented side only,
+#   exact match exempt, %2e not %2E, every '*' refused, '*' allowed, no '#', empty anchor, no byte
+#   check, any /** trusted, repo:///** only, bare prefix, case fold, Unicode normalise, ASCII only,
+#   empty segment, reported as stale, whole push named, repo ignored, glob covers its root).
+#   Note for the implementer: hot.go's touches() calls covers(); the reference changed covers(), so a
+#   requested repo://** stops pulling in hot resources. No frozen test depends on that either way.
 register: B1-04r
 jobs:
   - id: B1-04
@@ -73,3 +100,5 @@ jobs:
         sha256: f501c6f389f40fae0528641f4d2f9b8a506393b06e09b4e6ea38217afbd76529
       - path: kernel/internal/lease/testdata/sp2/b0-greedy.json
         sha256: 4c49c99136af858d19056aa377f75ea6871d0e736ac2319ecee981f8a558380e
+      - path: kernel/internal/lease/fence_cover_donetest_test.go
+        sha256: 3a3ecacd7f5683cc157e5a6b4eb9f59dff61e51ca409b06f92b138e7ad1f0687
