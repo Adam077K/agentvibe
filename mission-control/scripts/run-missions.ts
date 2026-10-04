@@ -22,7 +22,7 @@
 //
 // This script, like consume-dispatch.ts, is OUTSIDE server/**: spawning is its whole job.
 
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -73,7 +73,13 @@ export const REFUSED_SUBAGENT = 'refused_subagent';
 /** Agent/Task in any case: a tool name that differs only by case must not slip past the refusal. */
 const NESTED_AGENT_TOOL = /^(agent|task)$/i;
 
-export type RunFn = (bin: string, args: string[], cwd: string, onLine: (l: string) => void) => Promise<{ code: number | null; stderr: string }>;
+/** Which mission and role a spawned child belongs to, so the real spawn can record its process group. */
+export interface RunCtx {
+  missionId: string;
+  role: string;
+}
+
+export type RunFn = (bin: string, args: string[], cwd: string, onLine: (l: string) => void, ctx?: RunCtx) => Promise<{ code: number | null; stderr: string }>;
 
 /**
  * What runMission() reaches outside itself. Defaults are the real spawn and the real CSV log; the
@@ -176,9 +182,20 @@ function logLaunch(row: LaunchRow) {
 }
 
 /** Spawn with an args array (no shell), feed each stdout line to `onLine`, resolve with the exit code. */
-const run: RunFn = (bin, args, cwd, onLine) => {
+const run: RunFn = (bin, args, cwd, onLine, ctx) => {
   return new Promise((resolve) => {
-    const child = spawn(bin, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
+    // Once the runner is shutting down nothing new may start: a Builder launched after SIGINT is
+    // one nobody is left to stop.
+    if (shuttingDown) return resolve({ code: -1, stderr: 'runner is shutting down; not spawned' });
+    // detached: the child leads its own process group (pgid === pid), so a stop can signal the
+    // child AND everything it forked with one kill(-pgid). See "Stopping a mission" below.
+    const child = spawn(bin, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'], detached: true });
+    const group: TrackedGroup | null = child.pid === undefined ? null : { pgid: child.pid, identity: processIdentity(child.pid), kind: 'live', leaderExited: false, pinned: false };
+    if (group) {
+      liveGroups.set(group.pgid, group);
+      // No identity (the child was already gone when `ps` looked) means a record nothing could ever act on.
+      if (ctx && group.identity !== null) recordChild(ctx.missionId, { pgid: group.pgid, identity: group.identity, role: ctx.role, runner: process.pid });
+    }
     let buf = '';
     let stderr = '';
     child.stdout.on('data', (d: Buffer) => {
@@ -193,10 +210,17 @@ const run: RunFn = (bin, args, cwd, onLine) => {
     child.stderr.on('data', (d: Buffer) => {
       stderr = (stderr + d.toString('utf8')).slice(-4000);
     });
+    child.on('exit', () => {
+      if (!group) return;
+      group.leaderExited = true;
+      group.pinned = groupAlive(group.pgid); // see TrackedGroup: a member now is what keeps the number ours
+    });
     child.on('error', (err) => resolve({ code: -1, stderr: String(err) }));
     child.on('close', (code) => {
       if (buf.trim()) onLine(buf.trim());
-      resolve({ code, stderr });
+      // The leader is gone; the GROUP may not be. A forked worker that outlives it is the runner's
+      // to end, and it is forgotten only once the group is empty -- not when the pipe closes.
+      void finishGroup(group, ctx).then(() => resolve({ code, stderr }));
     });
   });
 };
@@ -342,7 +366,7 @@ async function runBuilder(m: Mission, emit: ReturnType<typeof emitter>, deps: Ru
         data: { subtype: j.subtype, num_turns: j.num_turns, duration_ms: j.duration_ms, session_id: j.session_id },
       });
     }
-  });
+  }, { missionId: m.id, role: 'builder' });
   const secs = (Date.now() - t0) / 1000;
   deps.logLaunch({ worker: 'claude', model, mission: m.id, seconds: secs, cost: cost?.toFixed(4) ?? '', exit: code });
   const receipt: LaunchReceipt = {
@@ -433,7 +457,7 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
     } else if (j.type === 'item.completed' && item.type === 'reasoning' && item.text) emit(R, { kind: 'message', text: `(thinking) ${clip(String(item.text), 160)}` });
     else if (j.type === 'turn.completed') emit(R, { kind: 'result', text: `tokens in ${j.usage?.input_tokens ?? '?'} / out ${j.usage?.output_tokens ?? '?'}`, data: { usage: j.usage } });
     else if (j.type === 'turn.failed' || j.type === 'error') emit(R, { kind: 'status', status: 'failed', text: clip(JSON.stringify(j)) });
-  });
+  }, { missionId: m.id, role: 'referee' });
   const secs = (Date.now() - t0) / 1000;
   deps.logLaunch({ worker: 'codex', model, mission: m.id, seconds: secs, cost: '', exit: code });
   // One receipt per launched process (server/missions.ts): the Referee is a launch like the Builder.
@@ -453,6 +477,311 @@ async function runReferee(m: Mission, built: { files: string[]; summary: string 
   else emit(R, { kind: 'status', status: 'failed', text: `no VERDICT line (exit ${code}) ${clip(stderr)}` });
   emit(RUNNER, { kind: 'receipt', text: `referee exit ${code}, ${secs.toFixed(1)}s`, data: { by: 'referee', exit: code, seconds: secs, lastMessageFile: outFile } });
   return { code, verdict };
+}
+
+// ── Stopping a mission ───────────────────────────────────────────────────────────────────────
+//
+// The server never signals anything: it appends `stop_requested` and stops (server/routes/
+// missions.ts). Only this process owns the children, so only this process kills them.
+//
+// Each child is spawned `detached`, which makes it the leader of its own process group, so
+// kill(-pgid) reaches the child AND every grandchild it forked. Signalling just the child's pid
+// would leave a forked worker running with nothing left to read its output. Because detached
+// children leave this process's group, a Ctrl-C (or the hangup of a closed terminal) no longer
+// reaches them by itself; main() installs SIGINT/SIGTERM/SIGHUP handlers that stop the loop, block
+// new spawns, terminate the live groups, settle the mission in flight as `stopped` and exit.
+//
+// A bare pgid is unsafe to signal: a group can outlive its leader (so a group is forgotten only when
+// EMPTY, not when the leader's pipes close), and the OS reuses the number once nothing holds it. So
+// a signal needs evidence the number is still ours (see TrackedGroup). For a child this process
+// holds: the leader unreaped, or a member seen in the group when the leader exited. For a line read
+// from `<id>/children.jsonl` by the next runner (to reap a SIGKILLed one): a validated record whose
+// leader is ALIVE and started when the record says. A file is never trusted further than that.
+//
+// KNOWN LIMITS: a child that calls setsid/setpgid leaves the group and escapes the kill; and a
+// recorded group whose leader is already dead is not reaped (nothing left to check the record
+// against). The kernel runner (B1-09a) is the real fix; the group is the best a plain spawn offers.
+//
+// Order: SIGTERM to the group, then SIGKILL to whatever is still in it after STOP_GRACE_MS. The
+// runner then waits for the group to be EMPTY before it writes `stopped` and releases the lock,
+// so `stopped` on the board means the processes are gone, not that a signal was sent.
+//
+// One mission runs at a time (main() awaits each), so every live group belongs to the mission
+// being run; if that ever becomes concurrent, liveGroups must be keyed by mission id.
+
+/** Grace between SIGTERM and SIGKILL. 5s lets a CLI flush its last write; MC_STOP_GRACE_MS overrides (tests). */
+export const STOP_GRACE_MS_DEFAULT = 5000;
+const stopGraceMs = () => {
+  const raw = process.env.MC_STOP_GRACE_MS;
+  return raw !== undefined && raw !== '' && Number(raw) >= 0 ? Number(raw) : STOP_GRACE_MS_DEFAULT;
+};
+/** How often a running mission re-reads the board for `stop_requested`. */
+const STOP_POLL_MS = 250;
+
+/**
+ * A process group the runner may signal, and the evidence that it is still the group it means.
+ * A pgid is only a number; the OS hands numbers out again once nothing holds them. Two sources:
+ *
+ * - `live`: a child this process spawned and still holds the handle of. While the leader is
+ *   unreaped its pid cannot be reused. When it exits, `pinned` records whether the group still had
+ *   a member at that instant: a group with members keeps its number reserved (the kernel will not
+ *   allocate a pid that is a live pgid), so the number is ours for exactly as long as every later
+ *   look still finds a member. The first empty look un-pins it for good. "No process holds that
+ *   pid" is NOT evidence, and nothing reads it as such.
+ * - `recorded`: a line read back from children.jsonl, written by a runner that is gone. A file is
+ *   not evidence. It is signalled only while its LEADER is alive and started when the record says
+ *   (pid + `ps` start time). A leaderless group, a null identity, a different process on that pid:
+ *   not signalled. Leaderless orphan groups are a documented limit.
+ */
+export interface TrackedGroup {
+  pgid: number;
+  identity: string | null;
+  kind: 'live' | 'recorded';
+  /** live only: the leader has exited. */
+  leaderExited: boolean;
+  /** live only: the group still had a member when the leader exited, and no look since has found it empty. */
+  pinned: boolean;
+}
+
+/** Process groups of the children currently running (pgid === the child's pid). */
+const liveGroups = new Map<number, TrackedGroup>();
+const terminations = new Map<number, Promise<void>>();
+
+/** Set by the first SIGINT/SIGTERM/SIGHUP. From then on `run` refuses to spawn and every checkpoint settles `stopped`. */
+let shuttingDown = false;
+let shutdownTerminated = false;
+export const isShuttingDown = () => shuttingDown;
+
+/** The leader's start time ("Sat Oct  4 10:00:00 2026"), or null when no such process exists. */
+export function processIdentity(pid: number): string | null {
+  if (!Number.isSafeInteger(pid) || pid <= 1) return null; // `ps -p -N` is an error, not "nothing": never ask it
+  const r = spawnSync('ps', ['-o', 'lstart=', '-p', String(pid)], { encoding: 'utf8', env: { ...process.env, LC_ALL: 'C' } });
+  const text = r.status === 0 && typeof r.stdout === 'string' ? r.stdout.trim() : '';
+  return text || null;
+}
+
+/** The process group `pid` is in, or null. */
+function processGroupOf(pid: number): number | null {
+  if (!Number.isSafeInteger(pid) || pid <= 1) return null;
+  const r = spawnSync('ps', ['-o', 'pgid=', '-p', String(pid)], { encoding: 'utf8', env: { ...process.env, LC_ALL: 'C' } });
+  const n = r.status === 0 && typeof r.stdout === 'string' ? Number(r.stdout.trim()) : NaN;
+  return Number.isSafeInteger(n) ? n : null;
+}
+
+/**
+ * A children.jsonl start record is signalled only if every field is what a spawn would have
+ * written: pgid a safe integer above 1 (0 is "my own group", negatives turn kill(-pgid) into
+ * kill(pid), 1 is init) that is neither the reaper's own pid nor its own group, and a non-empty
+ * string identity. Anything else is forged or damaged and is never signalled.
+ */
+export function validChildRecord(rec: { pgid?: unknown; identity?: unknown }, ownPid: number = process.pid, ownGroup: number | null = processGroupOf(process.pid)): boolean {
+  const { pgid, identity } = rec;
+  if (typeof pgid !== 'number' || !Number.isSafeInteger(pgid) || pgid <= 1) return false;
+  if (pgid === ownPid || pgid === ownGroup) return false;
+  return typeof identity === 'string' && identity.trim() !== '';
+}
+
+export function isOurs(g: TrackedGroup): boolean {
+  if (g.kind === 'recorded') {
+    // The leader must be alive, be a group leader, and be the process the record names.
+    if (g.identity === null || processIdentity(g.pgid) !== g.identity) return false;
+    return processGroupOf(g.pgid) === g.pgid;
+  }
+  if (!g.leaderExited) return true;
+  if (!g.pinned) return false;
+  if (!groupAlive(g.pgid)) {
+    g.pinned = false;
+    return false;
+  }
+  return true;
+}
+
+function groupAlive(pgid: number): boolean {
+  try {
+    process.kill(-pgid, 0);
+    return true;
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code !== 'ESRCH';
+  }
+}
+
+function signalGroup(g: TrackedGroup, sig: NodeJS.Signals): void {
+  if (!isOurs(g)) return;
+  try {
+    process.kill(-g.pgid, sig);
+  } catch {
+    /* ESRCH: already gone. Nothing else is actionable from here. */
+  }
+}
+
+/**
+ * SIGTERM the whole group, SIGKILL what is left after `graceMs`. Resolves once the group is empty
+ * (or, defensively, 2s after the SIGKILL, so a process stuck in the kernel cannot hang the runner).
+ * A group that is not ours (see isOurs) is never signalled; it resolves at once, or at the grace if the
+ * leader of a `recorded` group dies from the TERM and nothing can vouch for the number any more.
+ * Idempotent per group: a second call returns the first call's promise.
+ */
+export function terminateGroup(g: TrackedGroup, graceMs: number = stopGraceMs()): Promise<void> {
+  const prior = terminations.get(g.pgid);
+  if (prior) return prior;
+  if (!groupAlive(g.pgid) || !isOurs(g)) return Promise.resolve();
+  signalGroup(g, 'SIGTERM');
+  const started = Date.now();
+  const done = new Promise<void>((resolve) => {
+    let killedAt: number | null = null;
+    const tick = () => {
+      if (!groupAlive(g.pgid)) return resolve();
+      const now = Date.now();
+      if (killedAt === null && now - started >= graceMs) {
+        killedAt = now;
+        if (!isOurs(g)) return resolve();
+        signalGroup(g, 'SIGKILL');
+      } else if (killedAt !== null && now - killedAt > 2000) return resolve();
+      setTimeout(tick, 20);
+    };
+    tick();
+  }).finally(() => terminations.delete(g.pgid));
+  terminations.set(g.pgid, done);
+  return done;
+}
+
+/** Terminate every live child group. Used by the stop watcher and by the runner's own shutdown. */
+export function terminateLiveGroups(): Promise<void> {
+  return Promise.all([...liveGroups.values()].map((g) => terminateGroup(g))).then(() => undefined);
+}
+
+/** After a child's pipes close: end whatever it left in its group, then forget the group. */
+async function finishGroup(g: TrackedGroup | null, ctx: RunCtx | undefined): Promise<void> {
+  if (!g) return;
+  await terminateGroup(g);
+  liveGroups.delete(g.pgid);
+  if (ctx) recordChild(ctx.missionId, { pgid: g.pgid, ended: true });
+}
+
+// ── The record of what the runner spawned, for the runner that finds it dead ──────────────────
+//
+// `<id>/children.jsonl`, append-only like the rest of the store: one line per spawned group
+// {pgid, identity, role, runner} and one {pgid, ended} when the runner saw the group empty. A
+// runner that was SIGKILLed cannot clean up after itself; the next one reads this to do it.
+
+export const childrenPath = (id: string, dir: string = missionsDir()) => path.join(path.dirname(eventsPath(id, dir)), 'children.jsonl');
+
+function recordChild(id: string, rec: Record<string, unknown>, dir: string = missionsDir()): void {
+  try {
+    const file = childrenPath(id, dir);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.appendFileSync(file, JSON.stringify({ ts: Date.now(), ...rec }) + '\n');
+  } catch (e) {
+    console.log(`[runner] could not record child group for ${id}: ${String(e)}`); // never let bookkeeping stop a mission
+  }
+}
+
+/** Start records not yet followed by an `ended`, fields UNTRUSTED: validChildRecord decides what may be acted on. */
+function openChildren(id: string, dir: string): { pgid?: unknown; identity?: unknown; runner?: unknown }[] {
+  let text = '';
+  try {
+    text = fs.readFileSync(childrenPath(id, dir), 'utf8');
+  } catch {
+    return [];
+  }
+  const open = new Map<unknown, { pgid?: unknown; identity?: unknown; runner?: unknown }>();
+  for (const raw of text.split('\n')) {
+    if (!raw.trim()) continue;
+    try {
+      const r = JSON.parse(raw);
+      if (r === null || typeof r !== 'object') continue;
+      if (r.ended) open.delete(r.pgid);
+      else open.set(r.pgid, { pgid: r.pgid, identity: r.identity, runner: r.runner });
+    } catch {
+      /* torn line */
+    }
+  }
+  return [...open.values()];
+}
+
+/**
+ * Kill the groups a DEAD runner recorded for `id` and never saw end. Each record is validated
+ * (validChildRecord) and then signalled only while its leader is alive and is the recorded process
+ * (isOurs, kind `recorded`). Everything else is dropped with a warning and never signalled.
+ * Returns the pgids actually terminated. Call after reconcileWorking(), before relaunch.
+ *
+ * KNOWN LIMIT: a group whose leader is already dead is not reaped, and neither are survivors of a
+ * leader that died from the TERM. With no leader there is nothing to check the record against, and a
+ * pgid read from a file is not worth a guess. They are logged, not signalled.
+ */
+export async function reapOrphanGroups(id: string, dir: string = missionsDir()): Promise<number[]> {
+  const reaped: number[] = [];
+  const ownGroup = processGroupOf(process.pid);
+  for (const rec of openChildren(id, dir)) {
+    if (!validChildRecord(rec, process.pid, ownGroup)) {
+      console.log(`[runner] mission ${id} — ignoring invalid child record ${JSON.stringify(rec).slice(0, 120)}; not signalled`);
+      continue;
+    }
+    if (rec.runner === process.pid) continue; // our own live children are not orphans
+    const g: TrackedGroup = { pgid: rec.pgid as number, identity: rec.identity as string, kind: 'recorded', leaderExited: false, pinned: false };
+    let handled = false;
+    if (isOurs(g)) {
+      await terminateGroup(g);
+      reaped.push(g.pgid);
+      handled = true;
+    } else if (groupAlive(g.pgid)) {
+      console.log(`[runner] mission ${id} — group ${g.pgid} has no verifiable leader; left running, not signalled`);
+    } else handled = true; // empty: nothing left of it
+    if (handled) recordChild(id, { pgid: g.pgid, ended: true, reaped: reaped.includes(g.pgid) }, dir);
+  }
+  return reaped;
+}
+
+export interface StopWatch {
+  /** Fresh read of the board: has the founder asked to stop this mission, or is the runner shutting down? */
+  requested(): boolean;
+  /** True once the watcher actually signalled a running child. */
+  signalled(): boolean;
+  /** Resolves when every group the watcher terminated is empty. */
+  drain(): Promise<void>;
+  close(): void;
+}
+
+/**
+ * Poll the board for `stop_requested` on `id` while it runs. On sight, terminate every live group;
+ * keep checking, so a child spawned in the gap between two ticks is still caught on the next.
+ */
+export function watchForStop(id: string, dir: string = missionsDir(), pollMs: number = STOP_POLL_MS): StopWatch {
+  let signalled = false;
+  const requested = () => {
+    try {
+      return shuttingDown || foldBoard(readBoardLines(boardPath(dir))).find((m) => m.id === id)?.stopRequested === true;
+    } catch {
+      return false; // an unreadable board is not a stop request; the next tick reads again
+    }
+  };
+  const timer = setInterval(() => {
+    if (liveGroups.size === 0 || !requested()) return;
+    signalled = true;
+    void terminateLiveGroups();
+  }, pollMs);
+  return {
+    requested,
+    signalled: () => signalled || shutdownTerminated,
+    drain: () => Promise.all([...terminations.values()]).then(() => undefined),
+    close: () => clearInterval(timer),
+  };
+}
+
+/**
+ * If this mission was asked to stop, settle the card as `stopped` and return true: the caller
+ * returns without launching anything further (in particular, no Referee). `interrupted` names the
+ * agents whose process was actually killed, so their cards read `stopped` rather than `working`.
+ */
+async function settleIfStopped(m: Mission, stop: StopWatch, emit: ReturnType<typeof emitter>, interrupted: Who[]): Promise<boolean> {
+  if (!stop.signalled() && !stop.requested()) return false;
+  await stop.drain();
+  const why = shuttingDown ? 'runner shut down' : 'stop requested';
+  for (const who of stop.signalled() ? interrupted : []) emit(who, { kind: 'status', status: 'stopped', text: `terminated: ${why}` });
+  emit(RUNNER, { kind: 'status', text: `stopped (${why})${stop.signalled() ? '; worker process groups terminated' : '; nothing was running'}` });
+  appendMissionLine({ id: m.id, ts: Date.now(), status: 'stopped' } satisfies MissionLine, board());
+  console.log(`[runner] mission ${m.id} → stopped`);
+  return true;
 }
 
 // ── Mission loop ─────────────────────────────────────────────────────────────────────────────
@@ -589,11 +918,13 @@ export function reconcileWorking(dir: string = missionsDir()): string[] {
   for (const m of foldBoard(lines)) {
     const pid = pidOf.get(m.id);
     if (m.status !== 'working' || pid === undefined || pid === process.pid || pidAlive(pid)) continue;
-    appendMissionLine({ id: m.id, ts: Date.now(), status: 'waiting' } satisfies MissionLine, boardPath(dir));
+    // A card the founder had asked to stop is not handed back to Waiting to be launched again.
+    const to = m.stopRequested ? 'stopped' : 'waiting';
+    appendMissionLine({ id: m.id, ts: Date.now(), status: to } satisfies MissionLine, boardPath(dir));
     releaseMission(m.id, dir);
     const file = eventsPath(m.id, dir);
     fs.mkdirSync(path.dirname(file), { recursive: true });
-    const ev: TeamEvent = { ts: Date.now(), agent: RUNNER.agent, title: RUNNER.title, model: RUNNER.model, family: RUNNER.family, kind: 'status', text: `reconciled: runner pid ${pid} is gone; mission returned to waiting` };
+    const ev: TeamEvent = { ts: Date.now(), agent: RUNNER.agent, title: RUNNER.title, model: RUNNER.model, family: RUNNER.family, kind: 'status', text: `reconciled: runner pid ${pid} is gone; mission ${m.stopRequested ? 'stopped (stop was requested)' : 'returned to waiting'}` };
     fs.appendFileSync(file, JSON.stringify(ev) + '\n');
     reset.push(m.id);
   }
@@ -601,25 +932,39 @@ export function reconcileWorking(dir: string = missionsDir()): string[] {
 }
 
 export async function runMission(m: Mission, deps: RunnerDeps = REAL_DEPS) {
+  if (shuttingDown) return; // not claimed: it stays queued for the next runner
   if (!claimMission(m.id)) {
     console.log(`[runner] mission ${m.id} — not claimed (another runner holds it, or it is no longer queued)`);
     return;
   }
+  const stop = watchForStop(m.id);
   try {
-    await runClaimed(m, deps);
+    await runClaimed(m, deps, stop);
   } finally {
+    stop.close();
     releaseMission(m.id);
   }
 }
 
-async function runClaimed(m: Mission, deps: RunnerDeps) {
+async function runClaimed(m: Mission, deps: RunnerDeps, stop: StopWatch) {
   const emit = emitter(m.id);
   emit(RUNNER, { kind: 'status', text: `claimed by runner pid ${process.pid}; workdir ${WORKDIR}` });
+  // Asked to stop while still queued (or between claim and launch): nothing is ever launched.
+  if (await settleIfStopped(m, stop, emit, [])) return;
   console.log(`[runner] mission ${m.id} "${m.title}" — builder starting`);
   const built = await withDecisions(m.id, (extra) => runBuilder(m, emit, deps, extra), {
     note: (text, data) => emit(RUNNER, { kind: 'receipt', text, data }),
+    // A Stop (or the runner's own shutdown) while the founder is being asked must end the wait now,
+    // not at the decision timeout: nothing is running, so the stop watcher has nothing to signal.
+    interrupted: () => stop.requested(),
   });
-  if (!built) return; // asked the founder, no answer in time: withDecisions put the card back on Waiting
+  if (!built) {
+    // No answer in time (withDecisions put the card back on Waiting), or the wait was interrupted by
+    // a stop (it expired the question and wrote nothing): the second case settles `stopped` here.
+    await settleIfStopped(m, stop, emit, []);
+    return;
+  }
+  if (await settleIfStopped(m, stop, emit, [BUILDER])) return;
   if (built.refused) {
     // Not a generic failure, and not a Done card. The Builder broke the one-process rule, so its
     // output is not the Builder's alone and the Referee is not asked to judge it. The card goes
@@ -637,6 +982,7 @@ async function runClaimed(m: Mission, deps: RunnerDeps) {
   }
   console.log(`[runner] mission ${m.id} — referee starting`);
   const ref = await runReferee(m, built, emit, deps);
+  if ((stop.signalled() || shuttingDown) && (await settleIfStopped(m, stop, emit, [REFEREE]))) return;
   const line: MissionLine = ref.verdict
     ? { id: m.id, ts: Date.now(), status: 'done', verdict: ref.verdict.verdict, verdictReasons: ref.verdict.reasons, costUsd: built.cost }
     : { id: m.id, ts: Date.now(), status: 'failed', error: 'referee returned no verdict', costUsd: built.cost };
@@ -644,15 +990,56 @@ async function runClaimed(m: Mission, deps: RunnerDeps) {
   console.log(`[runner] mission ${m.id} → ${line.status} ${line.verdict ?? line.error}`);
 }
 
+/** Exit codes follow the shell convention: 128 + the signal number. */
+const SHUTDOWN_SIGNALS = { SIGHUP: 129, SIGINT: 130, SIGTERM: 143 } as const;
+
+/**
+ * Begin the runner's own shutdown on a signal. Children are detached (own process group), so the
+ * terminal's Ctrl-C and its hangup no longer reach them; this does what the terminal used to:
+ * block new spawns, terminate every live group (TERM, then KILL after the grace), let the mission
+ * in flight settle as `stopped` and release its lock, then exit. Bounded, so a wedged mission cannot
+ * hold the exit forever.
+ */
+function installShutdown(inflight: () => Promise<void>): void {
+  for (const [sig, code] of Object.entries(SHUTDOWN_SIGNALS) as [keyof typeof SHUTDOWN_SIGNALS, number][]) {
+    process.on(sig, () => {
+      if (shuttingDown) return;
+      shuttingDown = true;
+      shutdownTerminated = liveGroups.size > 0;
+      try {
+        console.log(`[runner] ${sig} — terminating worker process groups; in-flight mission will be stopped`);
+      } catch {
+        /* a hung-up terminal can refuse the write; the shutdown does not depend on it */
+      }
+      const bound = new Promise((r) => setTimeout(r, stopGraceMs() + 10_000));
+      void Promise.race([Promise.all([terminateLiveGroups(), inflight()]), bound]).then(() => process.exit(code));
+    });
+  }
+}
+
 async function main() {
   console.log(`[runner] board ${board()} · workdir ${WORKDIR} · builder ${CLAUDE_MODEL} · referee ${CODEX_MODEL}`);
-  for (const id of reconcileWorking()) console.log(`[runner] mission ${id} — previous runner is gone; back to waiting`);
+  let inflight: Promise<void> = Promise.resolve();
+  installShutdown(() => inflight.catch(() => undefined));
+  for (const id of reconcileWorking()) {
+    console.log(`[runner] mission ${id} — previous runner is gone; back to waiting`);
+    const reaped = await reapOrphanGroups(id);
+    if (reaped.length > 0) console.log(`[runner] mission ${id} — terminated ${reaped.length} orphaned worker process group(s): ${reaped.join(', ')}`);
+  }
   const orphaned = expireOrphanedDecisions();
   if (orphaned.length) console.log(`[runner] expired ${orphaned.length} decision(s) left pending by a runner that is gone`);
   for (;;) {
+    if (shuttingDown) {
+      await new Promise((r) => setTimeout(r, 1000)); // the handler owns the exit; launch nothing meanwhile
+      continue;
+    }
     const queued = foldBoard(readBoardLines(board())).filter((m) => m.status === 'queued');
-    for (const m of queued) await runMission(m);
-    if (flag('--once') && queued.length > 0) return;
+    for (const m of queued) {
+      if (shuttingDown) break;
+      inflight = runMission(m);
+      await inflight;
+    }
+    if (flag('--once') && queued.length > 0 && !shuttingDown) return;
     await new Promise((r) => setTimeout(r, 1000));
   }
 }

@@ -104,6 +104,12 @@ export interface DecisionOptions {
   /** Replaced in tests so a wait does not take wall-clock time. */
   sleep?: (ms: number) => Promise<void>;
   now?: () => number;
+  /**
+   * True when the wait should end now because the mission was stopped (or the runner is shutting
+   * down). The question is expired so it leaves "pending", and withDecisions returns null WITHOUT
+   * putting the card back on Waiting: the caller settles the card as `stopped`.
+   */
+  interrupted?: () => boolean;
   /** Where the runner's events go: one line of text plus structured data, shown as a receipt. */
   note?: (text: string, data: Record<string, unknown>) => void;
 }
@@ -131,6 +137,7 @@ export async function withDecisions<T extends BuilderRound>(
   const sleep = opts.sleep ?? ((ms) => new Promise<void>((r) => setTimeout(r, ms)));
   const now = opts.now ?? Date.now;
   const note = opts.note ?? (() => {});
+  const interrupted = opts.interrupted ?? (() => false);
 
   const answered: { question: string; choice: string }[] = [];
   let round = await run(decisionPromptLines(answered));
@@ -154,7 +161,12 @@ export async function withDecisions<T extends BuilderRound>(
     appendMissionLine(needed, file);
     note(`needs you: ${asked.question} [${asked.options.join(' | ')}]`, { by: 'runner', decisionId: needed.id, awaiting: 'founder' });
 
-    let settled = await waitForAnswer(needed.id, file, { pollMs, timeoutMs, sleep, now });
+    let settled = await waitForAnswer(needed.id, file, { pollMs, timeoutMs, sleep, now, interrupted });
+    if (settled === 'interrupted') {
+      appendMissionLine({ type: 'decision_expired', id: needed.id, at: now() } satisfies DecisionExpired, file);
+      note('stopped while waiting for the founder; decision expired', { by: 'runner', decisionId: needed.id, expired: true, stopped: true });
+      return null;
+    }
     if (settled?.status !== 'answered') {
       const expired: DecisionExpired = { type: 'decision_expired', id: needed.id, at: now() };
       appendMissionLine(expired, file);
@@ -173,6 +185,7 @@ export async function withDecisions<T extends BuilderRound>(
 
     note(`founder answered: ${settled.choice}`, { by: 'founder', decisionId: needed.id, choice: settled.choice });
     answered.push({ question: asked.question, choice: settled.choice });
+    if (interrupted()) return null; // answered, then stopped before the Builder resumed: do not relaunch it
     const next = await run(decisionPromptLines(answered));
     // Files written before the question still count, and so does what they cost.
     next.files = [...new Set([...round.files, ...next.files])];
@@ -185,12 +198,13 @@ export async function withDecisions<T extends BuilderRound>(
 async function waitForAnswer(
   id: string,
   file: string,
-  t: { pollMs: number; timeoutMs: number; sleep: (ms: number) => Promise<void>; now: () => number },
-): Promise<Decision | undefined> {
+  t: { pollMs: number; timeoutMs: number; sleep: (ms: number) => Promise<void>; now: () => number; interrupted: () => boolean },
+): Promise<Decision | 'interrupted' | undefined> {
   const deadline = t.now() + t.timeoutMs;
   for (;;) {
     const d = foldDecisions(readDecisionLines(file)).find((x) => x.id === id);
     if (d && d.status !== 'pending') return d;
+    if (t.interrupted()) return 'interrupted';
     if (t.now() >= deadline) return undefined;
     await t.sleep(t.pollMs);
   }
