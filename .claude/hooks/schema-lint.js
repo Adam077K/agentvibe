@@ -145,7 +145,7 @@ function configuredMcpServers() {
 // are superseded and are refused, because a superseded pin is not inert: it SILENTLY CLAMPS
 // `effort`, the one quality dial that binds (GRANT-HOLDERS.md §3.1; CONTROL-PLANE.md §3.1 — 269
 // of 269 reviewer runs executed sonnet-4-6 at `high` inside sessions defaulting to opus-5).
-const VALID_MODELS = ['claude-opus-5', 'claude-sonnet-5', 'claude-fable-5', 'claude-haiku-4-5'];
+const VALID_MODELS = ['claude-opus-5-5', 'claude-sonnet-5-5'];
 // PS-EFFORT-ENUM. Enum only — see the REQUIRED_FRONTMATTER note on what this field does not prove.
 const VALID_EFFORT = ['low', 'medium', 'high', 'xhigh', 'max'];
 const VALID_ISOLATION = ['worktree', 'none'];

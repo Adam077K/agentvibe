@@ -1,0 +1,94 @@
+{
+  "cases": [
+    {
+      "name": "tie-break-same-instant",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-01-01T02:00:00+02:00"
+      ],
+      "want": "2027-01-01T02:00:00+02:00",
+      "cite": "orchestrator ruling 2026-10-02 (deadline grammar, r2): RFC 3339, real calendar date, second < 60; 09a-ENGINEERING.md:670 (a join takes the longest retention); equal instants resolve to the greater string, so the join does not depend on input order (09a:665)"
+    },
+    {
+      "name": "fraction-trailing-zero-tie",
+      "deadlines": [
+        "2027-01-01T00:00:00.5Z",
+        "2027-01-01T00:00:00.50Z"
+      ],
+      "want": "2027-01-01T00:00:00.5Z",
+      "cite": "orchestrator ruling 2026-10-02 (deadline grammar, r2): RFC 3339, real calendar date, second < 60; 09a-ENGINEERING.md:670 (a join takes the longest retention); .5 and .50 are one instant; the tie goes to the greater string"
+    },
+    {
+      "name": "fraction-shorter-later",
+      "deadlines": [
+        "2027-01-01T00:00:00.10Z",
+        "2027-01-01T00:00:00.9Z"
+      ],
+      "want": "2027-01-01T00:00:00.9Z",
+      "cite": "orchestrator ruling 2026-10-02 (deadline grammar, r2): RFC 3339, real calendar date, second < 60; 09a-ENGINEERING.md:670 (a join takes the longest retention); .9 is later than .10"
+    },
+    {
+      "name": "leap-second-refused",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-06-30T23:59:60Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02 (deadline grammar, r2): RFC 3339, real calendar date, second < 60; 09a-ENGINEERING.md:670 (a join takes the longest retention); second 60 (a leap second) is outside the grammar"
+    },
+    {
+      "name": "century-1900-not-leap",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "1900-02-29T00:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02 (deadline grammar, r2): RFC 3339, real calendar date, second < 60; 09a-ENGINEERING.md:670 (a join takes the longest retention); 1900 is not a leap year (divisible by 100, not by 400)"
+    },
+    {
+      "name": "century-2000-leap",
+      "deadlines": [
+        "2000-02-28T23:59:59Z",
+        "2000-02-29T00:00:00Z"
+      ],
+      "want": "2000-02-29T00:00:00Z",
+      "cite": "orchestrator ruling 2026-10-02 (deadline grammar, r2): RFC 3339, real calendar date, second < 60; 09a-ENGINEERING.md:670 (a join takes the longest retention); 2000 is a leap year (divisible by 400)"
+    },
+    {
+      "name": "era-floor-year-0",
+      "deadlines": [
+        "0000-02-29T12:00:00Z",
+        "0000-03-01T00:00:00Z"
+      ],
+      "want": "0000-03-01T00:00:00Z",
+      "cite": "orchestrator ruling 2026-10-02 (deadline grammar, r2): RFC 3339, real calendar date, second < 60; 09a-ENGINEERING.md:670 (a join takes the longest retention); year 0 is a leap year; days before March of year 0 need a floored era"
+    },
+    {
+      "name": "era-floor-year-0-jan",
+      "deadlines": [
+        "0000-01-01T00:00:00Z",
+        "-0001-12-31T00:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02 (deadline grammar, r2): RFC 3339, real calendar date, second < 60; 09a-ENGINEERING.md:670 (a join takes the longest retention); a signed year is outside the grammar"
+    },
+    {
+      "name": "month-00-refused",
+      "deadlines": [
+        "2027-01-01T00:00:00Z",
+        "2027-00-15T00:00:00Z"
+      ],
+      "want": "undecided",
+      "cite": "orchestrator ruling 2026-10-02 (deadline grammar, r2): RFC 3339, real calendar date, second < 60; 09a-ENGINEERING.md:670 (a join takes the longest retention); month 00 is not a calendar month"
+    },
+    {
+      "name": "year-9999-orders",
+      "deadlines": [
+        "9999-12-31T23:59:59Z",
+        "2027-01-01T00:00:00Z"
+      ],
+      "want": "9999-12-31T23:59:59Z",
+      "cite": "orchestrator ruling 2026-10-02 (deadline grammar, r2): RFC 3339, real calendar date, second < 60; 09a-ENGINEERING.md:670 (a join takes the longest retention); the last instant of the grammar orders"
+    }
+  ]
+}

@@ -1,0 +1,486 @@
+{
+  "cases": [
+    {
+      "name": "label.full",
+      "kind": "label",
+      "value": {
+        "schema": "label/1",
+        "origin": "customer",
+        "dclass": "D2",
+        "boundary": "guarded",
+        "venture": "v_keel",
+        "retention": {
+          "class": "client",
+          "hold": "obligation",
+          "deadline": "2027-10-02T00:00:00Z"
+        },
+        "permission": "informs",
+        "exportable": true,
+        "taint": "untrusted",
+        "provenance": {
+          "sources": [
+            {
+              "ref": "crm:cust_812"
+            }
+          ],
+          "derived_from": [],
+          "author": {
+            "title": "Support Agent",
+            "family": "codex"
+          },
+          "human_principal": {
+            "id": "person_founder",
+            "role": "founder"
+          }
+        },
+        "consent_scope": "cs_panel_3",
+        "confidence": {
+          "rung": "E1",
+          "p": 0
+        },
+        "subjects": [
+          "subj_812"
+        ],
+        "revocation_epoch": 3
+      }
+    },
+    {
+      "name": "label.min",
+      "kind": "label",
+      "value": {
+        "schema": "label/1",
+        "origin": "internal",
+        "dclass": "D0",
+        "boundary": "open",
+        "venture": "portfolio",
+        "retention": {
+          "class": "journal_metadata",
+          "hold": "none"
+        },
+        "permission": "none",
+        "exportable": false,
+        "taint": "clean",
+        "provenance": {
+          "sources": [],
+          "derived_from": [],
+          "author": {
+            "title": "Kernel",
+            "family": "system"
+          }
+        },
+        "revocation_epoch": 0
+      }
+    },
+    {
+      "name": "event.full",
+      "kind": "event",
+      "value": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1XYZ",
+        "stream": "mission:m_42",
+        "seq": 7,
+        "type": "job.leased",
+        "ts": "2026-10-01T09:00:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "m_42",
+        "causation_id": "01J9ZQ3M4K8V2N6P0R5T7W1XYA",
+        "label": {
+          "schema": "label/1",
+          "origin": "customer",
+          "dclass": "D2",
+          "boundary": "guarded",
+          "venture": "v_keel",
+          "retention": {
+            "class": "client",
+            "hold": "obligation",
+            "deadline": "2027-10-02T00:00:00Z"
+          },
+          "permission": "informs",
+          "exportable": true,
+          "taint": "untrusted",
+          "provenance": {
+            "sources": [
+              {
+                "ref": "crm:cust_812"
+              }
+            ],
+            "derived_from": [],
+            "author": {
+              "title": "Support Agent",
+              "family": "codex"
+            },
+            "human_principal": {
+              "id": "person_founder",
+              "role": "founder"
+            }
+          },
+          "consent_scope": "cs_panel_3",
+          "confidence": {
+            "rung": "E1",
+            "p": 0
+          },
+          "subjects": [
+            "subj_812"
+          ],
+          "revocation_epoch": 3
+        },
+        "rationale": {
+          "summary": "lease granted to the build job",
+          "evidence": [
+            "ev_1"
+          ]
+        },
+        "snapshot_ref": "snap_14",
+        "schema": 2,
+        "data": {
+          "job": "j_9",
+          "lease": "l_3"
+        },
+        "prev_hash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "hash": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"
+      }
+    },
+    {
+      "name": "event.min",
+      "kind": "event",
+      "value": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1XZ0",
+        "stream": "system",
+        "seq": 1,
+        "type": "system.started",
+        "ts": "2026-10-01T08:00:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "boot_1",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
+          "revocation_epoch": 0
+        },
+        "schema": 1,
+        "data": {},
+        "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "hash": "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"
+      }
+    },
+    {
+      "name": "job.full",
+      "kind": "job",
+      "value": {
+        "id": "j_9",
+        "venture": "v_keel",
+        "record_ref": "id:brand:keel",
+        "model_id": "claude-opus-5",
+        "family": "claude",
+        "headless": true,
+        "parent_job": "j_8",
+        "provider_mode": "sub",
+        "isolation": "I3",
+        "context_profile": "prof_build",
+        "tool_lease": {
+          "allowed": [
+            "Read",
+            "Bash"
+          ],
+          "forbidden": [
+            "WebFetch"
+          ]
+        },
+        "label": {
+          "schema": "label/1",
+          "origin": "customer",
+          "dclass": "D2",
+          "boundary": "guarded",
+          "venture": "v_keel",
+          "retention": {
+            "class": "client",
+            "hold": "obligation",
+            "deadline": "2027-10-02T00:00:00Z"
+          },
+          "permission": "informs",
+          "exportable": true,
+          "taint": "untrusted",
+          "provenance": {
+            "sources": [
+              {
+                "ref": "crm:cust_812"
+              }
+            ],
+            "derived_from": [],
+            "author": {
+              "title": "Support Agent",
+              "family": "codex"
+            },
+            "human_principal": {
+              "id": "person_founder",
+              "role": "founder"
+            }
+          },
+          "consent_scope": "cs_panel_3",
+          "confidence": {
+            "rung": "E1",
+            "p": 0
+          },
+          "subjects": [
+            "subj_812"
+          ],
+          "revocation_epoch": 3
+        },
+        "budget": {
+          "tokens": 200000,
+          "wall_clock_s": 3600
+        },
+        "lease_ids": [
+          "l_3",
+          "l_4"
+        ],
+        "state": "running"
+      }
+    },
+    {
+      "name": "job.min",
+      "kind": "job",
+      "value": {
+        "id": "j_10",
+        "venture": "v_keel",
+        "record_ref": "id:brand:keel",
+        "model_id": "gpt-6-astra",
+        "family": "codex",
+        "headless": false,
+        "provider_mode": "api",
+        "isolation": "I1",
+        "context_profile": "prof_read",
+        "tool_lease": {
+          "allowed": [],
+          "forbidden": []
+        },
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
+          "revocation_epoch": 0
+        },
+        "budget": {},
+        "lease_ids": [],
+        "state": "queued"
+      }
+    },
+    {
+      "name": "lease.full",
+      "kind": "lease",
+      "value": {
+        "id": "l_3",
+        "resource": "job://j_9",
+        "holder": "j_9",
+        "responsibility_ref": "resp_2",
+        "fencing_token": "9007199254740993",
+        "epoch": "18446744073709551615",
+        "mode": "excl",
+        "kind": "pessimistic",
+        "expires_at": "2026-10-01T09:15:00Z"
+      }
+    },
+    {
+      "name": "lease.min",
+      "kind": "lease",
+      "value": {
+        "id": "l_4",
+        "resource": "repo://keel/src/",
+        "holder": "j_9",
+        "fencing_token": "1",
+        "epoch": "0",
+        "mode": "shared",
+        "kind": "optimistic",
+        "expires_at": "2026-10-01T09:15:00Z"
+      }
+    },
+    {
+      "name": "operation.full",
+      "kind": "operation",
+      "value": {
+        "id": "op_7f3",
+        "venture": "v_keel",
+        "verb": "refund",
+        "target": {
+          "kind": "customer",
+          "id": "cust_812"
+        },
+        "business_key": "refund:cust_812:inv_77",
+        "payload_digest": "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9",
+        "amendments": [
+          "am_1"
+        ],
+        "reservation": "res_5",
+        "state": "open"
+      }
+    },
+    {
+      "name": "operation.min",
+      "kind": "operation",
+      "value": {
+        "id": "op_8a1",
+        "venture": "v_keel",
+        "verb": "publish",
+        "target": "blog:post_12",
+        "business_key": "publish:post_12",
+        "payload_digest": "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096",
+        "amendments": [],
+        "state": "human"
+      }
+    },
+    {
+      "name": "effect.full",
+      "kind": "effect",
+      "value": {
+        "id": "ef_1",
+        "operation_id": "op_7f3",
+        "attempt": 2,
+        "contract_ref": "dc_88",
+        "snapshot_ref": "snap_14",
+        "effect_class": "R4",
+        "idem_class": "at_most_once",
+        "authorising_label": {
+          "schema": "label/1",
+          "origin": "founder",
+          "dclass": "D1",
+          "boundary": "open",
+          "venture": "v_keel",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "may_authorise",
+          "exportable": true,
+          "taint": "clean",
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
+          "revocation_epoch": 0
+        },
+        "approvals": [
+          "ap_1",
+          "ap_2"
+        ],
+        "fencing_tokens": {
+          "job://j_9": "9007199254740993"
+        },
+        "gateway_epoch": "9007199254740995",
+        "state": "proposed"
+      }
+    },
+    {
+      "name": "effect.min",
+      "kind": "effect",
+      "value": {
+        "id": "ef_2",
+        "operation_id": "op_8a1",
+        "attempt": 1,
+        "contract_ref": "dc_89",
+        "snapshot_ref": "snap_14",
+        "effect_class": "R0",
+        "idem_class": "natural",
+        "authorising_label": {
+          "schema": "label/1",
+          "origin": "founder",
+          "dclass": "D1",
+          "boundary": "open",
+          "venture": "v_keel",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "may_authorise",
+          "exportable": true,
+          "taint": "clean",
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
+          "revocation_epoch": 0
+        },
+        "approvals": [],
+        "fencing_tokens": {},
+        "gateway_epoch": "1",
+        "state": "settled"
+      }
+    },
+    {
+      "name": "receipt.full",
+      "kind": "receipt",
+      "value": {
+        "effect_id": "ef_1",
+        "operation_id": "op_7f3",
+        "attempt": 2,
+        "request_digest": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "provider_ref": "re_3NqA",
+        "provider_response_digest": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+        "observed_at": "2026-10-01T09:01:00Z",
+        "issuer": "gateway",
+        "sig": "ed25519:4f2b8c",
+        "chain_prev": "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"
+      }
+    },
+    {
+      "name": "receipt.min",
+      "kind": "receipt",
+      "value": {
+        "effect_id": "ef_2",
+        "operation_id": "op_8a1",
+        "attempt": 1,
+        "request_digest": "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096",
+        "observed_at": "2026-10-01T09:02:00Z",
+        "issuer": "merge_queue",
+        "sig": "ed25519:77aa01",
+        "chain_prev": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+      }
+    }
+  ]
+}

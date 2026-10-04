@@ -1,0 +1,378 @@
+{
+  "history": [
+    {
+      "event": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1YA0",
+        "stream": "mission:m_42",
+        "seq": 1,
+        "type": "decision.compiled",
+        "ts": "2026-10-01T09:00:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "m_42",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
+          "revocation_epoch": 0
+        },
+        "schema": 1,
+        "data": {
+          "action": {
+            "operation_id": "op_a1",
+            "verb": "publish",
+            "target": "blog:post_12",
+            "amount_usd": 49,
+            "audience": 1,
+            "identity": "brand:keel"
+          },
+          "snapshot": {
+            "constitution": "v14",
+            "mandate": "m_publish_v3",
+            "limits": "l_2026-10-01T09:00",
+            "journal_offset": 88213
+          },
+          "effect_class": "R1",
+          "door": "two_way",
+          "disposition": "auto",
+          "satisfied": [
+            "charter.grants.spend",
+            "label.untainted"
+          ],
+          "blockers": [],
+          "precedence_applied": "P8 over P9",
+          "valid_until": "2026-10-01T09:15"
+        },
+        "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "hash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+      },
+      "outcome": {
+        "operation_id": "op_a1",
+        "disposition": "auto",
+        "effect_class": "R1",
+        "door": "two_way"
+      }
+    },
+    {
+      "event": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1YB0",
+        "stream": "mission:m_42",
+        "seq": 2,
+        "type": "decision.compiled",
+        "ts": "2026-10-01T09:01:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "m_42",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
+          "revocation_epoch": 0
+        },
+        "schema": 1,
+        "data": {
+          "action": {
+            "operation_id": "op_b2",
+            "verb": "send",
+            "target": "list:newsletter",
+            "amount_usd": 49,
+            "audience": 1,
+            "identity": "brand:keel"
+          },
+          "snapshot": {
+            "constitution": "v14",
+            "mandate": "m_send_v3",
+            "limits": "l_2026-10-01T09:00",
+            "journal_offset": 88214
+          },
+          "effect_class": "R2",
+          "door": "two_way",
+          "disposition": "notify",
+          "satisfied": [
+            "charter.grants.spend",
+            "label.untainted"
+          ],
+          "blockers": [],
+          "precedence_applied": "P7 over P8",
+          "valid_until": "2026-10-01T09:15"
+        },
+        "prev_hash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "hash": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"
+      },
+      "outcome": {
+        "operation_id": "op_b2",
+        "disposition": "notify",
+        "effect_class": "R2",
+        "door": "two_way"
+      }
+    },
+    {
+      "event": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1YC0",
+        "stream": "mission:m_42",
+        "seq": 3,
+        "type": "decision.compiled",
+        "ts": "2026-10-01T09:02:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "m_42",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
+          "revocation_epoch": 0
+        },
+        "schema": 1,
+        "data": {
+          "action": {
+            "operation_id": "op_7f3",
+            "verb": "refund",
+            "target": "cust_812",
+            "amount_usd": 49,
+            "audience": 1,
+            "identity": "brand:keel"
+          },
+          "snapshot": {
+            "constitution": "v14",
+            "mandate": "m_refund_v3",
+            "limits": "l_2026-10-01T09:00",
+            "journal_offset": 88215
+          },
+          "effect_class": "R4",
+          "door": "costly_reversible",
+          "disposition": "ask",
+          "satisfied": [
+            "charter.grants.spend",
+            "label.untainted"
+          ],
+          "blockers": [
+            {
+              "rule": "limits.refunds_per_day",
+              "owner": "Regulation",
+              "remedy": "wait 3h or founder raise",
+              "expires": "2026-10-02T12:00"
+            }
+          ],
+          "precedence_applied": "P3 over P6",
+          "valid_until": "2026-10-01T09:15"
+        },
+        "prev_hash": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+        "hash": "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"
+      },
+      "outcome": {
+        "operation_id": "op_7f3",
+        "disposition": "ask",
+        "effect_class": "R4",
+        "door": "costly_reversible"
+      }
+    },
+    {
+      "event": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1YD0",
+        "stream": "mission:m_42",
+        "seq": 4,
+        "type": "decision.compiled",
+        "ts": "2026-10-01T09:03:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "m_42",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
+          "revocation_epoch": 0
+        },
+        "schema": 1,
+        "data": {
+          "action": {
+            "operation_id": "op_d4",
+            "verb": "sign",
+            "target": "vendor:acme",
+            "amount_usd": 49,
+            "audience": 1,
+            "identity": "brand:keel"
+          },
+          "snapshot": {
+            "constitution": "v14",
+            "mandate": "m_sign_v3",
+            "limits": "l_2026-10-01T09:00",
+            "journal_offset": 88216
+          },
+          "effect_class": "R3",
+          "door": "one_way",
+          "disposition": "co_sign",
+          "satisfied": [
+            "charter.grants.spend",
+            "label.untainted"
+          ],
+          "blockers": [],
+          "precedence_applied": "P4 over P5",
+          "valid_until": "2026-10-01T09:15"
+        },
+        "prev_hash": "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9",
+        "hash": "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096"
+      },
+      "outcome": {
+        "operation_id": "op_d4",
+        "disposition": "co_sign",
+        "effect_class": "R3",
+        "door": "one_way"
+      }
+    },
+    {
+      "event": {
+        "id": "01J9ZQ3M4K8V2N6P0R5T7W1YE0",
+        "stream": "mission:m_42",
+        "seq": 5,
+        "type": "decision.compiled",
+        "ts": "2026-10-01T09:04:00Z",
+        "actor": {
+          "kind": "engine",
+          "id": "avd"
+        },
+        "correlation_id": "m_42",
+        "label": {
+          "schema": "label/1",
+          "origin": "internal",
+          "dclass": "D0",
+          "boundary": "open",
+          "venture": "portfolio",
+          "retention": {
+            "class": "journal_metadata",
+            "hold": "none"
+          },
+          "permission": "none",
+          "exportable": false,
+          "taint": "clean",
+          "provenance": {
+            "sources": [],
+            "derived_from": [],
+            "author": {
+              "title": "Kernel",
+              "family": "system"
+            }
+          },
+          "revocation_epoch": 0
+        },
+        "schema": 1,
+        "data": {
+          "action": {
+            "operation_id": "op_e5",
+            "verb": "transfer",
+            "target": "venture:v_other",
+            "amount_usd": 49,
+            "audience": 1,
+            "identity": "brand:keel"
+          },
+          "snapshot": {
+            "constitution": "v14",
+            "mandate": "m_transfer_v3",
+            "limits": "l_2026-10-01T09:00",
+            "journal_offset": 88217
+          },
+          "effect_class": "R4",
+          "door": "one_way",
+          "disposition": "never",
+          "satisfied": [
+            "charter.grants.spend",
+            "label.untainted"
+          ],
+          "blockers": [
+            {
+              "rule": "constitution.never.cross_venture_money",
+              "owner": "Constitution",
+              "remedy": "none",
+              "expires": "2099-01-01T00:00"
+            }
+          ],
+          "precedence_applied": "P1 over P3",
+          "valid_until": "2026-10-01T09:15"
+        },
+        "prev_hash": "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096",
+        "hash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+      },
+      "outcome": {
+        "operation_id": "op_e5",
+        "disposition": "never",
+        "effect_class": "R4",
+        "door": "one_way"
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Provider Contract Registry v0 — README (B0-02)
 
-`registry.yml`: 5 rows — Claude Max 20x × {opus-5, sonnet-5, haiku-4-5, fable-5} + ChatGPT Pro × gpt-6-astra.
+`registry.yml`: 3 rows — Claude Max 20x × {opus-5-5, sonnet-5-5} + ChatGPT Pro × gpt-6-astra. The haiku-4-5 and fable-5 rows were removed 2026-10-03 (agents may use only the two 5.5 models); recover them from git history.
 Fetched 2026-10-01 from official vendor pages. Every `headless_allowed` value and every quote `text` is a
 quoted YAML string (no bare `yes`/`no`), so no parser reads one as a boolean.
 

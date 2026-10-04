@@ -41,6 +41,7 @@ export type {
   DispatchPayload,
 } from '../../server/routes/api.ts';
 export type { MissionsPayload, Mission, TeamView, MissionCreateRequest } from '../../server/routes/missions.ts';
+export type { DecisionRow, DecisionsPayload } from '../../server/routes/decisions.ts';
 export type { AgentCard, TeamEvent } from '../../server/missions.ts';
 export type { TrustState } from '../../server/trust.ts';
 export type { EmptyState } from '../../server/collectors/empty.ts';

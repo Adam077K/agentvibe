@@ -1,0 +1,231 @@
+# Done-test register, B1-06 (docs/vision-v3/14-BUILD-PLAN.md §6 row B1-06, "WorkerAdapter `claude`:
+# pinned argv, `contract_hash`, subtype map, children, `init_expect`"; acceptance "Contract fixtures;
+# a changed MCP description aborts before the first tool call; empty result → `unresolved`").
+# Canon: 09a §8.2 (contract, pinned line, init_expect), §8.4 (children), §8.5 (grant argv), §8.7
+# (model_id from system/init), §8.8 (UNPARSED); ENGINE-SPEC §8.1-8.3 (harness check, subtype map);
+# docs/vision-v3/_process/DR-B1-06-ADAPTER-RULINGS-2026-10-02.md (founder rulings A-C).
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest -run B1_06 ./internal/adapter/
+# kernel/internal/adapter/adapter.go and claude.go are NOT registered: they are the interface the
+# job implements (the B0-17 pattern). No test runs `claude`: the fixtures are canned stream-json.
+# B1-08 fit: Template() equals the frozen launcher test's claude tokens, and Argv(spec) for that
+# test's slot values (profile launch-pack) equals the argv it launches. The adapter never spawns.
+#
+# Round 1, 2026-10-02 (8ec0bd4): 8 tests, 10 fixtures, 29 of 29 mutants killed. FAILED by Opus review.
+#
+# RE-FREEZE r2 2026-10-02: 2026-10-02 re-freeze r2 after Opus review + founder rulings.
+# Founder rulings (2026-10-02, recorded in the DR note above and in 09a §8.2):
+#   A. no tool-description field: init_expect covers exactly tools, mcp_servers, agents, plugins;
+#      the Kernel pins and hashes the MCP config. mcp-description-changed.jsonl is removed and
+#      replaced by mcp-tools-changed.jsonl (one extra MCP tool in system/init).
+#   B. Agent/Task forbidden by default, allowed only with LaunchSpec.FundedTeam (both cases tested).
+#   C. --setting-sources from a pinned profile table (one row: launch-pack -> project); unknown
+#      profiles refused, no verbatim pass-through.
+# Review findings fixed: NaN/+Inf/-Inf budgets refused; per-run fields pinned (session_id, uuid, cwd,
+# model do not abort; each of the four harness fields does); a fixture line of 110,737 bytes
+# (long-line.jsonl) must be read; MCP server rename / removal / same-count tool rename abort;
+# a forbidden flag tested in every string slot and in first and later list positions; tool lists
+# parsed per element ("Read,Agent", "Agent,Read", " Agent", a comma in a forbidden name refused);
+# rate-limit.jsonl -> blocked(capacity), a rate-limit warning does not block.
+# Proof: throwaway reference in $TMPDIR passes 8 of 8 (-race -count=3); 12 fixtures; red 8 of 8 in
+# the repo against the stub. Mutants: 44 of 45 killed. The new ones: budget <= 0 only (NaN/Inf),
+# hash all but session_id/uuid, 64 KiB bufio.Scanner, MCP servers hashed by count only, slot check
+# on three slots only, tool lists not parsed, rate limit ignored, any rate-limit status blocks,
+# FundedTeam ignored, Agent forbidden even when funded-allowed, Agent allowed without FundedTeam,
+# profile passed through, profile case-folded, a tool both allowed and forbidden, mcp_servers /
+# agents / plugins left out of the hash. NOT killed, equivalent: "empty forbidden slot accepted",
+# because the slot rule already refuses an empty slot.
+# Caught while proving r2: the base spec forbids Agent and Task, which masked "Agent allowed, not
+# funded" (it was refused as both-allowed-and-forbidden). Those cases now carry their own list.
+#
+# RE-FREEZE r3 2026-10-02: 2026-10-02 re-freeze r3. Opus review of d0f0fc8 FAILED; checks (a) (b)
+# (d) (e) held. Founder rulings, 2026-10-02, recorded in the DR note:
+#   D. launch-pack -> project (project settings only, never user) is RATIFIED.
+#   E. Rate limits: measure first, freeze later. rate-limit.jsonl and the guessed-shape cases
+#      (blocked(capacity) on status rejected; a warning adjudicates) are REMOVED. Frozen instead:
+#      any unrecognised top-level event (anything but system/assistant/user/result), whatever its
+#      status, never adjudicates -> unresolved or blocked. New fixtures
+#      unrecognised-signal-{rejected,allowed}.jsonl, each with an otherwise clean success.
+# Review findings fixed: long-line.jsonl now holds a 1,137,737-byte line, plus an in-test 4 MiB
+# variant; no-init-result.jsonl (a result with no system/init) and a system-only stream never
+# adjudicate; an MCP server's status alone changing aborts; tool names with whitespace outside
+# parentheses ("Read Agent", "Read\tAgent", "Web Fetch") are refused while "Bash(git diff:*)" is
+# one rule. New test TestB1_06_UnrecognisedSignalNeverPasses: 9 tests, 14 fixtures, red 9 of 9.
+# Proof: reference in $TMPDIR passes 9 of 9 (-race -count=3). Mutants: 51 of 52 killed (all of r2
+# plus: unknown events ignored, only status rejected blocks, only the rate_limit_event type blocks,
+# bufio.Scanner at 1 MiB and at 2 MiB, a result before init accepted, MCP servers hashed by name
+# only, any space refused, inner space ignored). Survivor unchanged and equivalent: empty
+# forbidden slot (the slot rule refuses it).
+#
+# RE-FREEZE r3-nits 2026-10-02: 2026-10-02 final review nits. The final review PASSED 4d4bc92 and
+# left two gaps. (1) MED: the golden init now pins one plugin (lint-hooks); a same-count swap,
+# a changed path, and an emptied list each abort. (2) LOW: Agent(reviewer) and Task(tester) are
+# refused without FundedTeam; with it, Agent(reviewer) is allowed and Agent is not forbidden.
+# Every fixture init changed (the plugin), so all fixture hashes changed. Reference passes 9 of 9
+# (-race -count=3); red 9 of 9. Mutants: 53 of 54 killed. New and killed: plugins hashed by count
+# only; nested-agent check on exact names only. Survivor unchanged and equivalent.
+#
+# RE-FREEZE r4 2026-10-02: 2026-10-02 re-freeze r4 after impl review. The implementation,
+# origin/build/b1-06 @ 22ab9a4, PASSED Opus review; the review found gaps the tests did not pin.
+# Added kernel/internal/adapter/claude_r4_donetest_test.go. claude_donetest_test.go and the 14
+# fixtures are unchanged (hashes identical); r4 adds no fixture, because NothingElseAdjudicates
+# pins the count, so every r4 stream is derived in-test. Four tests:
+#   R4_ToolListsAreASCII (MED, security): any non-ASCII rune in a tool rule is ErrSpec, in
+#     allowed and forbidden, funded or not (U+FEFF/200B/00A0/2028/3000/FF0C, inside parentheses
+#     too). The CLI splits on JS \s, so a funded Agent(x<U+00A0>Bash) would become two rules.
+#   R4_UnrecognisedCountsAsUnparsed (MED): ASSUMPTION, canon silent - an unrecognised event
+#     makes the run UNPARSED (09a §8.8), i.e. Reason == unparsed, so it counts toward the rate.
+#   R4_PermissionModeIsThePinnedOne (LOW): system/init's permissionMode must be "dontAsk"
+#     (09a §8.2 pinned line), else abort before the first tool call; not part of init_expect.
+#   R4_NoTypedOutcomeNeverAdjudicates: is_error missing/null/"false"; an event after the result;
+#     a non-JSON or typeless line; two results; a mistyped result; an unknown kill; and a later
+#     system/init with another harness (aborts).
+# On 22ab9a4 unchanged: R4_ToolListsAreASCII, R4_UnrecognisedCountsAsUnparsed and
+# R4_PermissionModeIsThePinnedOne FAIL; R4_NoTypedOutcomeNeverAdjudicates and all r1-r3 tests pass.
+# Proof, $TMPDIR copies only: 22ab9a4 plus the three fixes passes 13 of 13 (-race -count=3). Ten
+# mutants, each killed: m1 22ab9a4's toolRule; m2 ReasonUnrecognised; m3 mode unchecked; is_error
+# missing taken as false; trailing ignored; unparsed lines ignored; a second result neither
+# counted nor trailing; a later init unchecked; an unknown kill ignored; a malformed result
+# trusted. A mutant runner bug was caught: a build failure was reported as SURVIVED; it now
+# says BUILD-FAIL, and none remain.
+#
+# RE-FREEZE r5 2026-10-02: 2026-10-02 re-freeze r5 after re-review. The Opus re-review FAILED the
+# implementation at a8ea780 (build/b1-06 on the r4 tests at 631ead4). Added
+# kernel/internal/adapter/claude_r5_donetest_test.go; the r1-r4 test files and the 14 fixtures are
+# unchanged (hashes identical), and r5 adds no fixture. Four tests:
+#   R5_NestedParenthesesRefused (HIGH, security): CLI 2.1.287 splits tool lists with a boolean
+#     in-parentheses flag, so "Read(a(b) Bash c)" (unfunded) and "Bash(echo (x) Agent y)" (funded)
+#     grant a bare Bash / Agent. Pinned fail-safe: one parenthesised argument with no parenthesis
+#     and no comma, in either list, funded or not; its whitespace only what frozen canon permits
+#     ("Bash(git diff:*)", r3), read as single interior ASCII spaces - leading, trailing, doubled
+#     spaces and tabs are refused. Controls: Bash(git diff:*), Bash(npm run test:*),
+#     Agent(reviewer), Bash(echo x Agent y) still pass.
+#   R5_KeysAreMatchedExactly (LOW): JSON keys are case-sensitive on the CLI side; a case-variant
+#     key never is the field and never overrides the exact one - permissionmode alone, exact mode
+#     overridden by a variant either side, a variant Model, and is_error / structured_output /
+#     subtype / type variants in a result. Each aborts or stays unresolved; none adjudicates.
+#   R5_LaterInitModeChecked: a later system/init matching init_expect but reporting another mode
+#     aborts (re-review mutant: mode checked on the first init only).
+#   R5_NestedAgentSpellingRefused: agent / AGENT / task / AGENT(x) refused unfunded; funded, a
+#     variant never lifts the Agent forbid (re-review mutant: EqualFold -> ==).
+# On a8ea780 unchanged: R5_NestedParenthesesRefused and R5_KeysAreMatchedExactly FAIL; the other
+# two r5 tests and all r1-r4 tests pass.
+# Proof, $TMPDIR only: a8ea780 plus the r5 fixes passes 17 of 17 (-race -count=3). Mutants, each
+# killed: m1 a8ea780's toolRule (nesting); m1' nesting refused, spaces unchecked; m2 Go's
+# case-insensitive keys; m3a mode on the first init only; m3b EqualFold -> ==. Mutants the
+# re-review called equivalent were skipped, as instructed.
+#
+# RE-FREEZE r6 2026-10-02: 2026-10-02 re-freeze r6 founder ruling F. The Opus re-review PASSED
+# a90071b and found one contract gap, decided by founder ruling F (DR note): Task is an alias of
+# Agent. claude_donetest_test.go IS RE-FROZEN, two assertions only, in TestB1_06_PinnedArgv: a
+# funded team allowed Agent(reviewer), or bare Agent, must have neither Agent nor Task in
+# --disallowedTools. Both asserted Task forbidden until r6, which is what made the CLI deny the
+# funded Agent(reviewer). The r4/r5 files and the 14 fixtures are unchanged; r6 adds no fixture.
+# Added claude_r6_donetest_test.go:
+#   R6_TaskIsAnAliasOfAgent: funded Agent(x)/Task(x) never meets a disallow that denies it (bare
+#     name, or same argument, either name); an explicit such forbid is ErrSpec; unfunded both bare
+#     names are forbidden and no Agent/Task form may be allowed.
+#   R6_BackslashRefused (LOW): a backslash anywhere in a rule, either list, is ErrSpec.
+#   R6_EmptyArgumentRefused, R6_ControlCharacterInArgumentRefused,
+#   R6_PermissionDenialEntryChecked: re-review mutants on code that was right.
+# On a90071b unchanged: TestB1_06_PinnedArgv (the re-frozen assertions), R6_TaskIsAnAliasOfAgent
+# and R6_BackslashRefused FAIL; everything else passes.
+# Proof, $TMPDIR only: a90071b plus the r6 fixes passes 22 of 22 (-race -count=3). Mutants, each
+# killed: no alias (a90071b), no alias-aware conflict check, no backslash check, empty argument
+# accepted, control check dropped in the argument, denial entries unchecked.
+#
+# RE-FREEZE r7 2026-10-02: 2026-10-02 re-freeze r7 after re-review. The Opus re-review PASSED
+# b3cc99d (a39c1ef on cca0666 + ceb9e2b) and found one MED gap. Added claude_r7_donetest_test.go;
+# r1-r6 files and the 14 fixtures are unchanged; r7 adds no fixture. CLI evidence (strings of the
+# installed 2.1.284 and 2.1.287 binaries, no process run): an argument "" or "*" is the bare
+# tool; names match case-sensitively (exact-key alias table, ===, glob RegExp flags s/su).
+#   R7_StarArgumentIsTheBareTool (MED): funded Agent/Task rule + forbid Task(*) or Agent(*) is
+#     ErrSpec; unfunded Agent(*)/Task(*) refused; for every tool a lease with X(*) has the same
+#     outcome as with X (Bash, Read, WebFetch, Agent, Task pairs). Control: Bash(git diff:*)
+#     allowed with Bash(rm:*) forbidden still passes.
+#   R7_CaseVariantNestedForbidRefused: a case-variant Agent/Task forbid meeting an allowed
+#     nested-agent rule is ErrSpec (void in the CLI; r6: never silently void). Kills the
+#     exact-name mutant at claude.go:150 - not equivalent.
+# On b3cc99d unchanged: both r7 tests FAIL (the second only on its TASK(*) row, the star gap);
+# everything else passes.
+# Proof, $TMPDIR only: b3cc99d plus "X(*) is X" passes 24 of 24 (-race -count=3). Mutants, each
+# killed: no star handling (b3cc99d); star only in the nested check; star only in the
+# both-lists check; exact names at :150.
+#
+# RE-FREEZE r7-case 2026-10-02: 2026-10-02 r7 case-variant tool names. Closes r7's OPEN 9 by
+# the orchestrator's call (fail-safe): any allow or forbid rule whose tool name equals a known
+# tool case-insensitively but not exactly is ErrSpec. Added claude_r7_case_donetest_test.go; every
+# earlier file, claude_r7_donetest_test.go included, is unchanged (hashes identical).
+#   R7_CaseVariantToolNamesRefused: bash/BASH/bAsh, read, edit, write, webfetch variants, bare
+#     and with arguments, plus MCP__/Mcp__/mCp__ prefixes - in both lists, funded or not.
+#   R7_ExactToolNamesStillPass: exact names, exact mcp__ names, and longer or unknown names
+#     (Bashful, bashful, readme, webfetcher, SomeNewTool, mcpx__tool) still pass.
+# On b3cc99d unchanged: R7_CaseVariantToolNamesRefused FAILS (with the two r7 tests); the
+# exact-names control passes.
+# Proof, $TMPDIR only: b3cc99d + r7 star fix + the case rule passes 26 of 26 (-race -count=3).
+# Mutants, each killed: no case rule; allow list only; forbid list only; no mcp__ prefix; fold
+# that refuses exact names too; whole rule compared instead of the tool name; prefix match
+# (killed only after "bashful/readme/webfetcher" were added as controls).
+#
+# OPEN (canon gaps, not decided here):
+# 9. (closed 2026-10-02 by r7-case: case-variant tool names refused. Remaining limit: case
+#    variants inside an MCP server or tool name are not caught at Argv time.)
+# 0. (resolved 2026-10-02, ruling F clarified by the founder: a funded team may allow bare Agent
+#    or a named Agent(x), and Task follows the same rule. No test changed; the frozen tests
+#    already accept bare Agent and Task for a funded team.)
+# 1. Exact rate-limit shape: measure on a real run, then re-freeze (ruling E). Until then
+#    blocked(capacity) vs unresolved is not pinned for a rate limit.
+# 2. (resolved by ruling D: the profile row is ratified.)
+# 3. WorkerOutcome is named in canon but never defined; adapter.go defines it.
+# 4. LaunchSpec lacks --agents/--agent/--session-id values; added AgentsPath, Record and SessionID.
+# 5. Status of a harness abort is unspecified: tests require not adjudicate/partial, Reason harness.
+# 6. Unpinned system/init fields: permissionMode, claude_code_version, skills, slash_commands and
+#    output_style neither abort nor are proven not to; tool-list order is not pinned.
+# 7. A description change that keeps the tool names is invisible to system/init; the pinned MCP
+#    config hash (Kernel side) is the control, and it is not B1-06's.
+# 8. Not frozen: canUseTool (SDK route), resume (no pinned resume line), nightly contract check.
+register: B1-06
+jobs:
+  - id: B1-06
+    files:
+      - path: kernel/internal/adapter/claude_donetest_test.go
+        sha256: e7e24ed6a917bb540d3bfa4d6a946b581d094a48a5cd0379de2a4cf6db96e189
+      - path: kernel/internal/adapter/claude_r4_donetest_test.go
+        sha256: 86fc34e6f93d5134a88e1cd1512ecb17c18bb55daacce5c988058894b5f062ca
+      - path: kernel/internal/adapter/claude_r5_donetest_test.go
+        sha256: da38ab2b79d155021106692f913473f0ce7102945105ac9e447d16e05c55dcf5
+      - path: kernel/internal/adapter/claude_r6_donetest_test.go
+        sha256: d89d4a92f74292a8e6d9a4d0aa8919523918c9815bf02eafe174283db0cf3f18
+      - path: kernel/internal/adapter/claude_r7_case_donetest_test.go
+        sha256: 1ac7a040506c23210498c105cc02740cb6995b8be03b4f764c151898800ecd52
+      - path: kernel/internal/adapter/claude_r7_donetest_test.go
+        sha256: a5247169d24852da074ffdb8feaf2d1bab4050d5e0dbd1f0a6bdabcfd4349c61
+      - path: kernel/internal/adapter/testdata/claude/children.jsonl
+        sha256: 4255aca3345580577700335b17198f4b2ea6f17b03376fe50749738d76a3bf3f
+      - path: kernel/internal/adapter/testdata/claude/empty-result.jsonl
+        sha256: daf044db3897b2a44484464e6b52452d16c7bb16fe683d11ed338776d4fbdb77
+      - path: kernel/internal/adapter/testdata/claude/error-during-execution.jsonl
+        sha256: 0affeb3dbfe996220149085cfef33d19e20397845eec28405e93482c3e9dbcad
+      - path: kernel/internal/adapter/testdata/claude/error-max-budget-usd.jsonl
+        sha256: 938510d71653371c8dd102125d383811a50bda046655bfbca1269e8e7791c8b6
+      - path: kernel/internal/adapter/testdata/claude/error-max-structured-output-retries.jsonl
+        sha256: 3d4667f8e8d6169cf9756d3eb6c504f57422b75a2445e50fe162675885a960e8
+      - path: kernel/internal/adapter/testdata/claude/error-max-turns.jsonl
+        sha256: fad6bfd696478c284eaae9ec22ebe5515d33e8168e2e8a05b10ef523f04fa7ab
+      - path: kernel/internal/adapter/testdata/claude/long-line.jsonl
+        sha256: 159a5f18bd2ec1031a4471a883aa08065257e59f84a682c35defd75d239119b6
+      - path: kernel/internal/adapter/testdata/claude/mcp-tools-changed.jsonl
+        sha256: 5425e44e4fb36d7f8c25c21b28960c4f52942e743bdf3cca19ff7cdf4d7333ff
+      - path: kernel/internal/adapter/testdata/claude/no-init-result.jsonl
+        sha256: 0317c0c25095e66d536e3b5da9702014732a3acd7b58e2a7148d90d39616a324
+      - path: kernel/internal/adapter/testdata/claude/no-init.jsonl
+        sha256: 0c759ddbed6f27ed6a14b0b3c2b2dcff7883b128383eede266127916e5af2008
+      - path: kernel/internal/adapter/testdata/claude/success.jsonl
+        sha256: 1e00c6c20736649d9b2628dc1ef81b9aa75788086ab6e9f6dd16362dcae7e65a
+      - path: kernel/internal/adapter/testdata/claude/truncated.jsonl
+        sha256: d16005324f405ffab8cec2c0dcac8d6cabafdf71b8cf74de9dcac72202bd6162
+      - path: kernel/internal/adapter/testdata/claude/unrecognised-signal-allowed.jsonl
+        sha256: ca26060799363ebcead769678a39a3857bc00692f1f78917910e7c8bd5dee40d
+      - path: kernel/internal/adapter/testdata/claude/unrecognised-signal-rejected.jsonl
+        sha256: c5f808a749280ca44f6aa8dc2675ff2a84e05f8f0901697390b8ecc157f2cac4

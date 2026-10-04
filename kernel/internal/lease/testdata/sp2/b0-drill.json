@@ -1,0 +1,26 @@
+{
+  "fixture": "SP2 B0-drill (zombie holder), ported from spikes/collision at commit 2162926 (branch vision/v3-sp2-collision)",
+  "sources": {
+    "declared": "spikes/collision/armB.mjs TASKS (common + per-task)",
+    "ttl": "docs/vision-v3/r4-spikes/SP2-collision.md §3.2 table, B0-drill (TTL 5 s)",
+    "touched_at_land": "spikes/collision/results/logs/dryrun/B0-drill/receipts.jsonl resources",
+    "zombie_refused": "SP2-collision.md §3.2 Finding 4 (7 resources) and B0-drill/events.jsonl reject"
+  },
+  "uri_prefix": "repo://shop-core/",
+  "dispatch_order": ["discount", "tax"],
+  "zombie": "discount",
+  "ttl_ms": 5000,
+  "hot": ["src/config.ts#<header>"],
+  "declared": {
+    "discount": ["src/types.ts#Cart", "src/types.ts#Totals", "src/types.ts#<eof>", "src/config.ts#config", "src/pricing.ts#computeTotal", "src/pricing.ts#<header>", "src/index.ts#*", "test/pricing.test.ts#*", "src/types.ts#+DiscountCode", "src/discounts.ts#*"],
+    "tax": ["src/types.ts#Cart", "src/types.ts#Totals", "src/types.ts#<eof>", "src/config.ts#config", "src/pricing.ts#computeTotal", "src/pricing.ts#<header>", "src/index.ts#*", "test/pricing.test.ts#*", "src/types.ts#+Region", "src/tax.ts#*"]
+  },
+  "touched": {
+    "tax": ["src/config.ts#<header>", "src/config.ts#config", "src/index.ts#*", "src/pricing.ts#<header>", "src/pricing.ts#computeTotal", "src/tax.ts#*", "src/types.ts#+Region", "src/types.ts#<eof>", "src/types.ts#Cart", "src/types.ts#Totals"],
+    "discount": ["src/config.ts#<header>", "src/config.ts#config", "src/discounts.ts#*", "src/index.ts#*", "src/pricing.ts#<header>", "src/pricing.ts#computeTotal", "src/types.ts#+DiscountCode", "src/types.ts#Cart", "src/types.ts#Totals"]
+  },
+  "zombie_refused": {
+    "stale": ["src/config.ts#config", "src/index.ts#*", "src/pricing.ts#<header>", "src/pricing.ts#computeTotal", "src/types.ts#Cart", "src/types.ts#Totals"],
+    "undeclared": ["src/config.ts#<header>"]
+  }
+}

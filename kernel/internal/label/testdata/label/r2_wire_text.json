@@ -1,0 +1,106 @@
+{
+  "cases": [
+    {
+      "name": "control",
+      "want": "valid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":3}",
+      "cite": "09a-ENGINEERING.md:592-609"
+    },
+    {
+      "name": "epoch-minus-zero",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":-0}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: one canonical encoding per integer, so Go and Userland read the same bytes; 09a-ENGINEERING.md:608 (revocation_epoch)"
+    },
+    {
+      "name": "epoch-one-point-zero",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":1.0}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: one canonical encoding per integer, so Go and Userland read the same bytes; 09a-ENGINEERING.md:608 (revocation_epoch)"
+    },
+    {
+      "name": "epoch-exponent",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":3e0}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: one canonical encoding per integer, so Go and Userland read the same bytes; 09a-ENGINEERING.md:608 (revocation_epoch)"
+    },
+    {
+      "name": "epoch-zero-point-zero",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":0.0}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: one canonical encoding per integer, so Go and Userland read the same bytes; 09a-ENGINEERING.md:608 (revocation_epoch)"
+    },
+    {
+      "name": "epoch-leading-zero",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":03}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2: one canonical encoding per integer, so Go and Userland read the same bytes; 09a-ENGINEERING.md:608 (revocation_epoch); RFC 8259 §6 (no leading zero)"
+    },
+    {
+      "name": "dup-taint-quarantined-then-clean",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2; 09a-ENGINEERING.md:588 (exactly this record); B1-02 9d519cb (exact keys, no duplicates)"
+    },
+    {
+      "name": "dup-permission",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"permission\":\"may_authorise\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2; 09a-ENGINEERING.md:588 (exactly this record); B1-02 9d519cb (exact keys, no duplicates)"
+    },
+    {
+      "name": "dup-schema",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2; 09a-ENGINEERING.md:588 (exactly this record); B1-02 9d519cb (exact keys, no duplicates)"
+    },
+    {
+      "name": "dup-in-retention",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\",\"hold\":\"legal\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2; 09a-ENGINEERING.md:588 (exactly this record); B1-02 9d519cb (exact keys, no duplicates)"
+    },
+    {
+      "name": "dup-in-provenance",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"derived_from\":[],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2; 09a-ENGINEERING.md:588 (exactly this record); B1-02 9d519cb (exact keys, no duplicates)"
+    },
+    {
+      "name": "dup-in-author",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\",\"family\":\"founder\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2; 09a-ENGINEERING.md:588 (exactly this record); B1-02 9d519cb (exact keys, no duplicates)"
+    },
+    {
+      "name": "dup-in-source",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\",\"ref\":\"crm:acct_78\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2; 09a-ENGINEERING.md:588 (exactly this record); B1-02 9d519cb (exact keys, no duplicates)"
+    },
+    {
+      "name": "dup-in-principal",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\",\"role\":\"founder\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2; 09a-ENGINEERING.md:588 (exactly this record); B1-02 9d519cb (exact keys, no duplicates)"
+    },
+    {
+      "name": "dup-in-confidence",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5,\"p\":0.9},\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2; 09a-ENGINEERING.md:588 (exactly this record); B1-02 9d519cb (exact keys, no duplicates)"
+    },
+    {
+      "name": "case-variant-beside",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"Taint\":\"clean\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2; 09a-ENGINEERING.md:588 (exactly this record); B1-02 9d519cb (exact keys, no duplicates)"
+    },
+    {
+      "name": "case-variant-in-provenance",
+      "want": "invalid",
+      "text": "{\"schema\":\"label/1\",\"origin\":\"internal\",\"dclass\":\"D1\",\"boundary\":\"guarded\",\"venture\":\"v_keel\",\"retention\":{\"class\":\"operational\",\"hold\":\"none\"},\"permission\":\"informs\",\"exportable\":false,\"taint\":\"quarantined\",\"provenance\":{\"sources\":[{\"ref\":\"crm:acct_77\"}],\"derived_from\":[\"rec_a\"],\"Derived_From\":[],\"author\":{\"title\":\"Kernel Engineer\",\"family\":\"claude\"},\"human_principal\":{\"id\":\"person_x\",\"role\":\"customer\"}},\"confidence\":{\"rung\":\"E2\",\"p\":0.5},\"revocation_epoch\":3}",
+      "cite": "orchestrator ruling 2026-10-02, B1-26 impl review r2; 09a-ENGINEERING.md:588 (exactly this record); B1-02 9d519cb (exact keys, no duplicates)"
+    }
+  ]
+}

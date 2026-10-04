@@ -1,191 +1,359 @@
-// test/run-missions.test.ts — B0-03: runner receipts, refused_subagent, and child jobs keyed by
-// parent_tool_use_id.
+// test/run-missions.test.ts — the founder-run runner's trust-bearing helpers.
 //
-// Nothing here launches `claude -p` or `codex exec`. runMission() takes its spawn as a dependency;
-// each test hands it a fake that replays fixture stream-json lines and records which binaries were
-// asked for. Every test uses its own temp MC_MISSIONS_DIR, so ~/.agentvibe is never touched.
+// The runner spawns real workers and is not run here. What is tested is the part that decides
+// what the board is allowed to say: who counts as having written a file, which line of the
+// Referee's output counts as a verdict, and who may run a mission.
+//
+// Every test uses its own temp MC_MISSIONS_DIR; nothing here touches ~/.agentvibe.
 
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { randomUUID } from 'node:crypto';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { appendMissionLine } from '../server/index-cache.ts';
-import {
-  boardPath,
-  eventsPath,
-  foldBoard,
-  foldTeam,
-  readBoardLines,
-  readLaunchReceipts,
-  type Mission,
-  type TeamEvent,
-} from '../server/missions.ts';
-import { builderArgs, REFUSED_SUBAGENT, runMission, type RunFn, type RunnerDeps } from '../scripts/run-missions.ts';
+import { boardPath, foldBoard, readBoardLines, readEvents, type MissionLine } from '../server/missions.ts';
+import { claimMission, createWriteTracker, parseVerdict, reconcileWorking, releaseMission } from '../scripts/run-missions.ts';
 
 let dir: string;
-let prevDir: string | undefined;
 beforeEach(() => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-runner-'));
-  prevDir = process.env.MC_MISSIONS_DIR;
-  process.env.MC_MISSIONS_DIR = dir;
 });
 afterEach(() => {
-  if (prevDir === undefined) delete process.env.MC_MISSIONS_DIR;
-  else process.env.MC_MISSIONS_DIR = prevDir;
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-function seedMission(): Mission {
-  const id = randomUUID();
-  const ts = Date.now();
-  appendMissionLine({ id, ts, status: 'waiting', title: 'Fixture', goal: 'write out.md' }, boardPath(dir));
-  appendMissionLine({ id, ts: ts + 1, status: 'queued' }, boardPath(dir));
-  const m = foldBoard(readBoardLines(boardPath(dir))).find((x) => x.id === id);
-  if (!m) throw new Error('seed failed');
-  return m;
+const ID = '11111111-1111-4111-8111-111111111111';
+const ID2 = '22222222-2222-4222-8222-222222222222';
+const board = () => boardPath(dir);
+const put = (l: MissionLine) => appendMissionLine(l, board());
+const waiting = (id: string): MissionLine => ({ id, ts: 1, status: 'waiting', title: 't', goal: 'g' });
+const status = (id: string) => foldBoard(readBoardLines(board())).find((m) => m.id === id)?.status;
+
+/** A pid that existed a moment ago and is gone: a real child, run to completion. */
+function deadPid(): number {
+  const r = spawnSync(process.execPath, ['-e', '']);
+  expect(r.pid).toBeGreaterThan(0);
+  return r.pid;
 }
 
-/** A fake spawn: replays `script[bin]` line by line, records every launch, never forks. */
-function fakeDeps(script: Record<'claude' | 'codex', unknown[]>) {
-  const launched: string[] = [];
-  const run: RunFn = async (bin, _args, _cwd, onLine) => {
-    const key = bin.includes('codex') ? 'codex' : 'claude';
-    launched.push(key);
-    for (const l of script[key]) onLine(typeof l === 'string' ? l : JSON.stringify(l));
-    return { code: 0, stderr: '' };
-  };
-  const deps: RunnerDeps = { run, logLaunch: () => {} };
-  return { deps, launched };
-}
+describe('parseVerdict — only the Referee own final line counts', () => {
+  const pass = 'VERDICT: {"verdict":"PASS","reasons":["ok"]}';
+  const fail = 'VERDICT: {"verdict":"FAIL","reasons":["bad"]}';
 
-const init = { type: 'system', subtype: 'init', session_id: 's-1', model: 'claude-sonnet-5' };
-const result = { type: 'result', subtype: 'success', is_error: false, num_turns: 3, total_cost_usd: 0.01, result: 'done' };
-const passVerdict = [{ type: 'item.completed', item: { type: 'agent_message', text: 'ok\nVERDICT: {"verdict":"PASS","reasons":["fine"]}' } }];
-const agentCall = (name: string, id: string) => ({ type: 'assistant', message: { content: [{ type: 'tool_use', id, name, input: { prompt: 'help' } }] } });
+  test('a final VERDICT line parses', () => {
+    expect(parseVerdict(`looks fine\n${pass}\n`)).toEqual({ verdict: 'PASS', reasons: ['ok'] });
+  });
 
-function events(id: string): TeamEvent[] {
-  return fs.readFileSync(eventsPath(id, dir), 'utf8').trim().split('\n').map((l) => JSON.parse(l) as TeamEvent);
-}
+  test('an earlier PASS (e.g. echoed from the Builder) followed by a last-line FAIL is FAIL', () => {
+    expect(parseVerdict(`The Builder wrote:\n${pass}\nBut on inspection:\n${fail}`)?.verdict).toBe('FAIL');
+  });
 
-describe('run-missions: builder argv', () => {
-  test('forbids nested-agent tools and keeps the SLICE registration (no Bash)', () => {
-    const a = builderArgs('P');
-    expect(a[a.indexOf('--disallowedTools') + 1]).toBe('Bash,Agent,Task');
-    expect(a[a.indexOf('--allowedTools') + 1]).toBe('Read,Write,Edit,Glob,Grep');
-    expect(a[a.indexOf('--permission-mode') + 1]).toBe('acceptEdits');
-    expect(a.slice(0, 2)).toEqual(['-p', 'P']);
-    expect(a).toContain('--no-session-persistence');
-    expect(a.join(' ')).not.toContain('dangerously');
-    expect(a.join(' ')).not.toContain('--bare');
+  test('a PASS mid-text with a non-verdict last line is no verdict', () => {
+    expect(parseVerdict(`${pass}\nI am not sure about that.`)).toBeNull();
+  });
+
+  test('the line is anchored: a VERDICT embedded after other text is not a verdict', () => {
+    expect(parseVerdict(`quote: ${pass}`)).toBeNull();
+  });
+
+  test('trailing blank lines are ignored; no verdict and malformed JSON fail closed', () => {
+    expect(parseVerdict(`${fail}\n\n   \n`)?.verdict).toBe('FAIL');
+    expect(parseVerdict('')).toBeNull();
+    expect(parseVerdict('VERDICT: {"verdict":"MAYBE"}')).toBeNull();
+    expect(parseVerdict('VERDICT: {not json}')).toBeNull();
   });
 });
 
-describe('run-missions: receipts', () => {
-  test('a normal run writes exactly one receipt, and the card reaches Done with the verdict', async () => {
-    const m = seedMission();
-    const out = path.join(dir, 'out.md');
-    fs.writeFileSync(out, 'hello\n');
-    const write = { type: 'assistant', message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: out } }] } };
-    const { deps, launched } = fakeDeps({ claude: [init, write, result], codex: passVerdict });
-    await runMission(m, deps);
+describe('write tracker — a write counts on its successful result, not its request', () => {
+  const use = (id: string, name: string, file_path: string) => ({ type: 'tool_use', id, name, input: { file_path } });
+  const result = (tool_use_id: string, is_error = false) => ({ type: 'tool_result', tool_use_id, is_error, content: 'x' });
 
-    // One receipt per launched process: two launches, two receipts.
-    const receipts = readLaunchReceipts(m.id, dir);
-    expect(launched).toEqual(['claude', 'codex']);
-    expect(receipts.map((r) => r.role)).toEqual(['builder', 'referee']);
-    expect(receipts[0]).toMatchObject({ missionId: m.id, role: 'builder', exit: 0, turns: 3, resultSubtype: 'success', unparsedLines: 0 });
-    expect(receipts[1]).toMatchObject({ missionId: m.id, role: 'referee', exit: 0, unparsedLines: 0 });
-    for (const r of receipts) {
-      expect(r.parentLaunchId).toBeUndefined();
-      expect(r.argvHash).toMatch(/^[0-9a-f]{64}$/);
+  test('a Write with a successful result is counted', () => {
+    const t = createWriteTracker();
+    t.onToolUse(use('a', 'Write', 'out.md'));
+    t.onToolResult(result('a'));
+    expect([...t.files()]).toEqual(['out.md']);
+  });
+
+  test('a refused write (is_error) is never counted', () => {
+    const t = createWriteTracker();
+    t.onToolUse(use('a', 'Write', 'out.md'));
+    t.onToolResult(result('a', true));
+    expect([...t.files()]).toEqual([]);
+  });
+
+  test('a write with no result at all is not counted', () => {
+    const t = createWriteTracker();
+    t.onToolUse(use('a', 'Edit', 'out.md'));
+    expect([...t.files()]).toEqual([]);
+  });
+
+  test('results are matched by tool_use_id: one refused, one allowed', () => {
+    const t = createWriteTracker();
+    t.onToolUse(use('a', 'Write', 'denied.md'));
+    t.onToolUse(use('b', 'Write', 'ok.md'));
+    t.onToolResult(result('b'));
+    t.onToolResult(result('a', true));
+    expect([...t.files()]).toEqual(['ok.md']);
+  });
+
+  test('non-write tools and unknown result ids are ignored', () => {
+    const t = createWriteTracker();
+    t.onToolUse(use('a', 'Read', 'in.md'));
+    t.onToolResult(result('a'));
+    t.onToolResult(result('zzz'));
+    expect([...t.files()]).toEqual([]);
+  });
+});
+
+describe('claimMission — one runner per mission', () => {
+  test('a double claim: the second is refused while the first holds the lock', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    expect(claimMission(ID, dir)).toBe(true);
+    expect(claimMission(ID, dir)).toBe(false);
+    expect(status(ID)).toBe('working');
+    // exactly one working line, so exactly one launch
+    expect(readBoardLines(board()).filter((l) => l.status === 'working')).toHaveLength(1);
+  });
+
+  test('a mission no longer queued when the lock is won is refused (finished by another runner)', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    put({ id: ID, ts: 3, status: 'done', verdict: 'PASS' });
+    expect(claimMission(ID, dir)).toBe(false);
+    expect(status(ID)).toBe('done');
+    expect(fs.existsSync(path.join(dir, ID, 'runner.lock'))).toBe(false);
+  });
+
+  test('release frees the lock', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    expect(claimMission(ID, dir)).toBe(true);
+    releaseMission(ID, dir);
+    expect(fs.existsSync(path.join(dir, ID, 'runner.lock'))).toBe(false);
+  });
+
+  test('a stale lock left by a dead runner on a still-queued mission is taken over', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    fs.mkdirSync(path.join(dir, ID), { recursive: true });
+    fs.writeFileSync(path.join(dir, ID, 'runner.lock'), String(deadPid()));
+    expect(claimMission(ID, dir)).toBe(true);
+    expect(status(ID)).toBe('working');
+  });
+
+  test('a lock held by a live pid is not taken over', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    fs.mkdirSync(path.join(dir, ID), { recursive: true });
+    fs.writeFileSync(path.join(dir, ID, 'runner.lock'), String(process.ppid));
+    expect(claimMission(ID, dir)).toBe(false);
+    expect(status(ID)).toBe('queued');
+  });
+});
+
+describe('reconcileWorking — a crashed runner does not leave a card working forever', () => {
+  test('a working card whose runnerPid is dead goes back to waiting, with an event, and its lock is cleared', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'working', runnerPid: deadPid() });
+    fs.mkdirSync(path.join(dir, ID), { recursive: true });
+    fs.writeFileSync(path.join(dir, ID, 'runner.lock'), 'x');
+    expect(reconcileWorking(dir)).toEqual([ID]);
+    expect(status(ID)).toBe('waiting');
+    expect(fs.existsSync(path.join(dir, ID, 'runner.lock'))).toBe(false);
+    const ev = readEvents(ID, dir).find((e) => e.kind === 'status' && /reconcil/i.test(e.text ?? ''));
+    expect(ev).toBeDefined();
+  });
+
+  test('a working card whose runner is alive is left alone', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'working', runnerPid: process.ppid });
+    expect(reconcileWorking(dir)).toEqual([]);
+    expect(status(ID)).toBe('working');
+  });
+
+  test('this runner own cards and non-working cards are left alone; only the dead one is reset', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'working', runnerPid: process.pid });
+    put(waiting(ID2));
+    put({ id: ID2, ts: 2, status: 'working', runnerPid: deadPid() });
+    expect(reconcileWorking(dir)).toEqual([ID2]);
+    expect(status(ID)).toBe('working');
+    expect(status(ID2)).toBe('waiting');
+  });
+});
+
+// ── lock takeover, exclusivity under real concurrency ────────────────────────────────────────
+
+const RUNNER_TS = path.resolve(import.meta.dir, '..', 'scripts', 'run-missions.ts');
+
+/** Run `script` (an ES module body) in a child bun; resolve with its trimmed stdout. */
+function bunRun(script: string, args: string[], env: Record<string, string> = {}): Promise<{ out: string; code: number | null }> {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, ['-e', script, ...args], { env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'inherit'] });
+    let out = '';
+    child.stdout.on('data', (d: Buffer) => (out += d.toString('utf8')));
+    child.on('close', (code) => resolve({ out: out.trim(), code }));
+  });
+}
+
+// Each claimer spins to a shared start instant so they hit the lock together, claims, then stays
+// alive for a moment so a winner is never mistaken for a dead owner by a slower peer.
+const CLAIMER = `
+  import { claimMission } from ${JSON.stringify(RUNNER_TS)};
+  const [id, dir, startAt] = process.argv.slice(1);
+  while (Date.now() < Number(startAt)) {}
+  const won = claimMission(id, dir);
+  console.log(won ? 'WON' : 'LOST');
+  await new Promise((r) => setTimeout(r, 700));
+`;
+
+describe('claimMission — takeover of a stale lock is exclusive', () => {
+  test('N concurrent claimers over a dead-pid lock: exactly one winner, every trial', async () => {
+    const claimers = 6;
+    for (let trial = 0; trial < 12; trial++) {
+      const d = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-race-'));
+      try {
+        const b = boardPath(d);
+        appendMissionLine(waiting(ID), b);
+        appendMissionLine({ id: ID, ts: 2, status: 'queued' }, b);
+        fs.mkdirSync(path.join(d, ID), { recursive: true });
+        fs.writeFileSync(path.join(d, ID, 'runner.lock'), String(deadPid()));
+        const startAt = String(Date.now() + 600);
+        const results = await Promise.all(Array.from({ length: claimers }, () => bunRun(CLAIMER, [ID, d, startAt])));
+        const outs = results.map((r) => r.out);
+        expect(outs.every((o) => o === 'WON' || o === 'LOST')).toBe(true);
+        expect(outs.filter((o) => o === 'WON')).toHaveLength(1);
+        expect(readBoardLines(b).filter((l) => l.status === 'working')).toHaveLength(1);
+      } finally {
+        fs.rmSync(d, { recursive: true, force: true });
+      }
     }
-    expect(receipts[0]!.launchId).not.toBe(receipts[1]!.launchId);
-    const after = foldBoard(readBoardLines(boardPath(dir))).find((x) => x.id === m.id)!;
-    expect(after).toMatchObject({ status: 'done', verdict: 'PASS' });
+  }, 120_000);
+
+  test('a lock removed by a peer between our attempt and our read is free, not a crash', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    // No lock on disk at all, and a stale-owner marker for nothing: the claim must simply succeed.
+    expect(claimMission(ID, dir)).toBe(true);
   });
 
-  test('a Builder that calls Agent is refused_subagent: no Referee, card not advanced', async () => {
-    const m = seedMission();
-    const { deps, launched } = fakeDeps({ claude: [init, agentCall('Agent', 'toolu_A'), result], codex: passVerdict });
-    await runMission(m, deps);
-
-    expect(launched).toEqual(['claude']);
-    const lines = readBoardLines(boardPath(dir)).filter((l) => l.id === m.id);
-    expect(lines.map((l) => l.status)).toEqual(['waiting', 'queued', 'working', 'waiting']);
-    expect(lines.at(-1)!.error).toBe(REFUSED_SUBAGENT);
-    const after = foldBoard(readBoardLines(boardPath(dir))).find((x) => x.id === m.id)!;
-    expect(after.status).toBe('waiting');
-    expect(after.error).toBe(REFUSED_SUBAGENT);
-    expect(after.verdict).toBeUndefined();
-
-    const receipts = readLaunchReceipts(m.id, dir);
-    expect(receipts.map((r) => r.role)).toEqual(['builder']);
-    const builder = foldTeam(m.id, events(m.id)).agents.find((a) => a.agent === 'builder')!;
-    expect(builder.status).toBe('failed');
-    expect(events(m.id).some((e) => e.agent === 'runner' && e.text?.includes(REFUSED_SUBAGENT))).toBe(true);
+  test('an empty lock younger than the bound is held; one older than it is retaken', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    const lock = path.join(dir, ID, 'runner.lock');
+    fs.mkdirSync(path.dirname(lock), { recursive: true });
+    fs.writeFileSync(lock, '');
+    expect(claimMission(ID, dir)).toBe(false);
+    expect(status(ID)).toBe('queued');
+    const old = new Date(Date.now() - 10 * 60_000);
+    fs.utimesSync(lock, old, old);
+    expect(claimMission(ID, dir)).toBe(true);
+    expect(status(ID)).toBe('working');
   });
 
-  test('the nested-agent match is case-insensitive', async () => {
-    const m = seedMission();
-    const { deps, launched } = fakeDeps({ claude: [init, agentCall('agent', 'toolu_a'), result], codex: passVerdict });
-    await runMission(m, deps);
-    expect(launched).toEqual(['claude']);
-    expect(foldBoard(readBoardLines(boardPath(dir))).find((x) => x.id === m.id)!.error).toBe(REFUSED_SUBAGENT);
+  test('a garbage lock past the bound is retaken the same way', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    const lock = path.join(dir, ID, 'runner.lock');
+    fs.mkdirSync(path.dirname(lock), { recursive: true });
+    fs.writeFileSync(lock, 'not-a-pid\n');
+    const old = new Date(Date.now() - 10 * 60_000);
+    fs.utimesSync(lock, old, old);
+    expect(claimMission(ID, dir)).toBe(true);
+  });
+});
+
+// ── the runner, end to end, against fake workers ─────────────────────────────────────────────
+//
+// The real script is spawned with `--once`, with MC_CLAUDE_BIN / MC_CODEX_BIN pointing at two small
+// node scripts. This is the wiring test: claim, release, reconcile and the Referee's output file
+// are exercised through main(), not through the helpers.
+
+const FAKE_CLAUDE = `#!/usr/bin/env node
+const fs = require('node:fs');
+fs.writeFileSync('out.md', 'hello');
+const out = (o) => console.log(JSON.stringify(o));
+out({ type: 'system', subtype: 'init', model: 'fake', session_id: 's1' });
+out({ type: 'assistant', message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: 'out.md' } }] } });
+out({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 't1', is_error: false, content: 'ok' }] } });
+out({ type: 'result', is_error: false, result: 'wrote out.md', total_cost_usd: 0.01, subtype: 'success' });
+`;
+
+const FAKE_CODEX = `#!/usr/bin/env node
+if (process.env.FAKE_CODEX_MODE === 'pass') {
+  const text = 'fine\\nVERDICT: {"verdict":"PASS","reasons":["ok"]}';
+  console.log(JSON.stringify({ type: 'item.completed', item: { type: 'agent_message', text } }));
+}
+`;
+
+describe('run-missions main(), end to end with fake workers', () => {
+  let work: string;
+  let bins: { claude: string; codex: string };
+  beforeEach(() => {
+    work = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-work-'));
+    const mk = (name: string, body: string) => {
+      const f = path.join(work, name);
+      fs.writeFileSync(f, body, { mode: 0o755 });
+      return f;
+    };
+    bins = { claude: mk('fake-claude', FAKE_CLAUDE), codex: mk('fake-codex', FAKE_CODEX) };
+  });
+  afterEach(() => {
+    fs.rmSync(work, { recursive: true, force: true });
   });
 
-  test('unparseable stream lines are counted into the receipt, not dropped silently', async () => {
-    const m = seedMission();
-    const out = path.join(dir, 'out.md');
-    fs.writeFileSync(out, 'hello\n');
-    const write = { type: 'assistant', message: { content: [{ type: 'tool_use', id: 't1', name: 'Write', input: { file_path: out } }] } };
-    const { deps } = fakeDeps({ claude: [init, 'not json', write, '{torn', result], codex: ['garbage', ...passVerdict] });
-    await runMission(m, deps);
-    const receipts = readLaunchReceipts(m.id, dir);
-    expect(receipts.map((r) => [r.role, r.unparsedLines])).toEqual([['builder', 2], ['referee', 1]]);
-  });
+  const runOnce = (mode: 'pass' | 'silent') =>
+    new Promise<number | null>((resolve) => {
+      const child = spawn(process.execPath, [RUNNER_TS, '--once', '--workdir', work, '--launch-log', path.join(work, 'launches.csv')], {
+        env: { ...process.env, MC_MISSIONS_DIR: dir, MC_CLAUDE_BIN: bins.claude, MC_CODEX_BIN: bins.codex, FAKE_CODEX_MODE: mode },
+        stdio: 'ignore',
+      });
+      child.on('close', resolve);
+    });
 
-  test('Task is refused the same way as Agent', async () => {
-    const m = seedMission();
-    const { deps, launched } = fakeDeps({ claude: [init, agentCall('Task', 'toolu_T'), result], codex: passVerdict });
-    await runMission(m, deps);
-    expect(launched).toEqual(['claude']);
-    expect(foldBoard(readBoardLines(boardPath(dir))).find((x) => x.id === m.id)!.error).toBe(REFUSED_SUBAGENT);
-  });
+  test('claims, runs both workers, records the verdict, and releases the lock', async () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    expect(await runOnce('pass')).toBe(0);
+    const m = foldBoard(readBoardLines(board())).find((x) => x.id === ID)!;
+    expect([m.status, m.verdict]).toEqual(['done', 'PASS']);
+    expect(readBoardLines(board()).filter((l) => l.status === 'working')).toHaveLength(1);
+    expect(fs.existsSync(path.join(dir, ID, 'runner.lock'))).toBe(false);
+  }, 30_000);
 
-  test('parent_tool_use_id messages become a linked child receipt drawn as "Builder › subagent"', async () => {
-    const m = seedMission();
-    const child = (text: string) => ({ type: 'assistant', parent_tool_use_id: 'toolu_A', message: { content: [{ type: 'text', text }] } });
-    const { deps } = fakeDeps({ claude: [init, agentCall('Agent', 'toolu_A'), child('child one'), child('child two'), result], codex: passVerdict });
-    await runMission(m, deps);
+  test('a refused claim does not launch: a live-owner lock leaves the mission queued', async () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    put(waiting(ID2));
+    put({ id: ID2, ts: 2, status: 'queued' });
+    fs.mkdirSync(path.join(dir, ID), { recursive: true });
+    fs.writeFileSync(path.join(dir, ID, 'runner.lock'), String(process.pid));
+    expect(await runOnce('pass')).toBe(0);
+    expect(status(ID)).toBe('queued');
+    expect(status(ID2)).toBe('done');
+  }, 30_000);
 
-    const receipts = readLaunchReceipts(m.id, dir);
-    expect(receipts).toHaveLength(2);
-    const [parent, sub] = receipts as [(typeof receipts)[0], (typeof receipts)[0]];
-    expect(parent.role).toBe('builder');
-    expect(sub.role).toBe('builder-subagent');
-    expect(sub.parentLaunchId).toBe(parent.launchId);
-    expect(sub.launchId).toBe(`${parent.launchId}:toolu_A`);
-    expect(sub.endedAt).toBeGreaterThanOrEqual(sub.startedAt);
+  test('startup reconciles a working card whose runner is dead', async () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'working', runnerPid: deadPid() });
+    put(waiting(ID2));
+    put({ id: ID2, ts: 2, status: 'queued' });
+    expect(await runOnce('pass')).toBe(0);
+    expect(status(ID)).toBe('waiting');
+    expect(status(ID2)).toBe('done');
+  }, 30_000);
 
-    const team = foldTeam(m.id, events(m.id));
-    const card = team.agents.find((a) => a.agent === 'builder-subagent')!;
-    expect(card.title).toBe('Builder › subagent');
-    expect(card.status).toBe('failed');
-    // The child's words are drawn on the child's card, never on the Builder's.
-    const builderText = events(m.id).filter((e) => e.agent === 'builder').map((e) => e.text ?? '');
-    expect(builderText.some((t) => t.includes('child one'))).toBe(false);
-    expect(events(m.id).some((e) => e.agent === 'builder-subagent' && e.text === 'child two')).toBe(true);
-    expect(foldBoard(readBoardLines(boardPath(dir))).find((x) => x.id === m.id)!.status).toBe('waiting');
-  });
-
-  test('a child whose parent tool_use line never arrived still gets its own receipt', async () => {
-    const m = seedMission();
-    const orphan = { type: 'assistant', parent_tool_use_id: 'toolu_Z', message: { content: [{ type: 'text', text: 'orphan' }] } };
-    const { deps } = fakeDeps({ claude: [init, orphan, result], codex: passVerdict });
-    await runMission(m, deps);
-    const receipts = readLaunchReceipts(m.id, dir);
-    expect(receipts.map((r) => r.role)).toEqual(['builder', 'builder-subagent']);
-    expect(foldBoard(readBoardLines(boardPath(dir))).find((x) => x.id === m.id)!.error).toBe(REFUSED_SUBAGENT);
-  });
+  test("a previous run's referee-last-message.txt (PASS) is not read as this run's verdict", async () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    fs.mkdirSync(path.join(dir, ID), { recursive: true });
+    fs.writeFileSync(path.join(dir, ID, 'referee-last-message.txt'), 'old run\nVERDICT: {"verdict":"PASS","reasons":["stale"]}\n');
+    expect(await runOnce('silent')).toBe(0);
+    const m = foldBoard(readBoardLines(board())).find((x) => x.id === ID)!;
+    expect(m.status).toBe('failed');
+    expect(m.verdict).toBeUndefined();
+  }, 30_000);
 });

@@ -1,0 +1,122 @@
+# Done-test register, B1-12b: the second half of the outbox (docs/vision-v3/14-BUILD-PLAN.md §6, B1-12:
+# "Outbox + Operation IDs + reconciler; local effectors: git PR, preview deploy, founder-mailbox
+# email"). B1-12a, the outbox core, is registered in B0-17b.yml. Scope: propose_effect over the B1-03
+# socket into the outbox, dispatch fencing on lease tokens, and the three local effectors.
+# Canon: 09a §2, §6, §7, §7.1, §7.2; founder rulings A-C in
+# docs/vision-v3/_process/FOUNDER-RULINGS-2026-10-02-outbox.md.
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest ./internal/effector/
+# kernel/internal/effector/effector.go is NOT registered: it is the contract the job implements.
+#
+# Frozen red on 2026-10-03 against the ErrNotImplemented stub: 13 of 14 tests fail. The 14th,
+# EffectorsReachNoNetwork, is a guard on imports and passes on the stub by design.
+# Green against a reference implementation kept in $TMPDIR only (never committed), sandboxed. The
+# socket test binds under $TMPDIR, which the sandbox allows, so all 14 run sandboxed.
+#
+# MUTANTS. 24, each applied to a $TMPDIR copy of the reference, each killed:
+#   fence re-check before Do removed        -> LeaseLostAfterDispatchingSendsNothing
+#   fence check at Dispatch removed         -> DispatchRefusesStaleLease
+#   fence check at propose removed          -> ProposeRefusals
+#   fence record kept per worker            -> FenceSurvivesRestart (+4)
+#   Config.Crash not passed to the outbox   -> LeaseLost..., CrashBetweenLeaseLossAndDispatch...
+#   effector's visibility lag not forwarded -> LagGuardThroughGateway
+#   lookup always Unknown                   -> CrashBetween..., LagGuard..., RulingsBAndC...
+#   ambiguous provider error made definite  -> RulingsBAndC..., EffectorClassReachesOutbox
+#   class hardcoded check_before            -> EffectorClassReachesOutbox
+#   empty lease_tokens accepted             -> ProposeRefusals
+#   non-string target accepted              -> ProposeRefusals
+#   ErrHostRejected not mapped to ErrRejected -> GitPREffector, PreviewDeployEffector
+#   mailbox lag ignored / read error as Absent / any recipient / no dedupe -> MailboxEffector (4)
+#   git repo allowlist removed / no query before create -> GitPREffector (2)
+#   any environment / any digest / class check_before -> PreviewDeployEffector (3)
+#   net/smtp imported                       -> EffectorsReachNoNetwork
+#   outbox per worker                       -> ConcurrentDuplicatesAcrossGateways (+5)
+#   business_ref dropped from the key       -> every Gateway test (coarse: fails at propose)
+#
+# OPEN (canon silent; the test expects ErrUndecided or pins the reading named here):
+#   O1 venture: propose_effect names none. Pinned: one Gateway per venture (Config.Venture).
+#   O2 no lease: lease_tokens {} -> ErrUndecided.
+#   O3 Target: 09a names it, never defines it. A JSON string is the target; any other type ->
+#      ErrUndecided.
+#   O4 TokenSet wire form: pinned as {resource: B1-02 bigint string}.
+#   O5 request id: propose_effect has none; the business key is the only deduplication.
+#   O6 a lease lost between journaling dispatching and the provider call: pinned as a definite
+#      failure (nothing sent), so the lease's new holder may dispatch it.
+#   O7 effector payload shapes and sandbox rules: founder recipient only, allow-listed repos,
+#      environment "preview" only, digest "sha256:" + 64 lowercase hex.
+# NOT COVERED: the gateway epoch (09a §15 external fencing authority); a raw socket(2) through
+# syscall (the import guard allows syscall, which the outbox's flock needs); a Reconcile that
+# dispatches is caught only through send counts in LagGuard.
+#
+# RE-FREEZE 2026-10-03: 2026-10-03 rulings B1-12b. O1-O7 are ruled, so OPEN above is closed;
+# the rulings are recorded in docs/vision-v3/_process/DR-B1-12B-RULINGS-2026-10-03.md. The round-1
+# file was edited in place, because its ErrUndecided cases and its definite-failure reading of O6
+# contradicted the rulings. Its old hash, 6e0e5b6e…0a88, is superseded.
+#   Q1 the venture is taken from the job's lease, never from the request: Config.Ventures; a lease
+#      of another venture -> ErrWrongVenture; a socket line naming a venture -> invalid_field.
+#   Q2 no lease -> ErrNoLease.  Q3 target non-string -> ErrInvalidTarget.  Q4, Q5 unchanged.
+#   Q6 CHANGED: a lease lost mid-dispatch is uncertain, never definite. LeaseLostAfterDispatching
+#      now requires uncertain, the new holder refused inside the lag, and one send after Absent.
+#      The new LeaseLostInFlightEffectHappensOnce requires that the old holder's effect lands, the
+#      new holder is refused, and the effect happens exactly once (dies / times out / answers ok).
+#   Q7 tight effector limits; the founder recipient must match exactly (case variant refused).
+# Now 15 tests: 14 fail on the stub; the import guard passes on it by design. All 15 pass against
+# the updated $TMPDIR reference, run sandboxed. The new mutants were each killed:
+#   pre-call lease loss made definite (ErrRejected)  -> LeaseLostAfterDispatchingSendsNothing
+#   fence checked after Do, lost lease made definite -> LeaseLostInFlightEffectHappensOnce
+#   venture check removed                            -> ProposeRefusals
+#   founder recipient matched case-insensitively     -> MailboxEffector
+# All 24 earlier mutants were re-run against this file and each is still killed: 28 of 28.
+#
+# RE-FREEZE r2 2026-10-03: 2026-10-03 re-freeze r2 after review. The Opus review PASSED d75c5c5,
+# the implementation of c982bb9, and left the gaps below. Added effector_r2_donetest_test.go.
+#
+# The round-1 file changed in two lines only, to follow the contract: fakeDeploy takes the new
+# environment argument, and the deploy test allow-lists its project. Its hash moves from 9633fe44…
+# to the one below. Contract change, in effector.go, which is unregistered: DeployHost.Deploy takes
+# the environment explicitly, DeployConfig gains Projects, and the payload and mailbox rules are
+# documented.
+#   1 MED deploy target: the host is told environment "preview"; the project is allow-listed (none
+#     listed refuses everything); a prod flag or target in an unknown key, a duplicate key or
+#     trailing data is refused, and the host is never called          -> R2DeployTargetIsPinned
+#   2 MED founder exact (founder@….evil, display-name, list, padding, case) -> R2MailboxFounderIsExact
+#     CR or LF in any header field (To, Subject); the body may break lines -> R2HeaderLineBreaksRefused
+#   3 LOW fence record never replaced by a later proposal               -> R2FenceRecordIsNeverReplaced
+#     cheap kills: unsafe idem, trailing data             -> R2MailboxRefusesUnsafeInput
+#                  empty target, PR without base/head/title -> R2IncompleteRequestsRefused
+#                  incomplete Gateway/effector Config       -> R2ConstructorsRefuseIncompleteConfig
+# ON d75c5c5: the package no longer compiles, because local.go calls the old Deploy, so every test
+# fails. With ONLY that call adapted (a compile shim, $TMPDIR), exactly one test fails:
+# R2DeployTargetIsPinned. The other 21 pass, the 7 round-2 tests among them.
+# MUTANTS, against a $TMPDIR reference (d75c5c5 plus the allow-list, the environment argument and a
+# duplicate-key check; never committed), each killed:
+#   founder check as strings.Contains (local.go:90)    -> R2MailboxFounderIsExact, R2HeaderLineBreaks…
+#   subject CR/LF check removed (local.go:93)          -> R2HeaderLineBreaksRefused
+#   fence overwritten: Stat bypassed + Link->Rename    -> R2FenceRecordIsNeverReplaced
+#   fence overwritten: Stat bypassed + WriteFile       -> R2FenceRecordIsNeverReplaced
+#   project allow-list removed / environment not passed / dup-key check removed / unknown keys
+#     allowed                                          -> R2DeployTargetIsPinned
+#   environment check removed                          -> PreviewDeployEffector, R2DeployTargetIsPinned
+#   trailing data allowed                              -> R2DeployTargetIsPinned, R2MailboxRefusesUnsafe…
+#   unsafe idem allowed                                -> R2MailboxRefusesUnsafeInput
+#   PR field check removed / empty target allowed      -> R2IncompleteRequestsRefused
+#   mailbox, Gateway or nil-effector config check removed -> R2ConstructorsRefuseIncompleteConfig
+# EQUIVALENT, judged and not pinned:
+#   - gateway.go:169's Stat check alone, or the Link alone swapped for Rename: each is covered by the
+#     other line, because Link never replaces an existing file and Stat is a fast path. A mutant that
+#     defeats both is killed (above).
+#   - parseTokens' m == nil, r == "", and checkFence's len(resources) == 0 and fenceOf's len == 0:
+#     the input is refused anyway, by ErrNoLease, the Fence, or the record never being empty.
+#   - fencePath's opID check: find() refuses an unknown id first.
+#   - fenced.Do with no fence in the context: unreachable, since the outbox calls Do only from Dispatch.
+# The reviewer's other surviving mutants were not listed by line in the brief, so these are this
+# builder's own sweep, not a one-to-one answer to the 13.
+register: B1-12b
+jobs:
+  - id: B1-12b
+    files:
+      - path: kernel/internal/effector/effector_donetest_test.go
+        sha256: 401fb96fa64ae9b57e3b9ce090092ab9ce671d5e2fef57480545cea6ca50c853
+      - path: kernel/internal/effector/effector_r2_donetest_test.go
+        sha256: 5fa3a66447607b70c685f1ddfeffe68d43c66e49973a040832a63a03fb7c06ee
