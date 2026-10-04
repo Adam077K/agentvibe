@@ -534,6 +534,45 @@ describe('createApp — a foreign Host is refused with 421 on EVERY route, metho
     expect(state.isBuilt).toBe(false);
   });
 
+  test('NOTHING exempts a foreign Host — no Sec-Fetch shape, no X-Requested-With, no Origin or Referer, no query', async () => {
+    // A rebinding page can load `/api/fleet` in a same-origin <iframe> and read it: that request
+    // is navigate + iframe. A user click makes it navigate + document + Sec-Fetch-User ?1. A page
+    // can add X-Requested-With itself, and the query is the attacker's to write. Origin and
+    // Referer naming us are not a browser vector here (the page's own origin is evil.example) but
+    // they are client-settable, and the contract is that Host alone decides.
+    const app0 = appWith();
+    const constant = (await settle(await app0.fetch(rebound('/api/health')))).body;
+    const loop = `127.0.0.1:${PORT}`;
+    const shapes: Record<string, string>[] = [
+      { 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'iframe' },
+      { 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'document', 'sec-fetch-user': '?1' },
+      { 'sec-fetch-site': 'same-origin', 'x-requested-with': 'XMLHttpRequest' },
+      { 'sec-fetch-site': 'none', 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'frame', 'sec-fetch-user': '?1' },
+      { origin: `http://${loop}` },
+      { referer: `http://${loop}/` },
+    ];
+    for (const p of ['/api/fleet', '/api/fleet?local', '/api/fleet?local=1']) {
+      for (const headers of shapes) {
+        const state = fixtureState(`exempt-${Math.random().toString(36).slice(2)}`);
+        const res = await settle(await createApp(state, dist).fetch(rebound(p, { headers }), loopbackPeer('127.0.0.1')));
+        expect({ p, headers, status: res.status }).toEqual({ p, headers, status: REFUSED });
+        expect({ p, headers, body: res.body }).toEqual({ p, headers, body: constant });
+        expect({ p, headers, built: state.isBuilt }).toEqual({ p, headers, built: false });
+      }
+    }
+  }, 30_000);
+
+  test('the verdict is per request — an allowed request does not vouch for the next one', async () => {
+    // A guard that memoised its verdict by Host header would let a hostless foreign-URL request
+    // ride on an earlier hostless loopback one. Same app, back to back.
+    const app = appWith();
+    expect((await app.fetch(new Request(`http://127.0.0.1:${PORT}/api/health`))).status).toBe(200);
+    expect((await settle(await app.fetch(new Request(`http://${EVIL}/api/health`)))).status).toBe(REFUSED);
+    expect((await app.fetch(ours('/api/health'))).status).toBe(200);
+    const sameHostForeignUrl = new Request(`http://${EVIL}/api/health`, { headers: { host: `127.0.0.1:${PORT}` } });
+    expect((await settle(await app.fetch(sameHostForeignUrl))).status).toBe(REFUSED);
+  });
+
   test('a cross-site request with OUR Host is still guard.ts\'s to refuse (403) — the two do not merge', async () => {
     const app = appWith();
     const res = await app.fetch(ours('/api/health', `127.0.0.1:${PORT}`, { headers: { 'sec-fetch-site': 'cross-site' } }));
