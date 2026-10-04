@@ -38,11 +38,11 @@ export function singleFlight(): <T>(fn: () => Promise<T>) => Promise<boolean> {
 function PendingCard({ d, now, onAnswer, busy }: { d: DecisionRow; now: number; onAnswer: (id: string, choice: string) => void; busy: boolean }) {
   return (
     <div className="rounded border border-warn/60 bg-raised px-4 py-3" data-testid={`decision-${d.id}`}>
-      <div className="flex items-baseline justify-between gap-3 text-[11px] text-dim">
+      <div className="flex items-baseline justify-between gap-3 text-xs text-dim">
         <span>{d.missionTitle ?? `mission ${d.missionId.slice(0, 8)}`}</span>
         <span>{formatRelative(d.createdAt, now)}</span>
       </div>
-      <p className="mt-1 text-[14px] text-text">{d.question}</p>
+      <p className="mt-1 text-sm text-text">{d.question}</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {d.options.map((o) => (
           <button
@@ -50,7 +50,7 @@ function PendingCard({ d, now, onAnswer, busy }: { d: DecisionRow; now: number; 
             type="button"
             disabled={busy}
             onClick={() => onAnswer(d.id, o)}
-            className="rounded border border-line-strong px-3 py-1 text-[13px] text-text transition-colors hover:border-live disabled:cursor-wait disabled:opacity-50"
+            className="rounded border border-line-strong px-3 py-1 text-sm text-text transition-colors hover:border-live disabled:cursor-wait disabled:opacity-50"
           >
             {o}
           </button>
@@ -64,7 +64,7 @@ export function DecisionHistory({ rows, now }: { rows: DecisionRow[]; now: numbe
   return (
     <ul className="space-y-1" data-testid="decision-history">
       {rows.map((d) => (
-        <li key={d.id} className="text-[12px] text-muted">
+        <li key={d.id} className="text-xs text-muted">
           <span className="fig text-dim">{formatRelative(d.answeredAt ?? d.createdAt, now)}</span>{' '}
           <span className="text-text">{d.question}</span>{' '}
           {d.status === 'answered' ? (
@@ -117,7 +117,7 @@ export function DecisionsView({ now, onFreshness }: { now: number; onFreshness?:
         </span>
       </HeadlineBar>
       <div className="px-6 py-4">
-        {(err || feed.error) && <p className="mb-3 text-[12px] text-bad">{err ?? feed.error}</p>}
+        {(err || feed.error) && <p className="mb-3 text-xs text-bad">{err ?? feed.error}</p>}
         {feed.data && pending.length === 0 && (
           <EmptyState
             headline="Nothing is waiting on you."
@@ -136,7 +136,7 @@ export function DecisionsView({ now, onFreshness }: { now: number; onFreshness?:
         </div>
         {history.length > 0 && (
           <section className="mt-8">
-            <h2 className="mb-2 text-[12px] uppercase tracking-wide text-dim">Recently answered</h2>
+            <h2 className="mb-2 text-xs uppercase tracking-wide text-dim">Recently answered</h2>
             <DecisionHistory rows={history} now={now} />
           </section>
         )}

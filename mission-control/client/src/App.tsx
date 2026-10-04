@@ -358,7 +358,7 @@ export function AppBar({
           >
             {t.label}
             {(badges[t.id] ?? 0) > 0 && (
-              <span className="fig ml-1.5 rounded-[3px] bg-warn/20 px-1 text-[11px] text-warn" title={`${badges[t.id]} waiting on you`}>
+              <span className="fig ml-1.5 rounded-[3px] bg-warn/20 px-1 text-xs text-warn" title={`${badges[t.id]} waiting on you`}>
                 {badges[t.id]}
               </span>
             )}
