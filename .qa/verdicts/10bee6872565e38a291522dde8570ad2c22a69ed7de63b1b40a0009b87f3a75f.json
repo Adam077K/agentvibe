@@ -1,0 +1,11 @@
+{
+  "subject": "10bee6872565e38a291522dde8570ad2c22a69ed7de63b1b40a0009b87f3a75f",
+  "base": "963613b127794775981c8d464a8b41e078918777",
+  "tier": "full",
+  "tier_driver": "mission-control/scripts/decisions.ts",
+  "verdict": "PASS",
+  "by": "r139-reviewer (opus-5.5)",
+  "run_id": null,
+  "evidence": null,
+  "recorded_at": "2026-10-04T16:01:10.324Z"
+}
