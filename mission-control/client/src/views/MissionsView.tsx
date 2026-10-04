@@ -9,7 +9,7 @@
 // Polling, not SSE: see server/routes/missions.ts for why.
 
 import { useCallback, useEffect, useState, type DragEvent, type FormEvent } from 'react';
-import type { DecisionsPayload, Mission, MissionsPayload, TeamView } from '../api.ts';
+import type { AgentCard, DecisionsPayload, Mission, MissionsPayload, TeamView } from '../api.ts';
 import { formatRelative } from '../format.ts';
 import { HeadlineBar } from '../ui.tsx';
 import type { Freshness } from '../App.tsx';
@@ -159,6 +159,41 @@ export function Card({
   );
 }
 
+/** One agent's card in the Team panel. Shows the family of the model that ran; flags a seat/model mismatch. */
+export function AgentCardView({ a, now }: { a: AgentCard; now: number }) {
+  return (
+    <div className="rounded border border-line bg-row-alt p-3" data-testid={`agent-${a.agent}`}>
+      <div className="flex items-baseline justify-between">
+        <span className="text-[13px] text-text">
+          {a.title} <span className="fig text-muted">· {a.model}</span> <span className="text-dim">({a.family})</span>
+          {a.slotMismatch && (
+            <span
+              className="fig ml-1 text-[11px] text-warn"
+              data-testid="slot-mismatch"
+              title={`slot declares ${a.slotMismatch.slotFamily} but model is ${a.slotMismatch.family}`}
+            >
+              model ≠ slot
+            </span>
+          )}
+        </span>
+        <span className={`fig text-[11px] ${a.status === 'failed' ? 'text-bad' : a.status === 'finished' ? 'text-live' : a.status === 'stopped' ? 'text-dim' : 'text-warn'}`}>
+          {a.status}
+        </span>
+      </div>
+      <div className="mt-1 text-[11px] text-dim">
+        {a.eventCount} events{typeof a.costUsd === 'number' ? ` · $${a.costUsd.toFixed(4)}` : ''}
+      </div>
+      <ol className="mt-2 space-y-1">
+        {a.latest.map((e, i) => (
+          <li key={i} className="text-[11px] text-muted">
+            <span className="fig text-dim">{formatRelative(e.ts, now)}</span> <span className="text-text">{e.kind}</span> {e.text}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 function TeamPanel({ mission, now }: { mission: Mission; now: number }) {
   const active = mission.status === 'queued' || mission.status === 'working';
   const { data, error } = usePoll<TeamView>(`/api/missions/${mission.id}/team`, active ? 1000 : 5000);
@@ -175,26 +210,7 @@ function TeamPanel({ mission, now }: { mission: Mission; now: number }) {
       )}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {data?.agents.map((a) => (
-          <div key={a.agent} className="rounded border border-line bg-row-alt p-3" data-testid={`agent-${a.agent}`}>
-            <div className="flex items-baseline justify-between">
-              <span className="text-[13px] text-text">
-                {a.title} <span className="fig text-muted">· {a.model}</span> <span className="text-dim">({a.family})</span>
-              </span>
-              <span className={`fig text-[11px] ${a.status === 'failed' ? 'text-bad' : a.status === 'finished' ? 'text-live' : a.status === 'stopped' ? 'text-dim' : 'text-warn'}`}>
-                {a.status}
-              </span>
-            </div>
-            <div className="mt-1 text-[11px] text-dim">
-              {a.eventCount} events{typeof a.costUsd === 'number' ? ` · $${a.costUsd.toFixed(4)}` : ''}
-            </div>
-            <ol className="mt-2 space-y-1">
-              {a.latest.map((e, i) => (
-                <li key={i} className="text-[11px] text-muted">
-                  <span className="fig text-dim">{formatRelative(e.ts, now)}</span> <span className="text-text">{e.kind}</span> {e.text}
-                </li>
-              ))}
-            </ol>
-          </div>
+          <AgentCardView key={a.agent} a={a} now={now} />
         ))}
       </div>
       {data && data.receipts.length > 0 && (

@@ -1,0 +1,11 @@
+{
+  "subject": "4fa82bb88f9c536d5ff29c43207394895e9483f2b08501b711aabacf878833f2",
+  "base": "ea94275337bd6798f55ee0ff324ed08af5d4068c",
+  "tier": "full",
+  "tier_driver": "mission-control/scripts/scorecard.ts",
+  "verdict": "PASS",
+  "by": "j3-reviewer (opus-5.5)",
+  "run_id": null,
+  "evidence": null,
+  "recorded_at": "2026-10-04T11:35:18.378Z"
+}

@@ -49,9 +49,11 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/Adam077K/agentvibe/kernel/internal/journal"
 )
@@ -783,13 +785,88 @@ type repoVerifier struct {
 
 const repoScheme = "repo://"
 
-// covers reports whether presented resource p covers touched resource t.
+// covers reports whether presented resource p covers touched resource t: p is t, or p is a glob
+// "<dir>/**" over a canonical repository directory and t lies strictly below it. Nothing else is a
+// glob, so repo://**, repo://a**, repo://a/* and repo://a/**/ are exact names and cover only
+// themselves; a glob over any other scheme keeps its plain prefix meaning. Receive and the hot-set
+// expansion (hot.go touches) both use it.
 func covers(p, t string) bool {
 	if p == t {
 		return true
 	}
-	if strings.HasSuffix(p, "/**") {
-		return strings.HasPrefix(t, strings.TrimSuffix(p, "**"))
+	if !strings.HasPrefix(p, repoScheme) {
+		// Not repo://: the canonical predicate does not apply, and a glob keeps its original meaning.
+		return strings.HasSuffix(p, "/**") && strings.HasPrefix(t, strings.TrimSuffix(p, "**"))
+	}
+	pre, ok := globPrefix(p)
+	return ok && below(pre, t, false)
+}
+
+// globPrefix returns "<dir>/" for a presented glob "<dir>/**" whose dir is a canonical repository
+// directory, and false for every other spelling.
+func globPrefix(p string) (string, bool) {
+	dir, ok := strings.CutSuffix(p, "/**")
+	if !ok || !strings.HasPrefix(dir, repoScheme) || !canonSegs(dir[len(repoScheme):]) {
+		return "", false
+	}
+	return dir + "/", true
+}
+
+// below reports whether t lies strictly below the glob prefix pre. A caller that has already judged t
+// canonical passes canon to skip re-checking its segments.
+func below(pre, t string, canon bool) bool {
+	rest, ok := strings.CutPrefix(t, pre)
+	if !ok {
+		return false
+	}
+	file, _, _ := strings.Cut(rest, "#")
+	return canon || canonSegs(file)
+}
+
+// canonSegs reports whether s is a "/"-joined run of canonical segments: each non-empty, not a dot
+// segment (literally or with a dot spelled %2e in any case), and free of controls, '*', a backslash
+// and an encoded separator (%2f, %5c in any case). Other percent-encodings are literal bytes.
+func canonSegs(s string) bool {
+	for _, seg := range strings.Split(s, "/") {
+		low := strings.ToLower(seg)
+		if seg == "" || hasControl(seg) || strings.ContainsAny(seg, "*\\") || strings.Contains(low, "%2f") || strings.Contains(low, "%5c") {
+			return false
+		}
+		if dots := strings.ReplaceAll(low, "%2e", "."); dots == "." || dots == ".." {
+			return false
+		}
+	}
+	return true
+}
+
+// canonicalTouched reports whether t is a name storage could have produced:
+// repo://<repo>/<path>#<anchor>, split at the first '#', byte for byte. The repository and every path
+// segment satisfy canonSegs, and there is at least one path segment. The anchor is a symbol name:
+// non-empty, no '/', '\\', '#', '%', control character or "..", and '*' only as the whole anchor.
+func canonicalTouched(t string) bool {
+	if !utf8.ValidString(t) {
+		return false
+	}
+	file, anchor, found := strings.Cut(t, "#")
+	rest, ok := strings.CutPrefix(file, repoScheme)
+	if !found || !ok || anchor == "" || !strings.Contains(rest, "/") || !canonSegs(rest) {
+		return false
+	}
+	if anchor == "*" {
+		return true
+	}
+	if strings.ContainsAny(anchor, "*/\\#%") || strings.Contains(anchor, "..") {
+		return false
+	}
+	return !hasControl(anchor)
+}
+
+// hasControl reports a C0 control, DEL or a C1 control (U+0080-U+009F) in s.
+func hasControl(s string) bool {
+	for _, c := range s {
+		if c < 0x20 || (c >= 0x7f && c <= 0x9f) {
+			return true
+		}
 	}
 	return false
 }
@@ -808,8 +885,15 @@ func (v *repoVerifier) Receive(ctx context.Context, p Push) error {
 		presented = append(presented, r)
 	}
 	sort.Strings(presented)
+	// A glob's prefix is computed once per presented resource, not once per touched name.
+	prefix := make(map[string]string, len(presented))
+	for _, r := range presented {
+		if pre, ok := globPrefix(r); ok {
+			prefix[r] = pre
+		}
+	}
 
-	var foreign, undeclared, stale []string
+	var foreign, malformed, undeclared, stale []string
 	seen := map[string]bool{}
 	for _, t := range p.Touched {
 		if seen[t] {
@@ -819,17 +903,22 @@ func (v *repoVerifier) Receive(ctx context.Context, p Push) error {
 		// Only repo:// is judged here. The other verifiers of 09a §6 are a logged follow-up, and a
 		// resource this verifier cannot judge is refused, never waved through.
 		if !strings.HasPrefix(t, repoScheme) {
-			foreign = append(foreign, t)
+			foreign = append(foreign, strconv.Quote(t))
+			continue
+		}
+		// A name storage would not have produced is refused, never normalised and then judged.
+		if !canonicalTouched(t) {
+			malformed = append(malformed, strconv.Quote(t))
 			continue
 		}
 		var cover []string
 		for _, r := range presented {
-			if covers(r, t) {
+			if pre, glob := prefix[r]; r == t || (glob && below(pre, t, true)) {
 				cover = append(cover, r)
 			}
 		}
 		if len(cover) == 0 {
-			undeclared = append(undeclared, t)
+			undeclared = append(undeclared, strconv.Quote(t))
 			continue
 		}
 		ok := false
@@ -849,10 +938,10 @@ func (v *repoVerifier) Receive(ctx context.Context, p Push) error {
 			why = append(why, fmt.Sprintf("presented %d, %s", p.Tokens[r], cur))
 		}
 		if !ok {
-			stale = append(stale, fmt.Sprintf("%s (%s)", t, strings.Join(why, "; ")))
+			stale = append(stale, fmt.Sprintf("%q (%s)", t, strings.Join(why, "; ")))
 		}
 	}
-	if len(foreign)+len(undeclared)+len(stale) == 0 {
+	if len(foreign)+len(malformed)+len(undeclared)+len(stale) == 0 {
 		return nil
 	}
 	// Name only what is refused: an accepted touched resource never appears in the refusal.
@@ -865,6 +954,9 @@ func (v *repoVerifier) Receive(ctx context.Context, p Push) error {
 	if len(stale) > 0 {
 		parts = append(parts, "stale: "+strings.Join(stale, ", "))
 		wrapped = append(wrapped, ErrStaleToken)
+	}
+	if len(malformed) > 0 {
+		parts = append(parts, "non-canonical (want repo://<repo>/<path>#<anchor>): "+strings.Join(malformed, ", "))
 	}
 	if len(foreign) > 0 {
 		parts = append(parts, "not repo:// (this verifier judges repo:// only): "+strings.Join(foreign, ", "))
