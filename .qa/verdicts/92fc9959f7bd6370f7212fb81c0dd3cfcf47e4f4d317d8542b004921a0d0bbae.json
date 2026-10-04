@@ -1,0 +1,11 @@
+{
+  "subject": "92fc9959f7bd6370f7212fb81c0dd3cfcf47e4f4d317d8542b004921a0d0bbae",
+  "base": "c367d15c71e2fe4e887d47d8f59c8a857900f53f",
+  "tier": "lite",
+  "tier_driver": "build/done-tests/B1-04r.yml",
+  "verdict": "PASS",
+  "by": "b109a-reviewer (opus-5.5)",
+  "run_id": null,
+  "evidence": null,
+  "recorded_at": "2026-10-04T12:06:37.207Z"
+}
