@@ -92,6 +92,34 @@
 #   empty segment, reported as stale, whole push named, repo ignored, glob covers its root).
 #   Note for the implementer: hot.go's touches() calls covers(); the reference changed covers(), so a
 #   requested repo://** stops pulling in hot resources. No frozen test depends on that either way.
+#
+# RE-FREEZE r5 2026-10-04: red-team r1 of LC-1 @6c030a5 returned GAPS (13 of 37 mutants survived,
+#   9 real, plus 1 over-specified assertion). fence_cover_donetest_test.go 3a3ecacd... -> 1761d852...
+#   Rulings, orchestrator ceo-1, 2026-10-04:
+#   R1 hot.go touches() uses the SAME glob predicate as Receive: a glob covering nothing in Receive
+#      (repo://**, repo:///**, repo://x**) pulls no hot resource into a grant. Supersedes r4's
+#      "No frozen test depends on that either way" note.
+#   R2 The anchor is a symbol name: non-empty; no '/', '\', '#', '%', C0 or C1 control, no "..";
+#      '*' only as the whole anchor. Split at the FIRST '#', so a second '#' is refused. Grep before
+#      freezing: every repo:// anchor in kernel code and tests (#f #* #<header> #<eof> #+Region
+#      #total #config #keep #Cart #computeTotal ...) satisfies R2 except the hot resource
+#      repo://x/src/a.ts#b#c in fence_r_donetest_test.go (HotSetValidationAndOrder), which is only
+#      AddHot-ed and acquired there, never pushed; R2 judges touched names only. job:// anchors
+#      (#fence=1, #<token>) are another scheme and untouched.
+#   R3 A path or repository segment holding '\' or %2f %2F %5c %5C is refused, fail closed; any
+#      other percent-encoding is byte-literal.
+#   Gaps closed: (1) the repository segment is held to C2 (repo://../, %2e%2e, ., empty, *, a#f;
+#   a held repo://../** and friends cover nothing); (2) every case mix of %2e; (3) repo://a/**/,
+#   repo://a**, repo://a/*, repo://a/**/** are exact names, refusing repo://a/x.ts#f and
+#   repo://ab/x.ts#f as ErrUndeclared (new GlobSpelling); (4) repo://a/100%25.md#*, a%2ex and
+#   %2e%2ex are ACCEPTED; (5) repo://b#f no longer pinned to ErrUndeclared (C6). New tests:
+#   GlobSpelling (green pin on c367d15), HotUsesSameRule (R1).
+#   Red 5 of 7 on c367d15 (ByteExact, GlobSpelling are green pins); every other lease test passes,
+#   tagged, untagged, -race. Scratch reference ($TMPDIR, not committed) passes all four configs
+#   (-race -count=2 tagged). Mutants 47 of 47 killed: the 22 of r4, 12 for the survivor classes
+#   (repo segment unchecked / empty only / literal dots only / '*'; the r4 fixed dot list; mixed
+#   case; "**" without slash; trailing "/" trimmed; "/*" one level; any %, any %2e, decoded ".."
+#   prefix refused), 2 for R1, 9 for R2, 3 for R3.
 register: B1-04r
 jobs:
   - id: B1-04
@@ -101,4 +129,4 @@ jobs:
       - path: kernel/internal/lease/testdata/sp2/b0-greedy.json
         sha256: 4c49c99136af858d19056aa377f75ea6871d0e736ac2319ecee981f8a558380e
       - path: kernel/internal/lease/fence_cover_donetest_test.go
-        sha256: 3a3ecacd7f5683cc157e5a6b4eb9f59dff61e51ca409b06f92b138e7ad1f0687
+        sha256: 1761d852edc9a44a3bf3079a839a6302e0ccd5d1b80b3fb0d499d4dc704d397a

@@ -45,6 +45,24 @@
 //	   ErrUndeclared, or no sentinel (as a non-repo:// refusal does). An uncovered canonical resource
 //	   is ErrUndeclared, as before.
 //
+// RE-FREEZE r5 (red-team r1 of 6c030a5; orchestrator ceo-1 rulings, 2026-10-04):
+//
+//	C2 also binds the REPOSITORY segment: repo://../x.ts#f, repo://%2e%2e/x.ts#f, repo://./x.ts#f,
+//	   repo:///x.ts#f and repo://*/x.ts#f are non-canonical, and a held repo://../** covers nothing.
+//	   Every case mix of %2e is a dot. Any other percent-encoding is a byte-literal file name:
+//	   repo://a/100%25.md#*, repo://a/a%2ex/y.ts#f and repo://a/%2e%2ex/y.ts#f are ACCEPTED.
+//	C5 A glob is spelled exactly "<canonical dir>/**". repo://a/**/, repo://a**, repo://a/* are
+//	   exact names, never globs: they cover no other resource (ErrUndeclared for what they miss).
+//	R1 hot.go touches() uses the SAME glob predicate as Receive: a glob that covers nothing in
+//	   Receive (repo://**) pulls no hot resource into a grant.
+//	R2 The anchor is a symbol name: non-empty; no '/', '\', '#', '%', C0 or C1 control, no "..";
+//	   '*' only as the whole anchor ("#*"). The name splits at the FIRST '#', so a second '#' is
+//	   refused. (Measured before freezing: no repo:// anchor in kernel code or tests carries any of
+//	   these, except fence_r_donetest_test.go's hot resource src/a.ts#b#c, which is only ever held
+//	   and acquired there, never pushed; R2 judges touched names only.)
+//	R3 A path or repository segment holding '\' or an encoded separator (%2f %2F %5c %5C) is
+//	   refused, fail closed.
+//
 // Not decided here, and NOT frozen: whether a glob lease and a file#symbol lease under it, held by
 // two jobs, conflict (fence.go "Open, NOT decided here"). Measured on main: both are granted and
 // BOTH jobs' pushes of the symbol are accepted. That needs a ruling first.
@@ -99,6 +117,23 @@ func lcRefusedForShape(t *testing.T, v lease.Verifier, job string, tokens map[st
 	}
 }
 
+// lcRefusedAlone checks that a push touching only r is refused, names r, and does not wrap
+// ErrStaleToken: the C6 posture, where the sentinel of a shape refusal is not pinned.
+func lcRefusedAlone(t *testing.T, v lease.Verifier, job string, tokens map[string]uint64, r string) {
+	t.Helper()
+	err := v.Receive(context.Background(), lease.Push{Job: job, Tokens: tokens, Touched: []string{r}})
+	if err == nil {
+		t.Errorf("Receive(%s touching %q under %v): accepted, want refused", job, r, keys(tokens))
+		return
+	}
+	if !lcNamed(err, r) {
+		t.Errorf("Receive(%s touching %q): refusal does not name it: %v", job, r, err)
+	}
+	if errors.Is(err, lease.ErrStaleToken) {
+		t.Errorf("Receive(%s touching %q): refusal wraps ErrStaleToken, but no token is stale: %v", job, r, err)
+	}
+}
+
 func keys(m map[string]uint64) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {
@@ -136,6 +171,12 @@ func TestB1_04R_CoverTraversalRefused(t *testing.T) {
 		"repo://a/src/.../y.ts#f",
 		"repo://a/.github/ci.yml#*",
 		"repo://a/src/.hidden.ts#f",
+		// r5 item 4: other percent-encodings are byte-literal names, not separators or dots
+		"repo://a/100%25.md#*",
+		"repo://a/a%2ex/y.ts#f",
+		"repo://a/%2e%2ex/y.ts#f",
+		"repo://a/%2e%2e%2e/y.ts#f",
+		"repo://a/x%2e/y.ts#f",
 	}})
 
 	for _, bad := range []string{
@@ -156,6 +197,20 @@ func TestB1_04R_CoverTraversalRefused(t *testing.T) {
 		"repo://a/src/./x.ts#f",
 		"repo://a/src/x.ts/..#f",
 		"repo://a/src/.#f",
+		// r5 item 2: every case mix of an encoded dot
+		"repo://a/%2e%2E/b/x.ts#f",
+		"repo://a/%2E%2e/b/x.ts#f",
+		"repo://a/%2E/x.ts#f",
+		"repo://a/.%2E/b/x.ts#f",
+		"repo://a/%2e./b/x.ts#f",
+		// r5 R3: a backslash or an encoded separator, fail closed
+		"repo://a/src\\..\\..\\b/x.ts#f",
+		"repo://a/src\\x.ts#f",
+		"repo://a/..%2fb/x.ts#f",
+		"repo://a/..%2Fb/x.ts#f",
+		"repo://a/..%5cb/x.ts#f",
+		"repo://a/..%5Cb/x.ts#f",
+		"repo://a/src%2fx.ts#f",
 	} {
 		lcRefusedForShape(t, v, "job_a", g.Tokens, bad)
 	}
@@ -182,6 +237,9 @@ func TestB1_04R_CoverShapeRefused(t *testing.T) {
 		"repo://a/x.ts#f",
 		"repo://a/src/caf\u00e9.ts#f",
 		"repo://a/docs/\u65e5\u672c.md#*",
+		"repo://a/src/types.ts#Foo.bar",
+		"repo://a/src/types.ts#total_2",
+		"repo://a/src/types.ts#caf\u00e9",
 	}})
 
 	for _, bad := range []string{
@@ -213,6 +271,23 @@ func TestB1_04R_CoverShapeRefused(t *testing.T) {
 		"repo://a/x\x7f.ts#f",
 		"repo://a/x\xff.ts#f",
 		"repo://a/src/x.ts#f\n",
+		// r5 R2: the anchor is a symbol name
+		"repo://a/src#/../../b/x.ts#f",
+		"repo://a/x.ts#f/../../../b",
+		"repo://a/x.ts#a/b",
+		"repo://a/x.ts#a\\b",
+		"repo://a/x.ts#f#g",
+		"repo://a/x.ts##",
+		"repo://a/x.ts#%2e%2e",
+		"repo://a/x.ts#a%20b",
+		"repo://a/x.ts#..",
+		"repo://a/x.ts#a..b",
+		"repo://a/x.ts#a*",
+		"repo://a/x.ts#*f",
+		"repo://a/x.ts#**",
+		"repo://a/x.ts#\tf",
+		"repo://a/x.ts#a\u0085b",
+		"repo://a/x.ts#a\u009fb",
 	} {
 		lcRefusedForShape(t, v, "job_a", g.Tokens, bad)
 	}
@@ -233,6 +308,16 @@ func TestB1_04R_CoverExactNonCanonicalRefused(t *testing.T) {
 		"repo://a/src/*.ts#f",
 		"repo://a/x.ts",
 		"repo://a/",
+		// r5 item 1: the repository segment
+		"repo://../x.ts#f",
+		"repo://%2e%2e/x.ts#f",
+		"repo://./x.ts#f",
+		"repo:///x.ts#f",
+		"repo://*/x.ts#f",
+		"repo://a#f",
+		"repo://a\\b/x.ts#f",
+		// r5 R2
+		"repo://a/x.ts#f/../../../b",
 	} {
 		// Subtests are numbered: t.TempDir is named after the subtest, and the Journal refuses '#'.
 		t.Run(fmt.Sprintf("exact%d", i), func(t *testing.T) {
@@ -259,7 +344,7 @@ func TestB1_04R_CoverExactNonCanonicalRefused(t *testing.T) {
 // that refuses only an empty repository (repo:///**) and not a missing one (repo://**); a glob
 // matched as a bare prefix (repo://a/** covering repo://ab/...).
 func TestB1_04R_CoverRepoWideGlobCoversNothing(t *testing.T) {
-	for i, wide := range []string{"repo://**", "repo:///**"} {
+	for i, wide := range []string{"repo://**", "repo:///**", "repo://../**", "repo://%2e%2e/**", "repo://./**", "repo://*/**"} {
 		t.Run(fmt.Sprintf("wide%d", i), func(t *testing.T) {
 			j, _ := b104Open(t)
 			c := b104Coord(t, j, &b104Clock{t: b104Epoch})
@@ -277,6 +362,8 @@ func TestB1_04R_CoverRepoWideGlobCoversNothing(t *testing.T) {
 					t.Fatalf("holding %s, Receive touching %s: %v, want ErrUndeclared naming it", wide, r, err)
 				}
 			}
+			// What the glob's own prefix would cover, e.g. repo://../b/x.ts#f under repo://../**.
+			lcRefusedAlone(t, v, "job_w", g.Tokens, strings.TrimSuffix(wide, "**")+"b/x.ts#f")
 		})
 	}
 
@@ -285,8 +372,80 @@ func TestB1_04R_CoverRepoWideGlobCoversNothing(t *testing.T) {
 	v := b104Verifier(t, j)
 	g := mustGrant(t, c, b104Req("job_b", b104Epoch, lease.AllOrNothing, "repo://b/**"))
 	accept(t, v, lease.Push{Job: "job_b", Tokens: g.Tokens, Touched: []string{"repo://b/x.ts#f", "repo://b/src/deep/y.ts#*"}})
-	for _, r := range []string{"repo://bb/x.ts#f", "repo://a/x.ts#f", "repo://b#f"} {
+	for _, r := range []string{"repo://bb/x.ts#f", "repo://a/x.ts#f"} {
 		refuse(t, v, lease.Push{Job: "job_b", Tokens: g.Tokens, Touched: []string{r}}, []error{lease.ErrUndeclared}, []string{r})
+	}
+	// Non-canonical (C1): refused, sentinel not pinned (C6).
+	lcRefusedAlone(t, v, "job_b", g.Tokens, "repo://b#f")
+}
+
+// TestB1_04R_CoverGlobSpelling: ruling C5 (r5). Only "<canonical dir>/**" is a glob. A held
+// repo://a/**/, repo://a** or repo://a/* is an exact name: it covers neither repo://a/x.ts#f nor
+// repo://ab/x.ts#f, and both are refused as undeclared, named.
+//
+// Kills: "**" without the slash taken as a glob (repo://a** then covers repo://ab/...); a trailing
+// "/" trimmed before the glob test (repo://a/**/ then acts as repo://a/**); a single "*" taken as
+// a one-level glob.
+func TestB1_04R_CoverGlobSpelling(t *testing.T) {
+	for i, held := range []string{"repo://a/**/", "repo://a**", "repo://a/*", "repo://a/**/**"} {
+		t.Run(fmt.Sprintf("glob%d", i), func(t *testing.T) {
+			j, _ := b104Open(t)
+			c := b104Coord(t, j, &b104Clock{t: b104Epoch})
+			v := b104Verifier(t, j)
+			g, err := c.Acquire(context.Background(), b104Req("job_g", b104Epoch, lease.AllOrNothing, held))
+			if err != nil {
+				return // Acquire refused it: nobody can hold it
+			}
+			for _, r := range []string{"repo://a/x.ts#f", "repo://ab/x.ts#f"} {
+				refuse(t, v, lease.Push{Job: "job_g", Tokens: g.Tokens, Touched: []string{r}}, []error{lease.ErrUndeclared}, []string{r})
+			}
+		})
+	}
+}
+
+// TestB1_04R_CoverHotUsesSameRule: ruling R1. Acquire adds a hot resource when a requested glob
+// covers its file, and "covers" is the predicate Receive uses. repo://** and repo:///** cover
+// nothing in Receive, so a grant of either (if Acquire grants it at all) carries no hot resource;
+// repo://x/** and repo://x/src/** carry it; repo://x** and repo://xx/** do not.
+//
+// Kills: touches() keeping the bare "/**" prefix rule while Receive tightens (repo://** then pulls
+// every hot resource in); a touches() that stops expanding globs altogether.
+func TestB1_04R_CoverHotUsesSameRule(t *testing.T) {
+	const hdr = "repo://x/src/config.ts#<header>"
+	ctx := context.Background()
+	grant := func(t *testing.T, res string) (lease.Grant, error) {
+		t.Helper()
+		j, _ := b104Open(t)
+		c := b104Coord(t, j, &b104Clock{t: b104Epoch})
+		if err := c.AddHot(ctx, hdr); err != nil {
+			t.Fatalf("AddHot(%s): %v", hdr, err)
+		}
+		return c.Acquire(ctx, b104Req("job_h", b104Epoch, lease.AllOrNothing, res))
+	}
+	for _, wide := range []string{"repo://**", "repo:///**", "repo://x**"} {
+		g, err := grant(t, wide)
+		if err != nil {
+			continue // Acquire refused it: nothing is granted, hot or not
+		}
+		if _, ok := g.Tokens[hdr]; ok {
+			t.Errorf("Acquire(%s) with %s hot: the grant carries the header %v, but %s covers nothing in Receive", wide, hdr, keys(g.Tokens), wide)
+		}
+	}
+	for _, res := range []string{"repo://x/**", "repo://x/src/**"} {
+		g, err := grant(t, res)
+		if err != nil {
+			t.Fatalf("Acquire(%s): %v", res, err)
+		}
+		if _, ok := g.Tokens[hdr]; !ok {
+			t.Errorf("Acquire(%s) with %s hot: grant %v lacks the header", res, hdr, keys(g.Tokens))
+		}
+	}
+	g, err := grant(t, "repo://xx/**")
+	if err != nil {
+		t.Fatalf("Acquire(repo://xx/**): %v", err)
+	}
+	if _, ok := g.Tokens[hdr]; ok {
+		t.Errorf("Acquire(repo://xx/**): grant %v carries %s from another repository", keys(g.Tokens), hdr)
 	}
 }
 
