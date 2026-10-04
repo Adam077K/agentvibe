@@ -404,48 +404,56 @@ func TestB1_04R_CoverGlobSpelling(t *testing.T) {
 }
 
 // TestB1_04R_CoverHotUsesSameRule: ruling R1. Acquire adds a hot resource when a requested glob
-// covers its file, and "covers" is the predicate Receive uses. repo://** and repo:///** cover
-// nothing in Receive, so a grant of either (if Acquire grants it at all) carries no hot resource;
-// repo://x/** and repo://x/src/** carry it; repo://x** and repo://xx/** do not.
+// covers its file, and "covers" is the predicate Receive uses. A glob that covers nothing in Receive
+// (repo://**, repo:///**, repo://x**, repo://../**, repo://*/**) pulls in no hot resource, and a
+// glob does not cover its own root (repo://x/src/** does not pull repo://x/src#h). repo://x/** and
+// repo://x/src/** do pull a hot resource in a file below them; repo://xx/** does not. A case whose
+// hot resource AddHot refuses, or whose glob Acquire refuses, is skipped where the answer is "not
+// pulled": nothing refused can be pulled in.
 //
-// Kills: touches() keeping the bare "/**" prefix rule while Receive tightens (repo://** then pulls
-// every hot resource in); a touches() that stops expanding globs altogether.
+// Kills: touches() keeping the bare "/**" prefix rule while Receive tightens; a touches() that
+// stops expanding globs; a covers() that refuses only a literal list of repo-wide globs; a covers()
+// that lets a glob cover its root directory as a file (red-team r5 C5d, C5g).
 func TestB1_04R_CoverHotUsesSameRule(t *testing.T) {
 	const hdr = "repo://x/src/config.ts#<header>"
 	ctx := context.Background()
-	grant := func(t *testing.T, res string) (lease.Grant, error) {
-		t.Helper()
-		j, _ := b104Open(t)
-		c := b104Coord(t, j, &b104Clock{t: b104Epoch})
-		if err := c.AddHot(ctx, hdr); err != nil {
-			t.Fatalf("AddHot(%s): %v", hdr, err)
-		}
-		return c.Acquire(ctx, b104Req("job_h", b104Epoch, lease.AllOrNothing, res))
-	}
-	for _, wide := range []string{"repo://**", "repo:///**", "repo://x**"} {
-		g, err := grant(t, wide)
-		if err != nil {
-			continue // Acquire refused it: nothing is granted, hot or not
-		}
-		if _, ok := g.Tokens[hdr]; ok {
-			t.Errorf("Acquire(%s) with %s hot: the grant carries the header %v, but %s covers nothing in Receive", wide, hdr, keys(g.Tokens), wide)
-		}
-	}
-	for _, res := range []string{"repo://x/**", "repo://x/src/**"} {
-		g, err := grant(t, res)
-		if err != nil {
-			t.Fatalf("Acquire(%s): %v", res, err)
-		}
-		if _, ok := g.Tokens[hdr]; !ok {
-			t.Errorf("Acquire(%s) with %s hot: grant %v lacks the header", res, hdr, keys(g.Tokens))
-		}
-	}
-	g, err := grant(t, "repo://xx/**")
-	if err != nil {
-		t.Fatalf("Acquire(repo://xx/**): %v", err)
-	}
-	if _, ok := g.Tokens[hdr]; ok {
-		t.Errorf("Acquire(repo://xx/**): grant %v carries %s from another repository", keys(g.Tokens), hdr)
+	for i, tc := range []struct {
+		req, hot string
+		pulled   bool
+	}{
+		{"repo://**", hdr, false},
+		{"repo:///**", hdr, false},
+		{"repo://x**", hdr, false},
+		{"repo://xx/**", hdr, false},
+		{"repo://x/src/**", "repo://x/src#h", false},
+		{"repo://x/**", "repo://x#h", false},
+		{"repo://../**", "repo://../x.ts#h", false},
+		{"repo://*/**", "repo://*/x.ts#h", false},
+		{"repo://x/**", hdr, true},
+		{"repo://x/src/**", hdr, true},
+		{"repo://x/**", "repo://x/src#h", true},
+	} {
+		t.Run(fmt.Sprintf("hot%d", i), func(t *testing.T) {
+			j, _ := b104Open(t)
+			c := b104Coord(t, j, &b104Clock{t: b104Epoch})
+			if err := c.AddHot(ctx, tc.hot); err != nil {
+				if tc.pulled {
+					t.Fatalf("AddHot(%s): %v", tc.hot, err)
+				}
+				return
+			}
+			g, err := c.Acquire(ctx, b104Req("job_h", b104Epoch, lease.AllOrNothing, tc.req))
+			if err != nil {
+				if tc.pulled {
+					t.Fatalf("Acquire(%s): %v", tc.req, err)
+				}
+				return
+			}
+			if _, ok := g.Tokens[tc.hot]; ok != tc.pulled {
+				t.Errorf("Acquire(%s) with %s hot: grant %v; hot resource pulled in = %v, want %v",
+					tc.req, tc.hot, keys(g.Tokens), ok, tc.pulled)
+			}
+		})
 	}
 }
 

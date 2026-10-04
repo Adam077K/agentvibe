@@ -120,6 +120,30 @@
 #   (repo segment unchecked / empty only / literal dots only / '*'; the r4 fixed dot list; mixed
 #   case; "**" without slash; trailing "/" trimmed; "/*" one level; any %, any %2e, decoded ".."
 #   prefix refused), 2 for R1, 9 for R2, 3 for R3.
+#
+# RE-FREEZE r5 addendum 2026-10-04: the red-team's own r5 material ($TMPDIR ref_final.go,
+#   fence.go.patched, mut/ with 36 mutants and gen.py), treated as untrusted: scanned first (imports
+#   strings and unicode/utf8 only; gen.py reads one file and writes into its own directory).
+#   fence_cover_donetest_test.go 1761d852... -> 1fb4ae06...: HotUsesSameRule is now a table of
+#   eleven glob/hot cases, adding repo://x/src/** vs hot repo://x/src#h (a glob does not cover its
+#   own root), repo://x/** vs repo://x#h, and repo://../** and repo://*/** vs a hot file under them
+#   (a non-canonical glob covers nothing, R1 + C5). Nothing else changed.
+#   Their reference predates R2/R3 and C5's canonical-directory rule, so on r5 it fails exactly the
+#   R2/R3 cases. Ported (R2 anchor check, R3 separators, C5 directory check; every gen.py pattern
+#   intact; the port removed again from C5a/C5b/C5d, whose point is a weaker directory check) it
+#   passes every lease test, tagged and untagged: a second, independent implementation satisfies r5.
+#   Their 36 mutants against the ported base: 33 killed (C5a and C5d did not build as generated,
+#   an unused variable; repaired with "_ = rest"; C5d and C5g needed the new HotUsesSameRule cases).
+#   3 survive, none a contract violation: C6b (a shape refusal wraps ErrUndeclared: C6 allows it,
+#   and the builder's reference does it too); C4e (controls checked in the path only: the anchor's
+#   are refused by R2 anyway, so it is equivalent once R2 holds); C4d (C1 controls refused in the
+#   PATH too: an over-refusal of a name the contract does not rule on). C4d needs a ruling, see
+#   OPEN below.
+#   Correction: r5 said "Mutants 47 of 47". The builder's set is 48 (22 + 12 + 2 + 9 + 3), and all
+#   48 are killed, re-run on this file.
+#   OPEN (orchestrator): is a C1 control (U+0080-U+009F) in a PATH segment canonical? validResource
+#   admits it; R2 refuses it in the anchor. Refusing it (fail closed) makes C4d the correct
+#   behaviour and is a one-line change to the reference; admitting it needs a positive control.
 register: B1-04r
 jobs:
   - id: B1-04
@@ -129,4 +153,4 @@ jobs:
       - path: kernel/internal/lease/testdata/sp2/b0-greedy.json
         sha256: 4c49c99136af858d19056aa377f75ea6871d0e736ac2319ecee981f8a558380e
       - path: kernel/internal/lease/fence_cover_donetest_test.go
-        sha256: 1761d852edc9a44a3bf3079a839a6302e0ccd5d1b80b3fb0d499d4dc704d397a
+        sha256: 1fb4ae0693702f25490c17d702acd1c1846613195a7873bd8088418ca45f2587
