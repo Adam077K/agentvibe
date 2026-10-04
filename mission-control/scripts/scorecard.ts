@@ -16,6 +16,7 @@
 // CLI:  bun run scripts/scorecard.ts --week 2026-W40 [--missions-dir D] [--minutes F] [--registry F] [--out F]
 //       writes docs/08-agents_work/scorecards/<week>.md by default.
 
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { missionsDir } from '../server/missions.ts';
@@ -66,10 +67,14 @@ export interface FamilyLedger {
 export interface Scorecard {
   week: string;
   window: { start: string; end: string };
-  sources: { receiptFiles: string[]; founderMinutes: string | null; registry: string | null };
+  /** registrySha256 is the hash of the registry text this render read: a render whose registry has since changed is detectable. */
+  sources: { receiptFiles: string[]; founderMinutes: string | null; registry: string | null; registrySha256: string | null };
   metrics: { dimension: string; measure: string; cell: Cell }[];
   budgetLedger: FamilyLedger[];
+  /** inputs that were NOT counted: unreadable, duplicate, out of bounds */
   unparsed: Unparsed[];
+  /** inputs that WERE counted but should not be trusted blindly (e.g. a child whose parent is unknown) */
+  anomalies: Unparsed[];
 }
 
 const fog = (reason: string): Cell => ({ kind: 'fog', reason });
@@ -101,12 +106,27 @@ export function isoWeekOf(ms: number): string {
 
 // ---------- parsers ----------
 
+// Bounds, documented here and nowhere else. A value above one is not a measurement of anything this tool
+// can stand behind: it is excluded from every total and reported, never clamped.
+/** A headless launch is capped by the runner's budget; 24 h is far above any real one. */
+export const MAX_LAUNCH_MS = 24 * 3_600_000;
+/** Turns in one launch. */
+export const MAX_TURNS = 10_000;
+/** Worker stream lines unread in one launch. */
+export const MAX_UNPARSED_LINES = 1_000_000;
+/** One hand-logged sitting: a day has 1,440 minutes. */
+export const MAX_MINUTES = 1_440;
+/** What a model id may look like. Anything else is not a model id and must never reach a table cell. */
+const MODEL_RE = /^[\w.:-]{1,64}$/;
+export const FOUNDER_KINDS = ['decision', 'rescue'] as const;
+
 const isStr = (v: unknown): v is string => typeof v === 'string' && v.length > 0;
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 
 export function parseReceipts(sources: SourceText[]): { receipts: ParsedReceipt[]; unparsed: Unparsed[] } {
   const receipts: ParsedReceipt[] = [];
   const unparsed: Unparsed[] = [];
+  const seen = new Map<string, string>();
   for (const { file, text } of sources) {
     text.split('\n').forEach((raw, i) => {
       const line = i + 1;
@@ -139,10 +159,26 @@ export function parseReceipts(sources: SourceText[]): { receipts: ParsedReceipt[
       if (!(p.exit === null || p.exit === undefined || Number.isInteger(p.exit))) bad.push('exit');
       if (!countOrNull(p.unparsedLines)) bad.push('unparsedLines');
       if (!(p.parentLaunchId === undefined || isStr(p.parentLaunchId))) bad.push('parentLaunchId');
+      if (!MODEL_RE.test(p.model as string)) bad.push('model');
       if (bad.length) {
         unparsed.push({ file, line, reason: `mistyped: ${bad.join(', ')}` });
         return;
       }
+      const over: string[] = [];
+      const durationMs = (p.endedAt as number) - (p.startedAt as number);
+      if (durationMs > MAX_LAUNCH_MS) over.push(`duration ${Math.round(durationMs / 1000)} s exceeds ${MAX_LAUNCH_MS / 1000} s`);
+      if (isNum(p.turns) && p.turns > MAX_TURNS) over.push(`turns ${p.turns} exceeds ${MAX_TURNS}`);
+      if (isNum(p.unparsedLines) && p.unparsedLines > MAX_UNPARSED_LINES) over.push(`unparsedLines ${p.unparsedLines} exceeds ${MAX_UNPARSED_LINES}`);
+      if (over.length) {
+        unparsed.push({ file, line, reason: `${over.join('; ')}: excluded from every total` });
+        return;
+      }
+      const first = seen.get(p.launchId as string);
+      if (first !== undefined) {
+        unparsed.push({ file, line, reason: `duplicate launchId ${p.launchId as string} (first seen at ${first}); not counted` });
+        return;
+      }
+      seen.set(p.launchId as string, `${file}:${line}`);
       receipts.push({
         launchId: p.launchId as string, missionId: p.missionId as string, role: p.role as string,
         model: p.model as string, startedAt: p.startedAt as number, endedAt: p.endedAt as number,
@@ -155,6 +191,13 @@ export function parseReceipts(sources: SourceText[]): { receipts: ParsedReceipt[
   return { receipts, unparsed };
 }
 
+/** YYYY-MM-DD that round-trips through a real UTC date, so 2026-02-30 and 2026-13-01 are refused. */
+function isCalendarDate(d: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
+  const t = Date.parse(d + 'T00:00:00Z');
+  return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === d;
+}
+
 /** CSV: header `date,minutes,kind,note`; `#` lines are comments. Quoting is not supported — keep notes comma-free. */
 export function parseFounderMinutes(src: SourceText): { rows: MinuteRow[]; unparsed: Unparsed[] } {
   const rows: MinuteRow[] = [];
@@ -164,13 +207,14 @@ export function parseFounderMinutes(src: SourceText): { rows: MinuteRow[]; unpar
     const t = raw.trim();
     if (!t || t.startsWith('#') || /^date\s*,/i.test(t)) return;
     const [date = '', minutes = '', kind = ''] = t.split(',').map((s) => s.trim());
-    const n = Number(minutes);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date + 'T00:00:00Z'))) {
-      unparsed.push({ file: src.file, line, reason: 'date is not YYYY-MM-DD' });
-    } else if (minutes === '' || !Number.isFinite(n) || n < 0) {
-      unparsed.push({ file: src.file, line, reason: 'minutes is not a non-negative number' });
+    if (!isCalendarDate(date)) {
+      unparsed.push({ file: src.file, line, reason: 'date is not a real calendar date (YYYY-MM-DD)' });
+    } else if (!/^\d{1,4}$/.test(minutes) || Number(minutes) > MAX_MINUTES) {
+      unparsed.push({ file: src.file, line, reason: `minutes is not a decimal integer from 0 to ${MAX_MINUTES}` });
+    } else if (!(FOUNDER_KINDS as readonly string[]).includes(kind)) {
+      unparsed.push({ file: src.file, line, reason: `kind is not one of ${FOUNDER_KINDS.join(' | ')}` });
     } else {
-      rows.push({ date, minutes: n, kind: kind || 'unspecified', file: src.file, line });
+      rows.push({ date, minutes: Number(minutes), kind, file: src.file, line });
     }
   });
   return { rows, unparsed };
@@ -239,8 +283,16 @@ export function buildScorecard(input: ScorecardInput): Scorecard {
   const weekAll = parsed.receipts.filter((r) => r.startedAt >= start && r.startedAt < end);
   // Child receipts (parentLaunchId set) run inside their parent's process: counting them as launches, or
   // adding their wall-clock, would double-count the parent. They are reported on their own row.
-  const inWeek = weekAll.filter((r) => r.parentLaunchId === null);
-  const children = weekAll.filter((r) => r.parentLaunchId !== null);
+  // A child naming a parent that is in no receipt file cannot be shown to run inside anything. It is
+  // counted as a top-level launch rather than silently dropped, and flagged.
+  const knownLaunchIds = new Set(parsed.receipts.map((r) => r.launchId));
+  const isOrphan = (r: ParsedReceipt) => r.parentLaunchId !== null && !knownLaunchIds.has(r.parentLaunchId);
+  const anomalies: Unparsed[] = weekAll.filter(isOrphan).map((r) => ({
+    file: r.file, line: r.line,
+    reason: `child launch ${r.launchId} names parentLaunchId ${r.parentLaunchId} which is in no receipt; counted as a top-level launch`,
+  }));
+  const inWeek = weekAll.filter((r) => r.parentLaunchId === null || isOrphan(r));
+  const children = weekAll.filter((r) => r.parentLaunchId !== null && !isOrphan(r));
   const noneInWeek = input.receipts.length === 0 ? 'no receipt: no launches.jsonl found' : `no receipt: no launch started in ${input.week}`;
   const all = receiptMetrics(inWeek, noneInWeek);
   const childCell: Cell = children.length === 0
@@ -322,53 +374,73 @@ export function buildScorecard(input: ScorecardInput): Scorecard {
       receiptFiles: input.receipts.map((s) => s.file).sort(),
       founderMinutes: input.founderMinutes?.file ?? null,
       registry: input.registry?.file ?? null,
+      registrySha256: input.registry ? createHash('sha256').update(input.registry.text).digest('hex') : null,
     },
-    metrics, budgetLedger, unparsed,
+    metrics, budgetLedger, unparsed, anomalies,
   };
 }
 
 // ---------- render ----------
 
+/**
+ * Escaping happens at the LEAF, once, and nothing is escaped again on its way into a row — escaping a
+ * string that already holds `\\|` would produce `\\\\|` and reopen the cell. Every string that reaches the
+ * Markdown from an input (a receipt id, a file label, a registry plan) goes through one of these two.
+ * Newlines are the dangerous character: one ends a table row, so what follows is a row the input wrote.
+ */
+export const esc = (v: unknown): string =>
+  String(v).replace(/\\/g, '\\\\').replace(/\r\n|\r|\n/g, ' ').replace(/\|/g, '\\|').replace(/`/g, '\\`').replace(/</g, '&lt;');
+/** For the inside of a `code span`: a backtick cannot be escaped there, so it is replaced. */
+export const code = (s: string): string =>
+  `\`${s.replace(/\r\n|\r|\n/g, ' ').replace(/`/g, "'").replace(/\|/g, '\\|').replace(/</g, '&lt;')}\``;
+
 function cellMd(c: Cell): string {
-  if (c.kind === 'fog') return `**FOG** — ${c.reason}`;
+  if (c.kind === 'fog') return `**FOG** — ${esc(c.reason)}`;
   const p = c.provenance;
   const where = p.locations.length > 6 ? [...p.locations.slice(0, 6), `+${p.locations.length - 6} more`] : p.locations;
-  const bits = [`n=${p.n}`, ...(p.coverage ? [p.coverage] : []), ...(where.length ? [where.map((l) => `\`${l}\``).join(' ')] : [])];
-  return `${c.value} ${c.unit} (${bits.join('; ')})`;
+  const bits = [`n=${p.n}`, ...(p.coverage ? [esc(p.coverage)] : []), ...(where.length ? [where.map((l) => code(l)).join(' ')] : [])];
+  return `${c.value} ${esc(c.unit)} (${bits.join('; ')})`;
 }
-
-const esc = (s: string) => s.replace(/\|/g, '\\|');
 
 export function renderMarkdown(s: Scorecard): string {
   const fogCount = s.metrics.filter((m) => m.cell.kind === 'fog').length
     + s.budgetLedger.reduce((a, f) => a + [f.launches, f.turns, f.wallClock, f.windowCap, f.weeklyCap].filter((c) => c.kind === 'fog').length, 0);
+  const listing = (items: Unparsed[]) => items.map((u) => `- ${code(`${u.file}:${u.line}`)} — ${esc(u.reason)}`);
   const out = [
-    `# Scorecard — ${s.week}`,
+    `# Scorecard — ${esc(s.week)}`,
     '',
     `Window: \`${s.window.start}\` to \`${s.window.end}\` (launches bucketed by \`startedAt\`). Rendered from receipts only;`,
     `every missing value is **FOG**, never zero. ${fogCount} cell(s) are fog. Generated by \`mission-control/scripts/scorecard.ts\`.`,
     '',
     '## Sources',
     '',
-    `- Receipt files: ${s.sources.receiptFiles.length === 0 ? '**none found**' : s.sources.receiptFiles.map((f) => `\`${f}\``).join(', ')}`,
-    `- Founder minutes: ${s.sources.founderMinutes ? `\`${s.sources.founderMinutes}\`` : '**file absent**'}`,
-    `- Provider registry: ${s.sources.registry ? `\`${s.sources.registry}\`` : '**file absent**'}`,
+    `- Receipt files: ${s.sources.receiptFiles.length === 0 ? '**none found**' : s.sources.receiptFiles.map((f) => code(f)).join(', ')}`,
+    `- Founder minutes: ${s.sources.founderMinutes ? code(s.sources.founderMinutes) : '**file absent**'}`,
+    `- Provider registry: ${s.sources.registry ? `${code(s.sources.registry)} — sha256 \`${s.sources.registrySha256}\`` : '**file absent**'}`,
     '',
     '## Scorecard',
     '',
     '| Dimension | Measure | Reading |',
     '|---|---|---|',
-    ...s.metrics.map((m) => `| ${m.dimension} | ${esc(m.measure)} | ${esc(cellMd(m.cell))} |`),
+    ...s.metrics.map((m) => `| ${esc(m.dimension)} | ${esc(m.measure)} | ${cellMd(m.cell)} |`),
     '',
     '## Budget Ledger v0',
     '',
     '| Family | Models | Launches | Turns | Wall-clock | Window cap | Weekly cap |',
     '|---|---|---|---|---|---|---|',
-    ...s.budgetLedger.map((f) => `| ${esc(f.family)} | ${f.models.join(', ')} | ${[f.launches, f.turns, f.wallClock, f.windowCap, f.weeklyCap].map((c) => esc(cellMd(c))).join(' | ')} |`),
+    ...s.budgetLedger.map((f) => `| ${esc(f.family)} | ${f.models.map(esc).join(', ')} | ${[f.launches, f.turns, f.wallClock, f.windowCap, f.weeklyCap].map(cellMd).join(' | ')} |`),
     '',
     '## Unparsed lines',
     '',
-    ...(s.unparsed.length === 0 ? ['None.'] : s.unparsed.map((u) => `- \`${u.file}:${u.line}\` — ${u.reason}`)),
+    'Not counted anywhere above: unreadable, duplicate, or outside the documented bounds.',
+    '',
+    ...(s.unparsed.length === 0 ? ['None.'] : listing(s.unparsed)),
+    '',
+    '## Anomalies',
+    '',
+    'Counted above, but worth a look.',
+    '',
+    ...(s.anomalies.length === 0 ? ['None.'] : listing(s.anomalies)),
     '',
   ];
   return out.join('\n');
