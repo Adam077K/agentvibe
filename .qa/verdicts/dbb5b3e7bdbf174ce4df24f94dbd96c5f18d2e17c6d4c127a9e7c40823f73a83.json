@@ -1,0 +1,11 @@
+{
+  "subject": "dbb5b3e7bdbf174ce4df24f94dbd96c5f18d2e17c6d4c127a9e7c40823f73a83",
+  "base": "c367d15c71e2fe4e887d47d8f59c8a857900f53f",
+  "tier": "full",
+  "tier_driver": "mission-control/scripts/run-missions.ts",
+  "verdict": "PASS",
+  "by": "r139-reviewer (opus-5.5)",
+  "run_id": null,
+  "evidence": null,
+  "recorded_at": "2026-10-04T12:06:16.811Z"
+}

@@ -18,6 +18,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import type { FamilyStamp } from './model-family.ts';
 
 export function missionsDir(): string {
   return process.env.MC_MISSIONS_DIR ?? path.join(os.homedir(), '.agentvibe', 'missions');
@@ -161,7 +162,8 @@ export interface TeamEvent {
   title: string;
   model: string;
   family: string;
-  kind: 'status' | 'tool' | 'message' | 'result' | 'receipt' | 'verdict';
+  /** `slot_model_mismatch` (B0-20, DR-83): a launch whose model id's family differs from its slot's. */
+  kind: 'status' | 'tool' | 'message' | 'result' | 'receipt' | 'verdict' | 'slot_model_mismatch';
   status?: AgentStatus;
   text?: string;
   costUsd?: number;
@@ -177,6 +179,8 @@ export interface AgentCard {
   costUsd?: number;
   eventCount: number;
   latest: TeamEvent[];
+  /** Set when this card's launch ran a model whose family is not the one its seat declared (B0-20). */
+  slotMismatch?: { slotFamily: string; family: string };
 }
 
 export interface TeamView {
@@ -210,8 +214,14 @@ export function readEvents(id: string, dir: string = missionsDir()): TeamEvent[]
 export function foldTeam(missionId: string, events: TeamEvent[], latestN = 6): TeamView {
   const cards = new Map<string, AgentCard>();
   const receipts: TeamEvent[] = [];
+  // Runner events never become cards, so a mismatch is collected by the seat (`role`) it names and
+  // applied to that seat's card once every card exists.
+  const mismatches = new Map<string, { slotFamily: string; family: string }>();
   for (const e of events) {
     if (e.kind === 'receipt') receipts.push(e);
+    if (e.kind === 'slot_model_mismatch' && typeof e.data?.role === 'string') {
+      mismatches.set(e.data.role, { slotFamily: String(e.data.slotFamily), family: String(e.data.family) });
+    }
     if (e.agent === 'runner') continue;
     let c = cards.get(e.agent);
     if (!c) {
@@ -224,6 +234,10 @@ export function foldTeam(missionId: string, events: TeamEvent[], latestN = 6): T
     if (typeof e.costUsd === 'number') c.costUsd = e.costUsd;
     c.latest.push(e);
     if (c.latest.length > latestN) c.latest.shift();
+  }
+    for (const [role, mm] of mismatches) {
+    const c = cards.get(role);
+    if (c) c.slotMismatch = mm;
   }
   return { missionId, agents: [...cards.values()], receipts, total: events.length };
 }
@@ -243,7 +257,7 @@ export function launchesPath(id: string, dir: string = missionsDir()): string {
   return path.join(dir, id, 'launches.jsonl');
 }
 
-export interface LaunchReceipt {
+export interface LaunchReceipt extends FamilyStamp {
   launchId: string;
   missionId: string;
   role: string;
@@ -259,6 +273,10 @@ export interface LaunchReceipt {
   unparsedLines?: number;
   parentLaunchId?: string;
 }
+
+// `family` is derived from `model` by familyOf() (server/model-family.ts), never from the slot;
+// `slotFamily` is what the slot declared, and `slotModelMismatch` is set when the two differ.
+// Receipts written before B0-20 carry none of the three.
 
 export function readLaunchReceipts(id: string, dir: string = missionsDir()): LaunchReceipt[] {
   let text: string;
