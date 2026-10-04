@@ -1,0 +1,75 @@
+# Done-test register, B1-04r: the B1-04 remainder its frozen tests (B1-04.yml) leave out. Row B1-04
+# (docs/vision-v3/14-BUILD-PLAN.md §6) names "hot resources"; its acceptance is "SP2 B0-greedy + drill
+# fixtures nightly". Canon: 09a §6 (lease_request: hot resource auto-added, max_wait_s → lease.starved,
+# "a resource in three cycles a week ... is proposed"), 04 §9.2 (hot resources auto-added to every
+# footprint that touches their file, DR-21), 09a §19 ("SP2 B0-greedy and drill as nightly fixtures").
+# Each frozen file with the sha256 of its bytes, computed by shasum, never typed.
+# Verify: node build/check-done-tests.mjs
+# Run:    go -C kernel test -count=1 -tags donetest -run B1_04R ./internal/lease/
+#
+# Frozen 2026-10-03 against origin/main f2ed126. The contract is NOT registered: hot.go, nightly.go,
+# Request.MaxWait and Coordinator.AddHot/HotSet/HotCandidates in fence.go. The B1-04 frozen file is
+# untouched; this file reuses its helpers. b0-greedy.json is already registered by B1-04.yml with the
+# same hash; it is the hot-resource acceptance data ("hot": ["src/config.ts#<header>"]).
+#
+# Red 8 of 8 on base (stubs return ErrNotImplemented; Acquire adds nothing; Detect ignores MaxWait).
+#   HotAutoAddedAndFenced, HotTouchRule, HotThresholdProposesNotAdds, MaxWaitStarvesYoungestWaiter,
+#   NightlyFiresOncePerWindow, NightlyWindowInLocation, NightlyIdempotentAcrossRestart,
+#   NightlyOneFireUnderRace.
+# Reachability NOT proven: the throwaway reference run in $TMPDIR was refused by the session's
+# permission check on 2026-10-03 and was not retried. The red-team pass (DR-BUILD-SPEED rule 1) owes it.
+#
+# Decided inside the contract (fail-safe, for the red team): the hot set is journaled, so every
+# Coordinator applies one set; a glob footprint touches every file it covers; the threshold PROPOSES
+# (09a §6 says "proposed") and never adds; a nightly claim is journaled before the run and a failed
+# run is not retried that night; the night is the local date the window opened; the window is
+# half-open.
+#
+# OPEN (founder questions; nothing frozen on them):
+# 1. Over-cap waiter OLDER than its holder: starve the waiter ("→ release all, requeue") or break at the
+#    youngest mission (the holder)? Only the case where both readings agree is frozen.
+# 2. MaxWait zero: no cap, or the 120 s default? A default would starve waits in fence_test.go and
+#    fence_adversarial_test.go that run Detect after 2 minutes.
+# 3. Does re-requesting (a replaced wait) restart the max_wait clock? Who requeues a starved job?
+# 4. "Three cycles a week": rolling 7 days or calendar week? A fourth cycle: propose again?
+# 5. Renew/heartbeat: ttl 90 s vs "renew every 60 s, ≤5 min unrenewed"; does renew keep the token;
+#    may an expired-but-unreclaimed lease be renewed; lease_id vs job-level grant. No test frozen.
+# 6. Shared mode: no semantics in 09a; no test frozen. 14 §6 has no owner row for 5, 6 or max_wait.
+# 7. The nightly window (hour, zone); a night missed entirely; a crash between claim and outcome.
+# 8. Hot-resource exemptions ("may be exempted and left to the queue, recorded per resource").
+#
+# RE-FREEZE r2 2026-10-03: 2026-10-03 orchestrator rulings (fail-safe, founder speed delegation).
+#   fence_r_donetest_test.go 028ecc8f... -> 5c0513f1... The r1 tests are unchanged; six are added:
+#   MaxWaitOlderWaiterStarves (an over-cap waiter of any age is starved), MaxWaitZeroIsDefault
+#   (zero = 120 s, never unbounded), MaxWaitClockPerResource (a replaced wait keeps the clock of the
+#   job's first wait on that resource), HotWeekIsRolling (rolling 7x24h; a candidate listed once),
+#   DrillWindowNoCatchUp (DrillWindow 23:00-04:00 local; a missed night is not caught up),
+#   NightlyCrashAfterClaim (claimed with no outcome = failed, not retried). Contract: hot.go gains
+#   DefaultMaxWait, nightly.go gains DrillWindow. No hot-resource exemptions in v0.
+#   The 120 s default breaks no existing test: fence_test.go:259 and fence_adversarial_test.go:423
+#   advance 2 minutes with no outstanding wait, and the frozen B1-04 file advances at most 91 s.
+#   Red 14 of 14 on f2ed126. Each new test fails on its intended assertion (starvation, the stubs).
+#   OUT OF SCOPE (follow-up job): renew, heartbeat, ttl and shared mode. OPEN questions 1-4, 7 and 8
+#   below are answered by these rulings; 5 and 6 move to that follow-up job.
+#
+# RE-FREEZE r3 2026-10-03: 2026-10-03 red-team r1 gaps + rulings. The red team on 86c1740 proved
+#   reachability; 14 of 43 mutants survived. fence_r_donetest_test.go 5c0513f1... -> f501c6f3...
+#   r1/r2 tests unchanged except one comment (the inclusive-end mutant was NOT killed there). Added:
+#   NightlyAfterMidnight (first Tick at 01:00 / 03:59:59 on 2 Oct fires night 2026-10-01; 04:00
+#   does not), NightlyFireOnceBarrier (8 callers held after Read/Head on NightlyStream; exactly one
+#   fires), HotUnderWoundWait, HotCountsOnlyCycleEdges (three 3-job cycles with unrelated holdings ->
+#   exactly r1 r2 r3), DetectStarvesEveryOverCapWait, StarvationsAreNotCycles,
+#   HotSetValidationAndOrder (sorted; no '#', empty path or anchor, not a ResourceUri refused; file =
+#   before the FIRST '#'), MaxWaitRulings (R1: a re-wait after a grant starts a new clock; R2: a
+#   negative MaxWait is refused; a replacement's MaxWait is the cap). DST: accepted gap, not tested.
+#   Red 22 of 22 on the stubs. Satisfiability, against a COPY of the red team's reference with its
+#   probes removed (-race -count=2): everything passes except the two new validations the reference
+#   predates (AddHot "file#" accepted; MaxWait -1s accepted), each a one-line guard.
+register: B1-04r
+jobs:
+  - id: B1-04
+    files:
+      - path: kernel/internal/lease/fence_r_donetest_test.go
+        sha256: f501c6f389f40fae0528641f4d2f9b8a506393b06e09b4e6ea38217afbd76529
+      - path: kernel/internal/lease/testdata/sp2/b0-greedy.json
+        sha256: 4c49c99136af858d19056aa377f75ea6871d0e736ac2319ecee981f8a558380e

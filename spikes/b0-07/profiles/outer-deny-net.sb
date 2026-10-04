@@ -1,0 +1,5 @@
+(version 1)
+;; B0-07 arm (b) outer profile: allow everything except outbound network.
+(allow default)
+(deny network-outbound)
+(deny network-bind)

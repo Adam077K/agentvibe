@@ -1,0 +1,436 @@
+{
+  "cases": [
+    {
+      "name": "p-and-ids-vary",
+      "cite": "09a-ENGINEERING.md:665 (a job's label is the join of every input: a function of the set); 06-MEMORY.md:180 (L1); orchestrator ruling 2026-10-02, B1-26 impl review r2: the encoded join is byte-identical over every order of its inputs",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_zeta",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [
+                {
+                  "ref": "crm:acct_77"
+                }
+              ],
+              "derived_from": [
+                "rec_a"
+              ],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "confidence": {
+              "rung": "E3",
+              "p": 0.9
+            },
+            "revocation_epoch": 3,
+            "subjects": [
+              "subj_c"
+            ]
+          }
+        },
+        {
+          "id": "rec_alpha",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [
+                {
+                  "ref": "crm:acct_77"
+                }
+              ],
+              "derived_from": [
+                "rec_a"
+              ],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "confidence": {
+              "rung": "E3",
+              "p": 0.3
+            },
+            "revocation_epoch": 3,
+            "subjects": [
+              "subj_a"
+            ]
+          }
+        },
+        {
+          "id": "rec_mid",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [
+                {
+                  "ref": "crm:acct_77"
+                }
+              ],
+              "derived_from": [
+                "rec_a"
+              ],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "confidence": {
+              "rung": "E3",
+              "p": 0.6
+            },
+            "revocation_epoch": 3,
+            "subjects": [
+              "subj_b",
+              "subj_a"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rungs-and-p-vary",
+      "cite": "09a-ENGINEERING.md:665 (a job's label is the join of every input: a function of the set); 06-MEMORY.md:180 (L1); orchestrator ruling 2026-10-02, B1-26 impl review r2: the encoded join is byte-identical over every order of its inputs",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_prior"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_b",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [
+                {
+                  "ref": "crm:acct_77"
+                }
+              ],
+              "derived_from": [
+                "rec_a"
+              ],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "confidence": {
+              "rung": "E4",
+              "p": 0.2
+            },
+            "revocation_epoch": 3
+          }
+        },
+        {
+          "id": "rec_c",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [
+                {
+                  "ref": "crm:acct_77"
+                }
+              ],
+              "derived_from": [
+                "rec_a"
+              ],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "confidence": {
+              "rung": "E1",
+              "p": 0.8
+            },
+            "revocation_epoch": 3
+          },
+          "control": true
+        },
+        {
+          "id": "rec_a",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [
+                {
+                  "ref": "crm:acct_77"
+                }
+              ],
+              "derived_from": [
+                "rec_a"
+              ],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "confidence": {
+              "rung": "E1",
+              "p": 0.4
+            },
+            "revocation_epoch": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "own-derived-and-inputs-unsorted",
+      "cite": "09a-ENGINEERING.md:665 (a job's label is the join of every input: a function of the set); 06-MEMORY.md:180 (L1); orchestrator ruling 2026-10-02, B1-26 impl review r2: the encoded join is byte-identical over every order of its inputs",
+      "own": {
+        "sources": [
+          {
+            "ref": "job:j_42"
+          }
+        ],
+        "derived_from": [
+          "rec_own_2",
+          "rec_own_1"
+        ],
+        "author": {
+          "title": "Support Agent",
+          "family": "codex"
+        }
+      },
+      "inputs": [
+        {
+          "id": "rec_9",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [
+                {
+                  "ref": "crm:acct_77"
+                }
+              ],
+              "derived_from": [
+                "rec_a"
+              ],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "confidence": {
+              "rung": "E2",
+              "p": 0.5
+            },
+            "revocation_epoch": 3
+          }
+        },
+        {
+          "id": "rec_1",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [
+                {
+                  "ref": "crm:acct_77"
+                }
+              ],
+              "derived_from": [
+                "rec_a"
+              ],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "confidence": {
+              "rung": "E2",
+              "p": 0.5
+            },
+            "revocation_epoch": 3
+          }
+        },
+        {
+          "id": "rec_5",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [
+                {
+                  "ref": "crm:acct_77"
+                }
+              ],
+              "derived_from": [
+                "rec_a"
+              ],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "confidence": {
+              "rung": "E2",
+              "p": 0.5
+            },
+            "revocation_epoch": 3
+          }
+        },
+        {
+          "id": "rec_3",
+          "label": {
+            "schema": "label/1",
+            "origin": "internal",
+            "dclass": "D1",
+            "boundary": "guarded",
+            "venture": "v_keel",
+            "retention": {
+              "class": "operational",
+              "hold": "none"
+            },
+            "permission": "informs",
+            "exportable": false,
+            "taint": "clean",
+            "provenance": {
+              "sources": [
+                {
+                  "ref": "crm:acct_77"
+                }
+              ],
+              "derived_from": [
+                "rec_a"
+              ],
+              "author": {
+                "title": "Kernel Engineer",
+                "family": "claude"
+              }
+            },
+            "confidence": {
+              "rung": "E2",
+              "p": 0.5
+            },
+            "revocation_epoch": 3
+          }
+        }
+      ]
+    }
+  ]
+}

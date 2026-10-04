@@ -1,0 +1,11 @@
+{
+  "subject": "d0db82d0f7a04cd0436b156822abbf71a5af3965bafe3b19335c7c4482fd95b5",
+  "base": "c50bb9bbc9565e45b13a9c80e4f04983f8da8e62",
+  "tier": "lite",
+  "tier_driver": "kernel/cmd/avscan/main.go",
+  "verdict": "PASS",
+  "by": "reviewer-opus",
+  "run_id": null,
+  "evidence": "B0-19 reviewer (Opus, not the builder): FAIL then PASS at 0862162; founder approved 2026-10-01",
+  "recorded_at": "2026-10-01T10:06:33.004Z"
+}

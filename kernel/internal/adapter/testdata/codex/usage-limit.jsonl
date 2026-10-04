@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"0199a3c1-7e2f-7b40-9c1d-2f6e8a4b5c01"}
+{"type":"turn.started"}
+{"type":"error","message":"illustrative usage-limit text; the shape is unmeasured (DR ruling E)"}
+{"type":"turn.failed","error":{"message":"illustrative usage-limit text; the shape is unmeasured (DR ruling E)"}}
