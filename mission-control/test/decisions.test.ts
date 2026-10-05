@@ -137,6 +137,17 @@ describe('/api/decisions', () => {
     expect(body.answered).toMatchObject([{ id: a.id, choice: 'MIT' }]);
   });
 
+  test('GET carries the mission status on each row, so the view can tell an answer that landed before a stop', async () => {
+    const mid = randomUUID();
+    seedMission(mid, 'working');
+    const a = needed({ mission_id: mid });
+    seed(a, { type: 'decision_answered', id: a.id, choice: 'MIT', by: 'founder', at: 9 });
+    appendMissionLine({ id: mid, ts: 4, status: 'stop_requested' }, boardFile());
+    appendMissionLine({ id: mid, ts: 5, status: 'stopped' }, boardFile());
+    const body = (await (await createDecisionsApi().request('/')).json()) as { answered: { id: string; status: string; missionStatus?: string }[] };
+    expect(body.answered).toMatchObject([{ id: a.id, status: 'answered', missionStatus: 'stopped' }]);
+  });
+
   test('GET with no file is empty, not an error', async () => {
     const body = await (await createDecisionsApi().request('/')).json();
     expect(body).toEqual({ pending: [], answered: [] });
@@ -217,6 +228,25 @@ describe('/api/decisions — orphans, torn tails, body size', () => {
     expect(res.status).toBe(409);
     expect(readDecisionLines(file)).toHaveLength(before);
     expect(foldDecisions(readDecisionLines(file))[0]!.status).toBe('pending');
+  });
+
+  test('a stop from an EARLIER attempt does not block an answer after the mission is relaunched (200)', async () => {
+    const mid = randomUUID();
+    seedMission(mid, 'working');
+    appendMissionLine({ id: mid, ts: 3, status: 'stop_requested' }, boardFile());
+    appendMissionLine({ id: mid, ts: 4, status: 'stopped' }, boardFile());
+    // Relaunched: queued, then claimed by a runner again.
+    appendMissionLine({ id: mid, ts: 5, status: 'queued' }, boardFile());
+    appendMissionLine({ id: mid, ts: 6, status: 'working', runnerPid: process.pid }, boardFile());
+    const mission = foldBoard(readBoardLines(boardFile())).find((m) => m.id === mid)!;
+    expect(mission).toMatchObject({ status: 'working' });
+    expect(mission.stopRequested).toBeUndefined();
+
+    const n = needed({ mission_id: mid });
+    seed(n);
+    const r = await answer(createDecisionsApi(), n.id, { choice: 'MIT' });
+    expect(r.status).toBe(200);
+    expect(foldDecisions(readDecisionLines(file)).find((d) => d.id === n.id)).toMatchObject({ status: 'answered', choice: 'MIT' });
   });
 
   test('an answer is refused (409) when the mission is not being worked, and appends nothing', async () => {
@@ -455,7 +485,7 @@ describe('withDecisions', () => {
   test('no DECISION line: one run, nothing written to the decisions file', async () => {
     const calls: string[][] = [];
     const out = await withDecisions(MISSION, async (extra) => (calls.push(extra), round('Wrote hello.md.', { files: ['hello.md'] })), { file, ...clock() });
-    expect(out?.files).toEqual(['hello.md']);
+    expect(out).toMatchObject({ files: ['hello.md'] });
     expect(calls).toHaveLength(1);
     expect(fs.existsSync(file)).toBe(false);
     // The first run is told how to ask.

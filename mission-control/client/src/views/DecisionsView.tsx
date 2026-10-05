@@ -68,7 +68,12 @@ export function DecisionHistory({ rows, now }: { rows: DecisionRow[]; now: numbe
           <span className="fig text-dim">{formatRelative(d.answeredAt ?? d.createdAt, now)}</span>{' '}
           <span className="text-text">{d.question}</span>{' '}
           {d.status === 'answered' ? (
-            <span className="text-live">→ {d.choice}</span>
+            <>
+              <span className="text-live">→ {d.choice}</span>
+              {d.missionStatus === 'stopped' && (
+                <span className="text-dim" title="The mission was stopped; the Builder may never have read this answer."> answered (mission stopped)</span>
+              )}
+            </>
           ) : (
             <span className="text-bad" title="The runner stopped waiting before this was answered (it timed out, or the runner itself was stopped).">
               expired
