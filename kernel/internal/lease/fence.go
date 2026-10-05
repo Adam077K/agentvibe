@@ -84,9 +84,14 @@ const TypeDeadlockBroken = "lease.deadlock_broken"
 // Event types of FenceStream besides TypeDeadlockBroken. They are distinct from the job:// claim's
 // TypeClaimed and TypeReleased, which live in other streams and mean other things.
 const (
-	TypeGranted     = "lease.granted"      // one whole Grant, wounds included
-	TypeWaited      = "lease.waited"       // a job's outstanding wait, replacing any earlier one
-	TypeJobReleased = "lease.job_released" // Release: every lease row of the job, and its wait
+	TypeGranted = "lease.granted" // one whole Grant, wounds included
+	// TypeGrantedDisplacing is a Grant that also deletes rows of other jobs under other names: a
+	// wounded holder's overlapping lease, or an expired one it reclaims. It is a distinct type, and
+	// Displaced is refused on any other, so a fold that predates it stops at "unknown event type"
+	// instead of ignoring the field and bringing the rows back.
+	TypeGrantedDisplacing = "lease.granted_displacing"
+	TypeWaited            = "lease.waited"       // a job's outstanding wait, replacing any earlier one
+	TypeJobReleased       = "lease.job_released" // Release: every lease row of the job, and its wait
 )
 
 // FenceStream is the one Journal stream holding every multi-resource lease, wait and break.
@@ -243,6 +248,10 @@ type grantedData struct {
 	ExpiresAt int64    `json:"expires_at_unix_nano"`
 	Token     uint64   `json:"token"`
 	Wounded   []held   `json:"wounded,omitempty"`
+	// Displaced is every row of another job that overlaps the grant and that its Resources do not
+	// overwrite: a wounded holder's overlapping lease, or an expired one the grant takes the coverage
+	// over from. The fold deletes exactly these, and only under TypeGrantedDisplacing.
+	Displaced []held `json:"displaced,omitempty"`
 }
 
 type waitedData struct {
@@ -335,13 +344,26 @@ func corrupt(ev journal.Event, format string, a ...any) error {
 // this package did not write fails closed instead of being half-applied.
 func (st *fstate) apply(ev journal.Event) error {
 	switch ev.Type {
-	case TypeGranted:
+	case TypeGranted, TypeGrantedDisplacing:
 		var d grantedData
 		if err := json.Unmarshal(ev.Data, &d); err != nil {
 			return corrupt(ev, "%v", err)
 		}
 		if d.Job == "" || len(d.Resources) == 0 || d.Token != ev.Seq {
 			return corrupt(ev, "job %q, %d resources, token %d", d.Job, len(d.Resources), d.Token)
+		}
+		if (ev.Type == TypeGrantedDisplacing) != (len(d.Displaced) > 0) {
+			return corrupt(ev, "%d displaced rows under this event type", len(d.Displaced))
+		}
+		for _, h := range d.Displaced {
+			cur, ok := st.leases[h.Resource]
+			if !ok || h.Job == d.Job || cur.Job != h.Job || cur.Token != h.Token {
+				return corrupt(ev, "displaces %s token %d of %q, which storage does not record", h.Resource, h.Token, h.Job)
+			}
+			if !overlapsAny(h.Resource, d.Resources) {
+				return corrupt(ev, "displaces %s, which overlaps nothing the grant takes", h.Resource)
+			}
+			delete(st.leases, h.Resource)
 		}
 		for _, r := range d.Resources {
 			st.leases[r] = lrec{Job: d.Job, Born: d.Born, Token: ev.Seq, Exp: d.ExpiresAt}
@@ -426,6 +448,19 @@ func (st *fstate) rowsOf(job string) []held {
 
 func live(l lrec, now int64) bool { return now < l.Exp }
 
+// overlapping lists, sorted by resource, every lease row of a job other than job, live or expired,
+// whose resource overlaps r.
+func (st *fstate) overlapping(r, job string) []held {
+	var out []held
+	for k, l := range st.leases {
+		if l.Job != job && overlaps(k, r) {
+			out = append(out, held{Resource: k, Job: l.Job, Token: l.Token})
+		}
+	}
+	sort.Slice(out, func(a, b int) bool { return out[a].Resource < out[b].Resource })
+	return out
+}
+
 // ---------------------------------------------------------------------------------------------
 // Coordinator.
 
@@ -467,6 +502,9 @@ func validRequest(req Request, now time.Time) error {
 	for _, r := range req.Resources {
 		if err := validResource(r); err != nil {
 			return err
+		}
+		if !canonicalRequested(r) {
+			return fmt.Errorf("lease: %s request names %q, which is not canonical (want repo://<repo>/<path>#<anchor>, repo://<repo>/<dir>/** or repo://<repo>/<path>)", req.Job, r)
 		}
 		if seen[r] {
 			return fmt.Errorf("lease: %s request names %s twice", req.Job, r)
@@ -532,16 +570,23 @@ func (c *coordinator) Acquire(ctx context.Context, req Request) (Grant, error) {
 		// Every hot resource the request touches is part of it: waited on, granted and fenced like a
 		// resource the caller named.
 		resources := c.st.withHot(req.Resources)
-		var busy []held
+		var busy, rows []held
 		older := false
+		seenRow := map[string]bool{}
 		for _, r := range resources {
-			l, ok := c.st.leases[r]
-			if !ok || l.Job == req.Job || !live(l, nowN) {
-				continue
-			}
-			busy = append(busy, held{Resource: r, Job: l.Job, Token: l.Token})
-			if l.Born <= born { // not strictly younger: the requester may not wound it
-				older = true
+			for _, h := range c.st.overlapping(r, req.Job) {
+				if seenRow[h.Resource] {
+					continue
+				}
+				seenRow[h.Resource] = true
+				rows = append(rows, h)
+				// An expired lease is free; the grant below still takes its coverage over.
+				if l := c.st.leases[h.Resource]; live(l, nowN) {
+					busy = append(busy, h)
+					if l.Born <= born { // not strictly younger: the requester may not wound it
+						older = true
+					}
+				}
 			}
 		}
 
@@ -565,8 +610,22 @@ func (c *coordinator) Acquire(ctx context.Context, req Request) (Grant, error) {
 		// it in one event. Its seq is every token.
 		tok := c.st.seq + 1
 		exp := now.Add(req.TTL).UnixNano()
-		ev, err := c.append(ctx, TypeGranted, grantedData{Job: req.Job, Born: born, Policy: req.Policy,
-			Resources: resources, ExpiresAt: exp, Token: tok, Wounded: busy})
+		granted := make(map[string]bool, len(resources))
+		for _, r := range resources {
+			granted[r] = true
+		}
+		var displaced []held
+		for _, h := range rows {
+			if !granted[h.Resource] { // a row of the same name is overwritten by the grant itself
+				displaced = append(displaced, h)
+			}
+		}
+		typ := TypeGranted
+		if len(displaced) > 0 {
+			typ = TypeGrantedDisplacing
+		}
+		ev, err := c.append(ctx, typ, grantedData{Job: req.Job, Born: born, Policy: req.Policy,
+			Resources: resources, ExpiresAt: exp, Token: tok, Wounded: busy, Displaced: displaced})
 		if errors.Is(err, journal.ErrSeqConflict) {
 			continue
 		}
@@ -653,8 +712,10 @@ func (st *fstate) graph(now int64) map[string][]string {
 	for job, w := range st.waits {
 		set := map[string]bool{}
 		for _, r := range w.Resources {
-			if l, ok := st.leases[r]; ok && l.Job != job && live(l, now) {
-				set[l.Job] = true
+			for _, h := range st.overlapping(r, job) {
+				if live(st.leases[h.Resource], now) {
+					set[h.Job] = true
+				}
 			}
 		}
 		out := make([]string, 0, len(set))
@@ -800,6 +861,61 @@ func covers(p, t string) bool {
 	}
 	pre, ok := globPrefix(p)
 	return ok && below(pre, t, false)
+}
+
+// overlaps reports whether two resources can both be covered by one touched name, so that two jobs
+// holding them would both be accepted for it. It is symmetric. For repo:// it is covers() both ways,
+// a glob against a glob comparing the two directories on the "/" boundary, plus ruling R6: two names of
+// one file overlap when either is the whole-file name file#* or the bare file, and file#f, file#g do
+// not. Any other scheme keeps covers' plain prefix meaning.
+func overlaps(a, b string) bool {
+	if a == b {
+		return true
+	}
+	if !strings.HasPrefix(a, repoScheme) || !strings.HasPrefix(b, repoScheme) {
+		return covers(a, b) || covers(b, a)
+	}
+	pa, ga := globPrefix(a)
+	pb, gb := globPrefix(b)
+	switch {
+	case ga && gb:
+		return strings.HasPrefix(pa, pb) || strings.HasPrefix(pb, pa)
+	case ga:
+		return below(pa, b, false)
+	case gb:
+		return below(pb, a, false)
+	}
+	fa, anchorA, foundA := strings.Cut(a, "#")
+	fb, anchorB, foundB := strings.Cut(b, "#")
+	return fa == fb && (!foundA || !foundB || anchorA == "*" || anchorB == "*")
+}
+
+func overlapsAny(row string, resources []string) bool {
+	for _, r := range resources {
+		if overlaps(row, r) {
+			return true
+		}
+	}
+	return false
+}
+
+// canonicalRequested reports whether a requested resource may be granted. Only repo:// is judged: it
+// is a canonical touched name, a glob "<canonical dir>/**", or a bare canonical file (which hot.go's
+// touches names as "r == file"). Every other scheme is left to validResource.
+func canonicalRequested(r string) bool {
+	rest, ok := strings.CutPrefix(r, repoScheme)
+	switch {
+	case !ok:
+		return true
+	case !utf8.ValidString(r):
+		return false
+	case strings.Contains(r, "#"):
+		return canonicalTouched(r)
+	case strings.HasSuffix(r, "/**"):
+		_, glob := globPrefix(r)
+		return glob
+	}
+	return strings.Contains(rest, "/") && canonSegs(rest)
 }
 
 // globPrefix returns "<dir>/" for a presented glob "<dir>/**" whose dir is a canonical repository

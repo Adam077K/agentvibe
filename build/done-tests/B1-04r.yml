@@ -185,6 +185,120 @@
 #   R3 skipped in the repo segment, repo segment admitting encoded separators, glob dir checking
 #   only empty and '*', non-repo globs pulling nothing, non-repo glob as a bare prefix. The one
 #   survivor, R2h, is equivalent under R4.
+#
+# RE-FREEZE r7 2026-10-04: follow-up LC-2, overlapping grants, plus the LC-1 follow-up "refuse
+#   non-canonical names at Acquire" (same entry point). NEW file fence_overlap_donetest_test.go;
+#   every earlier frozen file unchanged.
+#   Ruling (orchestrator ceo-1, 2026-10-04): two jobs must never both hold coverage of one resource.
+#   Acquire treats a requested resource as conflicting with every lease another job holds that
+#   covers it or that it covers, under LC-1's covers() (C1-C6, R1-R5). Fail closed: if overlap
+#   cannot be judged, refuse.
+#   Holes measured by probe on main 963613b: repo://a/** held, repo://a/x.ts#f granted to another
+#   job, and the reverse; repo://a/** and repo://a/src/** both granted; db://x/** and db://x/t#f
+#   both granted; Acquire grants repo://**, repo://a/../b/x.ts#f, repo://a/x.ts#, repo://a//x.ts#f,
+#   repo://a/src/*.ts#f, repo://a, repo://a/x.ts#f#g.
+#   Decided inside the ruling (O1-O8 in the file header): an overlap QUEUES exactly as an identical
+#   name does (fence.go Acquire contract + the 2026-10-03 max_wait/starvation rulings: AllOrNothing
+#   waits, WoundWait wounds only strictly younger holders, Detect's graph has the overlap edge,
+#   max_wait caps it); both directions, glob vs glob by directory; own leases never conflict; a
+#   wound revokes the holder's whole overlapping row and nothing else; an expired overlapping row
+#   is free AND reclaimed by the grant that takes its coverage (else storage accepts both pushes
+#   again; SP2 drill "stale holder rejected"); hot resources are judged for overlap; R5
+#   plain-prefix for other schemes; "#*" literal. A requested repo:// name is canonical when it is a
+#   canonical touched name, "<canonical dir>/**", or a bare canonical file (HotTouchRule acquires
+#   repo://shop-core/src/config.ts); anything else is refused before anything is decided or
+#   written, named, neither ErrWait nor ErrStaleToken. Hot rows pulled in are not re-judged.
+#   NOT frozen: a bare file lease vs its own symbols; HotCandidates edges through an overlap;
+#   legacy non-canonical rows already in a Journal.
+#   Red 10 of 10 on 963613b (their subtests that pass on main are only the no-overlap and
+#   canonical-name controls); every other lease test passes, untagged, tagged, -race untagged and
+#   -race tagged. Scratch reference (private mktemp dir, not committed) passes all four configs
+#   (-race -count=2 tagged) and the launcher donetests. Mutants: 30 of 32 killed by the new file,
+#   1 more (hot rows re-judged) by the frozen HotSetValidationAndOrder: identical-only, held-covers
+#   only, requested-covers only, bare prefix without "/", hot ignored, R5 ignored, expired still
+#   busy, expired row not reclaimed, wound revokes identical rows only, wound revokes every row,
+#   graph identical-only, graph one-way, own rows counted, own row revoked, #* wildcard (both ways,
+#   and each way alone), non-repo bare prefix, overlap refused outright, glob vs glob never
+#   compared; no Acquire check, touched-shape only, check after the busy test, repo segment
+#   unchecked, dots literal only, repo grammar on every scheme, wraps ErrStaleToken, bare repository
+#   admitted, wraps ErrWait, name not in the refusal. One survivor, equivalent: a slash-bounded
+#   string prefix agrees with covers() on every name Acquire now admits (it differs only on
+#   non-canonical names, which can no longer be granted).
+#
+# RE-FREEZE r7, part 2, 2026-10-04 (a second commit: part 1 was pushed at 0908907; no force-push).
+#   fence_overlap_donetest_test.go 8b9598ba... -> a938900d...
+#   Ruling R6 (orchestrator ceo-1, 2026-10-04), for Acquire OVERLAP only; Receive coverage stays
+#   literal (fence_cover_donetest_test.go StarAnchorIsLiteral unchanged). Two repo:// resources on
+#   the SAME file (before the first '#') overlap when either is the whole-file name file#* or the
+#   bare file. Distinct symbols of one file (file#f, file#g) do not. Rationale: SP2 leases
+#   whole-file as #* so that a whole-file editor collides with a symbol editor. Supersedes part 1's
+#   O8 ("#* stays literal" for overlap) and closes its "bare file vs its symbols" open item.
+#   Test: TestB1_04R_OverlapStarAnchorIsLiteral replaced by TestB1_04R_OverlapWholeFile, 25 pairs:
+#   #* vs symbol and bare vs symbol/#*, both ways; #f vs #g, #f vs #<header> granted; a directory
+#   glob overlaps all three forms, both ways; x.tsx, y.ts, another repository, x.ts.bak and
+#   x.ts/y.ts beside; db://x/t#* and db://x/t vs db://x/t#f granted (R6 binds repo:// only, as R1).
+#   Nothing else changed. Every frozen test still passes under R6, SP2 fixtures included.
+#   Red 10 of 10 on 963613b (WholeFile: 15 overlap pairs red, its 10 no-overlap controls green);
+#   every other lease test passes untagged, tagged, -race. Scratch reference + R6 passes all four
+#   configs (-race -count=2 tagged) and the launcher donetests.
+#   Mutants re-run against the R6 reference: 36 of 38 killed by the new file, 1 more (hot rows
+#   re-judged) by HotSetValidationAndOrder, 1 equivalent (slash-bounded string prefix, as part 1).
+#   R6 mutants, 9 of 9 killed by OverlapWholeFile: #* literal for overlap, bare file
+#   non-overlapping, #* one way (each way), bare one way (each way), every symbol pair of one file
+#   overlapping, the file matched as a string prefix, R6 applied to every scheme. Part 1's three #*
+#   wildcard mutants are retired: R6 makes their direction correct, and R6b-d are their successors.
+#
+# RE-FREEZE r7, part 3, 2026-10-04 (a third commit; part 2 was pushed at 63e2aba; no force-push).
+#   fence_overlap_donetest_test.go a938900d... -> ef4fddaa... Red-team of LC-2 returned GAPS (9
+#   survivors). Ruling R7 (orchestrator ceo-1, 2026-10-04): Detect's wait-for edges and
+#   cycleResources (so HotCandidates) judge a wait by the same overlap predicate as Acquire,
+#   ignoring expired rows and the waiting job's own rows. Closes part 1's "HotCandidates edges
+#   through an overlap" open item.
+#   Added: OverlapReclaimOnWound (item 1: one WoundWait grant wounds a live younger holder AND
+#   reclaims an expired overlapping glob; that glob's token is stale); OverlapOwnJobIsExactID
+#   (item 2: same Born, JOB_A, job_ab all wait); OverlapWaitStarves (item 3: MaxWait 1s, +2s,
+#   Detect drops the wait, no break); OverlapDetectIgnoresExpired (item 4); OverlapDetectIgnoresOwn
+#   (item 5); OverlapCycleCountsTowardHot (R7: three overlap-only cycles propose exactly their two
+#   waited resources, not one overlapped only by the next job's expired row). AcquireRefuses
+#   NonCanonical now tries the bad name in both positions (item 6). Nothing else changed.
+#   NOT pinned (item 7, not ruled): every expired row reclaimed on any grant; it stays the logged
+#   follow-up on expired-but-unreclaimed tokens. Only an expired row overlapping the grant is pinned.
+#   Red 15 of 16 on 963613b; OverlapDetectIgnoresOwn is a green pin (main has no overlap edges, so
+#   no self-loop to forbid). Every other lease test passes untagged, tagged, -race, except
+#   TestRaceIsDecidedInStorage, the B1-05 flake already logged (HANDOFF-BUILD-3 §6): 11 of 40 on
+#   main, 7 of 40 on the reference, untagged -count=40; not this file's.
+#   Scratch reference + R6 + R7 (hot.go cycleResources by overlap, live, not own) passes tagged,
+#   -race and -race -count=2 tagged, and the launcher donetests.
+#   Part 3 mutants 16 of 16 killed by the new file: reclaim only when nothing is wounded; reclaim
+#   only the wounded jobs' rows; own exemption keyed on Born, case-folded, by prefix; max_wait clock
+#   only on identically held resources; overlap wait recorded without its MaxWait; graph counting an
+#   expired overlap row, graph ignoring liveness; graph counting the own overlap row, graph ignoring
+#   the job; canonical check on the first resource only, on the last only; cycleResources identical
+#   names only, counting expired rows, one direction. Parts 1-2's 38 mutants re-run against this
+#   reference: unchanged (36 by the new file, 1 by HotSetValidationAndOrder, 1 equivalent).
+#   Total 54: 52 killed by the new file, 1 by a frozen test, 1 equivalent.
+#
+# RE-FREEZE r7, part 4, 2026-10-04 (a fourth commit; part 3 was pushed at 8f4b9f9; no force-push).
+#   fence_overlap_donetest_test.go ef4fddaa... -> c24c23c7... The red-team's LC-2 material
+#   ($TMPDIR lc2.e4OMxL, named by lc2.path; the brief's lc2.mTmpFm did not exist), treated as
+#   untrusted: every Go file and all 45 mutant variants scanned (stdlib strings/sort/fmt/utf8/time/
+#   json/sync/math/strconv/errors/context and the journal package only; no os, exec, net, unsafe);
+#   gen.py and run.py read and not run; their gocache NOT used (it holds prebuilt artifacts). Run
+#   in a fresh copy of this branch with this builder's own GOCACHE.
+#   Their reference (ref2.go + fence.patched.go + hot.patched.go, base identical to main) is a
+#   second, independent implementation: it passes every lease test, tagged, untagged, -race and
+#   -race -count=2 tagged, including all of part 3.
+#   Their 45 mutants against this file: 43 killed by it. 2 survive, both by design: O5d (every
+#   expired row reclaimed on any grant: item 7, not ruled, not pinned) and O6b (hot rows re-judged
+#   for canonicity: killed by the frozen HotSetValidationAndOrder, as C11).
+#   Their 7 proposed tests, each run on both references (pass) and on main: 5 duplicate part 3
+#   (red on main), DetectNoSelfOverlapEdge duplicates OverlapDetectIgnoresOwn (green pin), and
+#   NoOverReclaim pins the status quo answer to item 7 and is NOT adopted (not ruled).
+#   One gap adopted: ExemptionIsJobID's fourth case, holder job_ab and requester job_a. Measured
+#   first: an exemption "holder id starts with requester id" survived every lease test. Added to
+#   OverlapOwnJobIsExactID (the holder is now per case); it kills that mutant and its mirror.
+#   Nothing else changed. Red 15 of 16 on 963613b as in part 3; both references pass.
+#   Builder mutant total 56: 54 killed by this file, 1 by HotSetValidationAndOrder, 1 equivalent.
 register: B1-04r
 jobs:
   - id: B1-04
@@ -195,3 +309,5 @@ jobs:
         sha256: 4c49c99136af858d19056aa377f75ea6871d0e736ac2319ecee981f8a558380e
       - path: kernel/internal/lease/fence_cover_donetest_test.go
         sha256: b1cc317f51c91c245e03ed51aa315a23ffa3047d97ced88261046f582ce2de19
+      - path: kernel/internal/lease/fence_overlap_donetest_test.go
+        sha256: c24c23c707ad11aa56d62c1ae14b355bb250f0e0aa63676c7ac5ee7970b6e264
