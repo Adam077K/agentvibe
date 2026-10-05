@@ -140,9 +140,12 @@ export function foldBoard(lines: MissionLine[]): Mission[] {
     cur.updatedAt = l.ts;
     // The request outlives the claim (queued -> working) and ends with the mission's run.
     if (l.status !== 'queued' && l.status !== 'working') delete cur.stopRequested;
-    // A launch starts a new attempt: the reason the last one did not advance (refused_subagent)
-    // must not ride along onto a card that then finishes.
-    if (l.status === 'queued' || l.status === 'working') delete cur.error;
+    // A launch starts a new attempt: the reason the last one did not advance (refused_subagent), and
+    // the cost it ran up, must not ride along onto a card that then finishes.
+    if (l.status === 'queued' || l.status === 'working') {
+      delete cur.error;
+      delete cur.costUsd;
+    }
     if (l.verdict) cur.verdict = l.verdict;
     if (l.verdictReasons) cur.verdictReasons = l.verdictReasons;
     if (typeof l.costUsd === 'number') cur.costUsd = l.costUsd;
@@ -219,6 +222,10 @@ export function foldTeam(missionId: string, events: TeamEvent[], latestN = 6): T
   const mismatches = new Map<string, { slotFamily: string; family: string }>();
   for (const e of events) {
     if (e.kind === 'receipt') receipts.push(e);
+    // The runner's claim opens an attempt. The board clears a launch's `error` on queued/working; this is
+    // the same reset for the one thing the board does not carry, so a mismatch an earlier run raised does
+    // not stay on the card after a clean relaunch.
+    if (e.agent === 'runner' && e.data?.claimed === true) mismatches.clear();
     if (e.kind === 'slot_model_mismatch' && typeof e.data?.role === 'string') {
       mismatches.set(e.data.role, { slotFamily: String(e.data.slotFamily), family: String(e.data.family) });
     }
@@ -235,7 +242,7 @@ export function foldTeam(missionId: string, events: TeamEvent[], latestN = 6): T
     c.latest.push(e);
     if (c.latest.length > latestN) c.latest.shift();
   }
-    for (const [role, mm] of mismatches) {
+  for (const [role, mm] of mismatches) {
     const c = cards.get(role);
     if (c) c.slotMismatch = mm;
   }

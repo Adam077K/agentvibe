@@ -27,7 +27,8 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { appendMissionLine } from '../server/index-cache.ts';
-import { expireOrphanedDecisions, withDecisions } from './decisions.ts';
+import { expireOrphanedDecisions, isInterrupted, withDecisions } from './decisions.ts';
+import { pidAlive } from './pid-alive.ts';
 import {
   boardPath,
   eventsPath,
@@ -775,13 +776,18 @@ export function watchForStop(id: string, dir: string = missionsDir(), pollMs: nu
  */
 async function settleIfStopped(m: Mission, stop: StopWatch, emit: ReturnType<typeof emitter>, interrupted: Who[]): Promise<boolean> {
   if (!stop.signalled() && !stop.requested()) return false;
+  await settleStopped(m, stop, emit, interrupted);
+  return true;
+}
+
+/** The settling itself, for a caller that already KNOWS it was a stop and so must not ask the board again. */
+async function settleStopped(m: Mission, stop: StopWatch, emit: ReturnType<typeof emitter>, interrupted: Who[]): Promise<void> {
   await stop.drain();
   const why = shuttingDown ? 'runner shut down' : 'stop requested';
   for (const who of stop.signalled() ? interrupted : []) emit(who, { kind: 'status', status: 'stopped', text: `terminated: ${why}` });
   emit(RUNNER, { kind: 'status', text: `stopped (${why})${stop.signalled() ? '; worker process groups terminated' : '; nothing was running'}` });
   appendMissionLine({ id: m.id, ts: Date.now(), status: 'stopped' } satisfies MissionLine, board());
   console.log(`[runner] mission ${m.id} → stopped`);
-  return true;
 }
 
 // ── Mission loop ─────────────────────────────────────────────────────────────────────────────
@@ -790,15 +796,6 @@ async function settleIfStopped(m: Mission, stop: StopWatch, emit: ReturnType<typ
 // the same append-only, file-per-fact style as the board, with no server in the path. Winning the
 // lock is not enough: the board is re-read under it, because another runner may have run the
 // mission to its end and released the lock between our fold and our claim.
-
-function pidAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (e) {
-    return (e as NodeJS.ErrnoException).code !== 'ESRCH'; // EPERM: it exists, it is just not ours
-  }
-}
 
 const lockPath = (id: string, dir: string) => path.join(path.dirname(eventsPath(id, dir)), 'runner.lock');
 
@@ -948,7 +945,7 @@ export async function runMission(m: Mission, deps: RunnerDeps = REAL_DEPS) {
 
 async function runClaimed(m: Mission, deps: RunnerDeps, stop: StopWatch) {
   const emit = emitter(m.id);
-  emit(RUNNER, { kind: 'status', text: `claimed by runner pid ${process.pid}; workdir ${WORKDIR}` });
+  emit(RUNNER, { kind: 'status', text: `claimed by runner pid ${process.pid}; workdir ${WORKDIR}`, data: { claimed: true } });
   // Asked to stop while still queued (or between claim and launch): nothing is ever launched.
   if (await settleIfStopped(m, stop, emit, [])) return;
   console.log(`[runner] mission ${m.id} "${m.title}" — builder starting`);
@@ -958,9 +955,15 @@ async function runClaimed(m: Mission, deps: RunnerDeps, stop: StopWatch) {
     // not at the decision timeout: nothing is running, so the stop watcher has nothing to signal.
     interrupted: () => stop.requested(),
   });
+  if (isInterrupted(built)) {
+    // A stop ended the wait (withDecisions expired the question and wrote nothing to the board). It is
+    // known from the return value, so a board that cannot be read now cannot leave the card `working`.
+    await settleStopped(m, stop, emit, []);
+    return;
+  }
   if (!built) {
-    // No answer in time (withDecisions put the card back on Waiting), or the wait was interrupted by
-    // a stop (it expired the question and wrote nothing): the second case settles `stopped` here.
+    // No answer in time: withDecisions put the card back on Waiting. A stop that landed in the same
+    // breath still wins, so ask once.
     await settleIfStopped(m, stop, emit, []);
     return;
   }

@@ -7,16 +7,16 @@
 // Nothing here signals a pid it did not spawn: the only kills in this file are the cleanup of the
 // fake workers' own recorded pids, and the signals the runner under test sends.
 
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { appendMissionLine } from '../server/index-cache.ts';
 import { decisionsPath, foldDecisions, readDecisionLines } from '../server/decisions.ts';
-import { withDecisions, type BuilderRound } from '../scripts/decisions.ts';
+import { isInterrupted, withDecisions, type BuilderRound } from '../scripts/decisions.ts';
 import { STOP_REQUESTED, boardPath, foldBoard, readBoardLines, readEvents, foldTeam, type MissionLine } from '../server/missions.ts';
-import { childrenPath, isOurs, processIdentity, reapOrphanGroups, reconcileWorking, validChildRecord } from '../scripts/run-missions.ts';
+import { childrenPath, isOurs, processIdentity, reapOrphanGroups, reconcileWorking, runMission, validChildRecord, type RunFn } from '../scripts/run-missions.ts';
 
 const RUNNER_TS = path.resolve(import.meta.dir, '..', 'scripts', 'run-missions.ts');
 const ID = '11111111-1111-4111-8111-111111111111';
@@ -532,6 +532,45 @@ describe('Stop while waiting on a Decision', () => {
   }, 40_000);
 });
 
+describe('Stop while waiting on a Decision — the board cannot be read afterwards', () => {
+  afterEach(() => {
+    delete process.env.MC_MISSIONS_DIR;
+  });
+
+  test('the card still settles `stopped`: the interrupt is a returned value, not something the caller re-reads the board to learn', async () => {
+    process.env.MC_MISSIONS_DIR = dir;
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'queued' });
+    const launched: string[] = [];
+    const run: RunFn = async (bin, _args, _cwd, onLine) => {
+      launched.push(bin.includes('codex') ? 'codex' : 'claude');
+      onLine(JSON.stringify({ type: 'system', subtype: 'init', model: 'fake', session_id: 's1' }));
+      onLine(JSON.stringify({ type: 'result', is_error: false, result: 'Need a choice.\nDECISION: Which format? || markdown | plain', total_cost_usd: 0.01, subtype: 'success' }));
+      return { code: 0, stderr: '' };
+    };
+    // From the moment withDecisions has expired the question, every read of the board fails. Writes still
+    // work, which is exactly the state that left a card `working` for ever.
+    const realRead = fs.readFileSync;
+    const spy = spyOn(fs, 'readFileSync').mockImplementation(((p: unknown, ...rest: unknown[]) => {
+      if (p === board() && fs.existsSync(decisionsPath()) && realRead(decisionsPath(), 'utf8').includes('decision_expired')) {
+        throw Object.assign(new Error('EIO: simulated board read failure'), { code: 'EIO' });
+      }
+      return (realRead as (...a: unknown[]) => unknown)(p, ...rest);
+    }) as typeof fs.readFileSync);
+    try {
+      const done = runMission(mission(ID), { run, logLaunch: () => {} });
+      await until('pending decision', () => decisions().find((d) => d.status === 'pending'));
+      requestStop(ID);
+      await done;
+    } finally {
+      spy.mockRestore();
+    }
+    expect(decisions().map((d) => d.status)).toEqual(['expired']);
+    expect(mission(ID).status).toBe('stopped');
+    expect(launched).toEqual(['claude']); // asked once, never resumed, no Referee
+  }, 30_000);
+});
+
 describe('withDecisions — interrupted', () => {
   const round = (summary: string): BuilderRound => ({ ok: true, refused: false, files: [], summary });
   const clock = () => {
@@ -539,7 +578,7 @@ describe('withDecisions — interrupted', () => {
     return { now: () => t, sleep: async (ms: number) => void (t += ms) };
   };
 
-  test('interrupted mid-wait: null, question expired, NO waiting line written, Builder not resumed', async () => {
+  test('interrupted mid-wait: {interrupted}, question expired, NO waiting line written, Builder not resumed', async () => {
     process.env.MC_MISSIONS_DIR = dir;
     try {
       put(waiting(ID));
@@ -550,7 +589,8 @@ describe('withDecisions — interrupted', () => {
       const out = await withDecisions(ID, async () => (n++, round('DECISION: q? || a | b')), {
         file, pollMs: 1000, timeoutMs: 600_000, ...clock(), interrupted: () => ++polls > 3,
       });
-      expect(out).toBeNull();
+      expect(out).toEqual({ interrupted: true });
+      expect(isInterrupted(out)).toBe(true);
       expect(n).toBe(1);
       expect(foldDecisions(readDecisionLines(file)).map((d) => d.status)).toEqual(['expired']);
       expect(readBoardLines(board()).map((l) => l.status)).toEqual(['waiting', 'working']); // the card is the caller's to settle
@@ -578,7 +618,7 @@ describe('withDecisions — interrupted', () => {
         },
         interrupted: () => stopped,
       });
-      expect(out).toBeNull();
+      expect(out).toEqual({ interrupted: true });
       expect(n).toBe(1);
     } finally {
       delete process.env.MC_MISSIONS_DIR;
@@ -630,6 +670,21 @@ describe('reconcile and fold', () => {
     expect(mission(ID)).toMatchObject({ status: 'stopped' });
     expect(mission(ID).error).toBeUndefined();
     expect(mission(ID).stopRequested).toBeUndefined();
+  });
+
+  test('a relaunch starts a clean attempt: the cost a refused run left on the card does not survive into the next one', () => {
+    put(waiting(ID));
+    put({ id: ID, ts: 2, status: 'working' });
+    put({ id: ID, ts: 3, status: 'waiting', error: 'refused_subagent', costUsd: 0.42 });
+    expect(mission(ID)).toMatchObject({ status: 'waiting', costUsd: 0.42 }); // the refused card still shows what it cost
+    put({ id: ID, ts: 4, status: 'queued' });
+    expect(mission(ID).costUsd).toBeUndefined();
+    put({ id: ID, ts: 5, status: 'working', runnerPid: 1 });
+    put({ id: ID, ts: 6, status: 'done', verdict: 'PASS' }); // a final line that carries no cost
+    expect(mission(ID)).toMatchObject({ status: 'done', verdict: 'PASS' });
+    expect(mission(ID).costUsd).toBeUndefined();
+    put({ id: ID, ts: 7, status: 'failed', costUsd: 0.1 });
+    expect(mission(ID).costUsd).toBe(0.1); // a line that does carry one still sets it
   });
 
   test('a stop request never moves the status: one landing after `done` leaves it done', () => {

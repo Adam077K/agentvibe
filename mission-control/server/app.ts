@@ -15,12 +15,18 @@ import { LiveState, live } from './state.ts';
 import { createApi } from './routes/api.ts';
 import { createStream } from './routes/stream.ts';
 import { crossSiteGuard } from './routes/guard.ts';
+import { hostGuard } from './routes/host-guard.ts';
 import { createMissionsApi } from './routes/missions.ts';
 import { createDecisionsApi } from './routes/decisions.ts';
 import { DEFAULT_CLIENT_DIST, mountClient } from './routes/static.ts';
 
 export function createApp(state: LiveState = live, clientDist: string = DEFAULT_CLIENT_DIST): Hono {
   const app = new Hono();
+
+  // FIRST, above everything including the cross-site guard: a request whose Host is not one of
+  // our loopback names is a DNS-rebinding page, which the browser marks same-origin and which
+  // guard.ts therefore cannot see. See routes/host-guard.ts.
+  app.use('*', hostGuard());
 
   // Blocks CROSS-SITE BROWSER REQUESTS. Not "drive-by" — same-site is allowed, so any other
   // service on this loopback still reaches everything, and a non-browser client sends no such

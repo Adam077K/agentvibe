@@ -37,6 +37,23 @@ describe('DecisionHistory', () => {
   });
 });
 
+describe('DecisionHistory: an answer that landed just before a stop', () => {
+  test('on a stopped mission it reads "answered (mission stopped)"; on any other mission it does not', () => {
+    const stopped = renderToStaticMarkup(<DecisionHistory now={NOW} rows={[row({ missionStatus: 'stopped' })]} />);
+    expect(stopped).toContain('answered (mission stopped)');
+    expect(stopped).toContain('→ MIT'); // the choice is still shown
+    for (const missionStatus of ['working', 'done', undefined] as const) {
+      expect(renderToStaticMarkup(<DecisionHistory now={NOW} rows={[row({ missionStatus })]} />)).not.toContain('mission stopped');
+    }
+  });
+
+  test('an expired decision on a stopped mission stays "expired"', () => {
+    const html = renderToStaticMarkup(<DecisionHistory now={NOW} rows={[row({ status: 'expired', choice: undefined, missionStatus: 'stopped' })]} />);
+    expect(html).toContain('expired');
+    expect(html).not.toContain('answered (mission stopped)');
+  });
+});
+
 describe('the Decisions tab', () => {
   const stream: StreamState = { fleet: null, sessions: null, connection: 'live', lastEventAt: NOW };
   const bar = (badges?: Record<string, number>) =>
