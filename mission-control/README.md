@@ -159,6 +159,8 @@ the only thing standing between the attacker's `<img>` and execution: the marker
 **not** written by the attacker's page, and **was** written by the user's own navigation to
 the same URL in the same browser against the same server.
 
+The server answers only to `localhost`, `127.0.0.1` and `[::1]` (`421` for any other Host), so a DNS-rebinding page cannot read it (`server/routes/host-guard.ts`).
+
 ## Ports
 
 | Port | What |
