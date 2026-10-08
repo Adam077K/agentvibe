@@ -1,0 +1,11 @@
+{
+  "subject": "5a01f8aa0abab0f8e567ad3cd3534024f5bb5e08d2a9186835529459e37df80b",
+  "base": "81775d1f1c384062185a149bae7e31425bcac7b0",
+  "tier": "lite",
+  "tier_driver": "build/jobs.yml",
+  "verdict": "PASS",
+  "by": "reviewer (sonnet-5.5)",
+  "run_id": null,
+  "evidence": null,
+  "recorded_at": "2026-10-08T22:28:36.897Z"
+}
