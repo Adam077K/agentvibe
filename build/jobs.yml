@@ -24,7 +24,12 @@
 #    extra IDs that are not rows map to their row: B0-17a/b -> B0-17 (#147); B1-04r -> B1-04 (#171,
 #    then #178, #181); B1-08d/h -> B1-08 (#166 row, #170, #172); B1-12a/b -> B1-12 (#158, #163);
 #    LC-1 -> B1-04 (#178); LC-2 -> B1-04 (#181); HG-1 -> mission-control, no row (#180); J1 -> #139,
-#    #145 (inferred); J2/J3/J4 -> #177/#176/#175; MC-CLEAN -> #179. B1-04f is a W1 follow-up of B1-04.
+#    #145 (inferred); J2/J3/J4 -> #177/#176/#175; MC-CLEAN -> #179. B1-04f is the lease follow-up
+#    job of B1-04 named in docs/vision-v3/15-EXECUTION-PLAN.md W1-b (branch handoff/build-4).
+#  - status values: not_started | partial | merged. `partial` = work is on main but the acceptance
+#    is NOT met: B0-16 (kernel module merged; CI wiring is #144, unmerged); B0-15 (schema-lint
+#    18/0/0 on main via f0682d8, but its irreversible-tier gate never ran). `merged` records that
+#    the work landed, not that a spike resolved (B0-07 is merged with outcome `unresolved`).
 
 - id: B0-00
   title: "**Capacity measurement**: every subscription seat, both families — a fixed benchmark job per seat, run until the rolling window throttles; weekly-cap headroom read from each plan's usage page"
@@ -294,7 +299,7 @@
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 16
   window_hours_est: 2
-  status: not_started
+  status: partial
   acceptance: "`schema-lint` 18 pass · 0 fail · 0 warnings; irreversible-tier gate PASS (CLAUDE.md \"known contradiction\")"
   acceptance_hash: "sha256:1e55fa6e20c9c46881476f2f41946a411b1034fa81a9e665ffcf4cd927dad2fb"
 
@@ -311,7 +316,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
-  status: merged
+  status: partial
   founder_present: false
   acceptance: "CI fails on a disallowed import, and on any non-`kernel/` path writing the Journal"
   acceptance_hash: "sha256:8eaa9fda425d3a8338a0815b0f4894055757d137c594660e5faf99da2f188219"
