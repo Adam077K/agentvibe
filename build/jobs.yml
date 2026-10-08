@@ -20,6 +20,11 @@
 #  - window_hours_est = turns_est / 8 (illustration ratio, 14-BUILD-PLAN.md §1, until B0-00).
 #  - status is not_started for every row at population time; the register is imported at the
 #    Handover (14-BUILD-PLAN.md §7).
+#  - status was synced to origin/main merge history at 81775d1 by REG-1 (2026-10-09). Split and
+#    extra IDs that are not rows map to their row: B0-17a/b -> B0-17 (#147); B1-04r -> B1-04 (#171,
+#    then #178, #181); B1-08d/h -> B1-08 (#166 row, #170, #172); B1-12a/b -> B1-12 (#158, #163);
+#    LC-1 -> B1-04 (#178); LC-2 -> B1-04 (#181); HG-1 -> mission-control, no row (#180); J1 -> #139,
+#    #145 (inferred); J2/J3/J4 -> #177/#176/#175; MC-CLEAN -> #179. B1-04f is a W1 follow-up of B1-04.
 
 - id: B0-00
   title: "**Capacity measurement**: every subscription seat, both families — a fixed benchmark job per seat, run until the rolling window throttles; weekly-cap headroom read from each plan's usage page"
@@ -324,7 +329,7 @@
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "Every test exists, fails red against an empty implementation, and has its hash in the register"
   acceptance_hash: "sha256:512eede8dcb09e1680048a7dae136f737ddcdd657dd6fe465617d0cfaf8a2030"
