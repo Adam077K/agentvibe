@@ -20,6 +20,16 @@
 #  - window_hours_est = turns_est / 8 (illustration ratio, 14-BUILD-PLAN.md §1, until B0-00).
 #  - status is not_started for every row at population time; the register is imported at the
 #    Handover (14-BUILD-PLAN.md §7).
+#  - status was synced to origin/main merge history at 81775d1 by REG-1 (2026-10-09). Split and
+#    extra IDs that are not rows map to their row: B0-17a/b -> B0-17 (#147); B1-04r -> B1-04 (#171,
+#    then #178, #181); B1-08d/h -> B1-08 (#166 row, #170, #172); B1-12a/b -> B1-12 (#158, #163);
+#    LC-1 -> B1-04 (#178); LC-2 -> B1-04 (#181); HG-1 -> mission-control, no row (#180); J1 -> #139,
+#    #145 (inferred); J2/J3/J4 -> #177/#176/#175; MC-CLEAN -> #179. B1-04f is the lease follow-up
+#    job of B1-04 named in docs/vision-v3/15-EXECUTION-PLAN.md W1-b (branch handoff/build-4).
+#  - status values: not_started | partial | merged. `partial` = work is on main but the acceptance
+#    is NOT met: B0-16 (kernel module merged; CI wiring is #144, unmerged); B0-15 (schema-lint
+#    18/0/0 on main via f0682d8, but its irreversible-tier gate never ran). `merged` records that
+#    the work landed, not that a spike resolved (B0-07 is merged with outcome `unresolved`).
 
 - id: B0-00
   title: "**Capacity measurement**: every subscription seat, both families — a fixed benchmark job per seat, run until the rolling window throttles; weekly-cap headroom read from each plan's usage page"
@@ -51,7 +61,7 @@
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 12
   window_hours_est: 1.5
-  status: not_started
+  status: merged
   acceptance: "6/6 mission route tests; crosscheck 0 write/shell exceptions; `npm run check` tally unchanged except named sandbox artefacts"
   acceptance_hash: "sha256:e186ed641a08eb9e5d1ccbdb15e8629d7c746691cc80087c542a3aec03419d0f"
 
@@ -68,7 +78,7 @@
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 14
   window_hours_est: 1.8
-  status: not_started
+  status: merged
   acceptance: "Every pinned model has a row with URL, hash and `valid_until`; every launch shows its seat and window in `launches.csv`"
   acceptance_hash: "sha256:6014fa796d866c8948a97689c4fcf1d096b6e0d4e680f65f079ee942bb2b9bbc"
 
@@ -85,7 +95,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
-  status: not_started
+  status: merged
   acceptance: "A Builder that calls `Agent` is refused, or is drawn as \"Builder › subagent\" with its own receipt"
   acceptance_hash: "sha256:fd2e0cfd3b00e19976e716c81fcd36f8a02f6c91a0c5b825540a4a2e0a3c63dd"
 
@@ -153,7 +163,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 12
   window_hours_est: 1.5
-  status: not_started
+  status: merged
   acceptance: "Pass/fail recorded; if fail, the named fallback (I3 for all headless work, at a measured capacity cost) is written into B1-10 [15 OG7]"
   acceptance_hash: "sha256:ad4b7711654eac05a9f7179f28964be50c3120f532286b471eadcae7cfc64320"
 
@@ -238,7 +248,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 20
   window_hours_est: 2.5
-  status: not_started
+  status: merged
   acceptance: "The Sunday scorecard renders from receipts only; missing values render as fog; founder minutes are logged by hand"
   acceptance_hash: "sha256:7292da632ac532ccc3cc27bb36b0830c9a1b73601f3168914fa4720a3eb81dbc"
 
@@ -255,7 +265,7 @@
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 14
   window_hours_est: 1.8
-  status: not_started
+  status: merged
   acceptance: "The lint refuses a job with >30 turns, a same-family Referee, no test, or a dangling dependency; the register covers every destination capability"
   acceptance_hash: "sha256:bec6cf97def82faf5b93910b219c21350b1f5a481ea760079f3be02d05d96952"
 
@@ -289,7 +299,7 @@
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 16
   window_hours_est: 2
-  status: not_started
+  status: partial
   acceptance: "`schema-lint` 18 pass · 0 fail · 0 warnings; irreversible-tier gate PASS (CLAUDE.md \"known contradiction\")"
   acceptance_hash: "sha256:1e55fa6e20c9c46881476f2f41946a411b1034fa81a9e665ffcf4cd927dad2fb"
 
@@ -306,7 +316,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
-  status: not_started
+  status: partial
   founder_present: false
   acceptance: "CI fails on a disallowed import, and on any non-`kernel/` path writing the Journal"
   acceptance_hash: "sha256:8eaa9fda425d3a8338a0815b0f4894055757d137c594660e5faf99da2f188219"
@@ -324,7 +334,7 @@
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "Every test exists, fails red against an empty implementation, and has its hash in the register"
   acceptance_hash: "sha256:512eede8dcb09e1680048a7dae136f737ddcdd657dd6fe465617d0cfaf8a2030"
@@ -359,7 +369,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 14
   window_hours_est: 1.8
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "A seeded secret in each of 26 fixture repos is found with no model call; a repo not yet scanned cannot be opened by any worker (DR-76)"
   acceptance_hash: "sha256:e926a8b6943ac57c55d14a1af7f2ecc8af93a9c9179ca44037e4031a7e08d517"
@@ -377,7 +387,7 @@
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 8
   window_hours_est: 1
-  status: not_started
+  status: merged
   acceptance: "A Codex model launched in a \"Claude\" slot is logged `family: codex`; a slot/model mismatch is recorded as an event (DR-83)"
   acceptance_hash: "sha256:02787e54dfbd7976f9e10f833eb170b221a8a7006a185ad28e6cb8f180b079ce"
 
@@ -411,7 +421,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 16
   window_hours_est: 2
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "10k random appends + crash injection → identical rebuild"
   acceptance_hash: "sha256:b90a99ff70f8fee198b0047dfa02072f771881ecaed3a599a71d0233c9ea4c3b"
@@ -429,7 +439,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 12
   window_hours_est: 1.5
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "State hash reproduced on rebuild; a tampered row breaks the chain and is refused"
   acceptance_hash: "sha256:065e375c1deeebf837e71853b7ab4bb721b67adae1a5cebbd0ce50d6211ec6c8"
@@ -447,7 +457,7 @@
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 22
   window_hours_est: 2.8
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "Round-trip fixtures in both languages; an upcaster cannot change a past decision's meaning (replay test)"
   acceptance_hash: "sha256:1af5359752d47a381179914e2274c1ac12edcaef273ccfa3f660792cfdb51283"
@@ -465,7 +475,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 24
   window_hours_est: 3
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "Userland's direct append fails at the OS (mode 660); a malformed command is refused and journaled"
   acceptance_hash: "sha256:722c07bebb625369c607d4107d8a5d6b16402619ac3996d95811c0960627195a"
@@ -483,7 +493,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 26
   window_hours_est: 3.3
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "SP2 B0-greedy + drill fixtures nightly; stale holder rejected by storage; touched ≠ declared → refused"
   acceptance_hash: "sha256:bb5e2d8154d9778120d6c42b11e0d0e82a5abe242aa6093dbc0b971b5f3cb7d2"
@@ -501,7 +511,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 10
   window_hours_est: 1.3
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "1,000 two-runner races → 0 double claims (SLICE unknown closed)"
   acceptance_hash: "sha256:701f9d91704a0ecb2e03d8f6654e6293e7b7ea64f24decc77978ae94b3a51d97"
@@ -519,7 +529,7 @@
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 26
   window_hours_est: 3.3
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "Contract fixtures; a changed MCP description aborts before the first tool call; empty result → `unresolved`"
   acceptance_hash: "sha256:abdf9cbb999507b204a30ec2933d3913c1f7a0c9dcbfe5354c7f08e204c440cf"
@@ -537,7 +547,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 22
   window_hours_est: 2.8
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "Fixtures; empty stdout (known detached-TTY bug) → `unresolved`, never `pass`"
   acceptance_hash: "sha256:2309de6dff7688818ca1ec485ca0766c215521614d7997c968d651b2015121ed"
@@ -555,7 +565,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 20
   window_hours_est: 2.5
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "`--dangerously-skip-permissions` refused before exec; an unattended 03:00 launch succeeds; the 121st launch in an hour is refused"
   acceptance_hash: "sha256:1b99d8556d72e90bc66ab345b651dbae91c8d174519d6d242865fca3f1917276"
@@ -573,7 +583,7 @@
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 16
   window_hours_est: 2
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "Daemon killed mid-job → reconciled, no orphan"
   acceptance_hash: "sha256:ecf18f3c846827932f1a3e7496cebcc2ea3a30b7e750d072a6e076e2e411be6e"
@@ -663,7 +673,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 28
   window_hours_est: 3.5
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "Q3 subset: faults at 4 crash points → one effect; `uncertain` never auto-retries"
   acceptance_hash: "sha256:de9ed0c2d66b10ecc164d934a7157be21802c484a1fc33b6a76427194b43947b"
@@ -699,7 +709,7 @@
   referee: {family: codex, model: "gpt-6-astra"}
   turns_est: 18
   window_hours_est: 2.3
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "100% table tests on the seed rights matrix; a method-typed admission rule is rejected"
   acceptance_hash: "sha256:aae6159802e61fcba19362e09ba1789b70a1698192ee2e04d9e6f8232b5422dd"
@@ -807,7 +817,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 22
   window_hours_est: 2.8
-  status: not_started
+  status: merged
   acceptance: "The acceptance reserve cannot be spent on execution; the projection carries `journal_offset`"
   acceptance_hash: "sha256:a882673bc1d1c115551874a9493a5c09752d3285d872eed7bf9b9a01c5813868"
 
@@ -945,7 +955,7 @@
   referee: {family: claude, model: "claude-opus-5-5"}
   turns_est: 18
   window_hours_est: 2.3
-  status: not_started
+  status: merged
   founder_present: false
   acceptance: "Classification, boundary, retention class, retention deadline, permission, taint and origin round-trip as distinct fields; human provenance is a provenance field; every 06 label name maps to one wire name (DR-68)"
   acceptance_hash: "sha256:0e9f0575b4e07a84458806dab8dcab9e7a783a338056a8baafce81c8dc8c2ccc"
